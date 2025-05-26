@@ -1,0 +1,6 @@
+ID,Name,Unit,Base Price,Min Price,Max Price,Status
+1,Roofing Standard,square,450,430,550,active
+2,Premium Windows,unit,800,750,950,active
+3,High-Efficiency HVAC,system,5500,5000,6000,active
+4,Premium Paint Package,gallon,65,65,85,active
+5,Standard Garage Door,unit,1200,1150,1350,active 

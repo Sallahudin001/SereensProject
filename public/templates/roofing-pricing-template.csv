@@ -1,0 +1,16 @@
+Name,Unit,Base Price,Min Price,Max Price
+Asphalt Shingles - Standard,square,350.00,300.00,400.00
+Asphalt Shingles - Architectural,square,450.00,400.00,525.00
+Metal Roofing - Standing Seam,square,750.00,675.00,900.00
+Metal Roofing - Corrugated,square,500.00,450.00,600.00
+Tile Roofing - Concrete,square,650.00,600.00,800.00
+Tile Roofing - Clay,square,900.00,800.00,1100.00
+Flat Roof - TPO,square,550.00,500.00,625.00
+Flat Roof - EPDM,square,500.00,450.00,575.00
+Plywood Replacement,sheet,85.00,75.00,95.00
+Underlayment - Synthetic,square,45.00,40.00,55.00
+Ridge Vent,linear foot,12.00,10.00,14.00
+Flashing - Metal,linear foot,8.00,7.00,10.00
+Gutter - 5" Aluminum,linear foot,12.00,10.00,14.00
+Gutter - 6" Aluminum,linear foot,15.00,13.00,18.00
+Downspout,linear foot,8.00,7.00,10.00 

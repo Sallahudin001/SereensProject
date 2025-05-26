@@ -1,0 +1,6 @@
+PlanNumber,RateName,PaymentFactor,MerchantFee,Notes,Status
+ROF-001,Standard Asphalt Shingles,450,10,Standard installation,active
+ROF-002,Premium Metal Roofing,850,12,Premium quality,active
+WIN-001,Vinyl Windows,650,15,Energy efficient,active
+PNT-001,Premium Paint Package,65,20,Interior/Exterior,active
+GAR-001,Standard Garage Door,1200,8,With installation,active 

@@ -1,0 +1,22 @@
+PlanNumber,RateName,PaymentFactor,MerchantFee,Notes,Status
+PNT-001,Interior Paint - Light,55,25,Light tone per gallon,active
+PNT-002,Interior Paint - Medium,65,22,Medium tone per gallon,active
+PNT-003,Interior Paint - Dark,75,20,Dark tone per gallon,active
+PNT-004,Exterior Paint - Standard,75,27,Weather resistant per gallon,active
+PNT-005,Exterior Paint - Premium,95,18,Premium quality per gallon,active
+Name,Unit,Base Price,Min Price,Max Price
+Exterior Paint - One Color,square foot,2.75,2.25,3.50
+Exterior Paint - Two Color,square foot,3.25,2.75,4.00
+Exterior Paint - Three Color,square foot,3.75,3.25,4.50
+Interior Paint - One Color,square foot,2.25,1.75,3.00
+Interior Paint - Two Color,square foot,2.75,2.25,3.50
+Interior Paint - Accent Wall,linear foot,4.50,4.00,5.25
+Trim Painting - Standard,linear foot,3.00,2.50,3.50
+Trim Painting - Premium,linear foot,3.75,3.25,4.50
+Deck Staining,square foot,2.50,2.00,3.00
+Pressure Washing - Standard,square foot,0.75,0.60,0.90
+Pressure Washing - Heavy Duty,square foot,1.25,1.00,1.50
+Cabinet Painting - Standard,linear foot,35.00,30.00,45.00
+Cabinet Painting - Premium,linear foot,45.00,40.00,55.00
+Surface Preparation,hour,45.00,40.00,55.00
+Premium Paint Upgrade,gallon,25.00,20.00,35.00 
