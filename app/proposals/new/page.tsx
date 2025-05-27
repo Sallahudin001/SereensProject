@@ -59,6 +59,7 @@ export default function NewProposalPage() {
   const proposalId = searchParams.get("id")
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
   const [formData, setFormData] = useState<ProposalFormData>({
     customer: {
       name: "",
@@ -81,8 +82,26 @@ export default function NewProposalPage() {
     selectedOffers: [],
   })
 
-  // Pre-fill form if editing an existing proposal
+  // Fetch current user and pre-fill form if editing an existing proposal
   useEffect(() => {
+    async function fetchCurrentUser() {
+      try {
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getCurrentUser' })
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success) {
+            setCurrentUser(data.user)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error)
+      }
+    }
+
     async function fetchProposal() {
       if (proposalId) {
         const proposal = await getProposalById(proposalId)
@@ -99,6 +118,8 @@ export default function NewProposalPage() {
         }
       }
     }
+
+    fetchCurrentUser()
     fetchProposal()
   }, [proposalId])
 
@@ -291,6 +312,10 @@ export default function NewProposalPage() {
                 products={formData.products}
                 data={formData.pricing}
                 updateData={updatePricing}
+                proposalId={formData.id ? parseInt(formData.id) : undefined}
+                userId={currentUser?.id}
+                customerData={formData.customer}
+                fullFormData={formData}
               />
             )}
             {currentStep === 5 && <MemoizedSignatureDepositForm formData={formData} />}

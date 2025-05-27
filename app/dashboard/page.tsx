@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { DashboardPerformanceChart } from "@/components/charts/dashboard-performance-chart"
 import { DashboardServicesChart } from "@/components/charts/dashboard-services-chart"
+import PendingApprovals from "@/components/dashboard/pending-approvals"
 
 // Animation variants
 const fadeIn = {
@@ -213,6 +214,20 @@ export default function DashboardPage() {
                 </Button>
               </Link>
             </motion.div>
+            <div className="flex gap-2">
+              <Link href="/test-discount">
+                <Button variant="outline" className="hidden sm:flex">
+                  <AlertCircle className="mr-2 h-4 w-4 text-orange-600" />
+                  Test Discount
+                </Button>
+              </Link>
+              <Link href="/admin/approvals">
+                <Button variant="outline" className="hidden sm:flex">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Approvals
+                </Button>
+              </Link>
+            </div>
           </div>
         </motion.div>
 
@@ -271,6 +286,16 @@ export default function DashboardPage() {
               </Card>
             </motion.div>
           ))}
+        </motion.div>
+
+        {/* Pending Approvals Section */}
+        <motion.div
+          initial="hidden"
+          animate={statsSection.isInView ? "visible" : "hidden"}
+          variants={fadeIn}
+          className="mb-8"
+        >
+          <PendingApprovals />
         </motion.div>
 
         <motion.div
