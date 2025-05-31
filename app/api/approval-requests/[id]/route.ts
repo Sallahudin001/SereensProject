@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeQuery } from '@/lib/db'
 import { NotificationService } from '@/lib/notifications'
 import { auth } from '@clerk/nextjs/server'
+import { logDiscountDecision } from "@/lib/activity-logger";
 
 export async function GET(
   request: NextRequest,
@@ -185,32 +186,16 @@ export async function PATCH(
       }
     }
     
-    // Create activity log entry
-    try {
-      // Using correct column names from the activity_log table schema
-      await executeQuery(
-        `INSERT INTO activity_log (
-          proposal_id, user_id, action, details
-        ) VALUES (
-          $1, $2, $3, $4
-        )`,
-        [
-          request_data.proposal_id,
-          validApproverId, 
-          status === 'approved' ? 'approved_discount' : 'rejected_discount',
-          JSON.stringify({
-            requestId,
-            originalValue: request_data.original_value,
-            requestedValue: request_data.requested_value,
-            notes: notes || '',
-            proposalNumber: proposalDetails[0]?.proposal_number
-          })
-        ]
-      )
-    } catch (logError) {
-      console.error('Error creating activity log:', logError)
-      // Continue even if logging fails
-    }
+    // Log the activity using the specialized function
+    await logDiscountDecision(
+      validApproverId,
+      request_data.proposal_id,
+      request_data.proposal_number || '',
+      parseFloat(request_data.original_value) || 0,
+      parseFloat(request_data.requested_value) || 0,
+      status === 'approved',
+      notes
+    );
     
     // Update the proposal based on approval status
     try {

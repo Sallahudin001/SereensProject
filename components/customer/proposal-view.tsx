@@ -803,7 +803,6 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             <div><strong>Homeowner:</strong> {proposal?.customer?.name || 'N/A'}</div>
                             <div><strong>Address:</strong> {proposal?.customer?.address || 'N/A'}</div>
                             <div><strong>Proposal Date:</strong> {formatDate(proposal?.createdAt)}</div>
-                            <div><strong>Project Manager:</strong> {proposal?.projectManagerName || 'Jaime Sanchez'} ({proposal?.projectManagerPhone || 'XXX-XXX-XXXX'})</div>
                         </div>
                     </motion.div>
 

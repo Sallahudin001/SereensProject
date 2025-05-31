@@ -363,7 +363,7 @@ export default function DashboardPage() {
                     >
                       {filteredProposals.map((proposal, index) => (
                         <motion.tr
-                          key={index}
+                          key={proposal.id || `proposal-${index}`}
                           className="border-b hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
                           variants={tableRowVariants}
                           onClick={() => window.location.href = `/proposals/view/${proposal.id}?mode=admin`}

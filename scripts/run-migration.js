@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 require('dotenv').config();
+const { executeQuery } = require('../lib/db.js');
 
 // Configure database connection
 const pool = new Pool({
@@ -42,5 +43,78 @@ async function runMigration() {
   }
 }
 
+async function runActivityLogMigration() {
+  console.log('Running activity log schema migration...');
+  
+  try {
+    // Read the migration SQL file
+    const migrationPath = path.join(__dirname, '..', 'migrations', 'improve_activity_log_schema.sql');
+    
+    if (!fs.existsSync(migrationPath)) {
+      throw new Error(`Migration file not found: ${migrationPath}`);
+    }
+    
+    const migrationSql = fs.readFileSync(migrationPath, 'utf8');
+    
+    // Execute the migration
+    await executeQuery(migrationSql);
+    
+    console.log('✅ Activity log schema migration completed successfully');
+    
+    // Check if the migration was applied correctly
+    const columnsResult = await executeQuery(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'activity_log'
+      ORDER BY column_name;
+    `);
+    
+    console.log('Current activity_log table columns:');
+    columnsResult.forEach(column => {
+      console.log(`- ${column.column_name}`);
+    });
+    
+    // Show row count
+    const countResult = await executeQuery(`
+      SELECT COUNT(*) as count FROM activity_log;
+    `);
+    
+    console.log(`\nTotal activity log entries: ${countResult[0].count}`);
+    
+    // Show entity type distribution
+    if (columnsResult.some(col => col.column_name === 'entity_type')) {
+      const entityTypeResult = await executeQuery(`
+        SELECT entity_type, COUNT(*) as count 
+        FROM activity_log 
+        GROUP BY entity_type 
+        ORDER BY count DESC;
+      `);
+      
+      console.log('\nEntity type distribution:');
+      entityTypeResult.forEach(row => {
+        console.log(`- ${row.entity_type}: ${row.count} entries`);
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error running activity log migration:', error);
+    process.exit(1);
+  }
+}
+
 // Run the migration
-runMigration(); 
+runMigration();
+
+// Execute the function if this script is run directly
+if (require.main === module) {
+  runActivityLogMigration().then(() => {
+    console.log('Migration script completed');
+    process.exit(0);
+  }).catch(err => {
+    console.error('Migration script failed:', err);
+    process.exit(1);
+  });
+} else {
+  // Export for use in other scripts
+  module.exports = { runActivityLogMigration };
+} 

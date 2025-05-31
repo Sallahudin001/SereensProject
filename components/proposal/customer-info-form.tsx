@@ -12,9 +12,6 @@ interface CustomerData {
   address: string
   email: string
   phone: string
-  managerName?: string
-  managerEmail?: string
-  managerPhone?: string
 }
 
 interface CustomerInfoFormProps {
@@ -32,9 +29,6 @@ export default function CustomerInfoForm({ data, updateData }: CustomerInfoFormP
     address: data.address || "",
     email: data.email || "",
     phone: data.phone || "",
-    managerName: data.managerName || "",
-    managerEmail: data.managerEmail || "",
-    managerPhone: data.managerPhone || "",
   }))
 
   // Handle form field changes
@@ -119,45 +113,6 @@ export default function CustomerInfoForm({ data, updateData }: CustomerInfoFormP
             onChange={handleChange}
             required
           />
-        </div>
-      </div>
-
-      <Separator className="my-4" />
-
-      <div>
-        <h3 className="text-lg font-medium mb-4">Manager Information</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="managerName">Manager Name</Label>
-            <Input
-              id="managerName"
-              name="managerName"
-              placeholder="Jane Doe"
-              value={formData.managerName}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="managerEmail">Manager Email</Label>
-            <Input
-              id="managerEmail"
-              name="managerEmail"
-              type="email"
-              placeholder="manager@example.com"
-              value={formData.managerEmail}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="managerPhone">Manager Phone</Label>
-            <Input
-              id="managerPhone"
-              name="managerPhone"
-              placeholder="(555) 987-6543"
-              value={formData.managerPhone}
-              onChange={handleChange}
-            />
-          </div>
         </div>
       </div>
     </div>

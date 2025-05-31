@@ -39,85 +39,51 @@ export default function AdminDashboardPage() {
 
   // Fetch dashboard data
   useEffect(() => {
-    // This would be an API call in a real implementation
-    // For now we'll use mock data
     const fetchData = async () => {
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        setLoading(true)
 
-        setMetrics([
-          {
-            id: "proposals",
-            name: "Proposals Created",
-            value: 126,
-            change: 8.2,
-            trend: "up"
-          },
-          {
-            id: "products",
-            name: "Active Products",
-            value: 84,
-            change: 2.1,
-            trend: "up" 
-          },
-          {
-            id: "approvals",
-            name: "Pending Approvals",
-            value: 12,
-            change: -5.0,
-            trend: "down"
-          },
-          {
-            id: "revenue",
-            name: "Monthly Revenue",
-            value: 287650,
-            change: 12.5,
-            trend: "up"
+        // Fetch real metrics data
+        const metricsResponse = await fetch('/api/admin/dashboard')
+        
+        if (metricsResponse.ok) {
+          const metricsData = await metricsResponse.json()
+          if (metricsData.success && metricsData.metrics) {
+            setMetrics(metricsData.metrics)
+          } else {
+            console.error("Failed to fetch metrics data:", metricsData.error)
+            // Initialize with empty metrics instead of mock data
+            setMetrics([])
           }
-        ])
+        } else {
+          console.error("Failed to fetch metrics:", metricsResponse.statusText)
+          setMetrics([])
+        }
 
-        setRecentActivity([
-    {
-      id: 1,
-            type: "pricing_update",
-            user: "John Smith",
-            timestamp: "2 hours ago",
-            details: "Updated pricing for Roofing category"
-    },
-    {
-      id: 2,
-            type: "approval",
-            user: "Jane Doe",
-            timestamp: "4 hours ago",
-            details: "Approved discount request for Johnson proposal"
-    },
-    {
-      id: 3,
-            type: "product_add",
-            user: "Mike Wilson",
-            timestamp: "1 day ago",
-            details: "Added new product 'Premium HVAC System'"
-    },
-    {
-      id: 4,
-            type: "proposal",
-            user: "Sarah Chen",
-            timestamp: "1 day ago",
-            details: "Created new proposal for Anderson project"
-    },
-    {
-      id: 5,
-      type: "settings",
-            user: "Admin",
-            timestamp: "2 days ago",
-            details: "Updated company branding settings"
+        // Fetch real activity data
+        const activityResponse = await fetch('/api/admin/activity?limit=5')
+        
+        if (activityResponse.ok) {
+          const activityData = await activityResponse.json()
+          
+          if (activityData.success && activityData.activities) {
+            setRecentActivity(activityData.activities)
+          } else {
+            console.error("Failed to fetch activity data:", activityData.error)
+            // Initialize with empty activity instead of mock data
+            setRecentActivity([])
           }
-        ])
+        } else {
+          console.error("Failed to fetch activity data:", activityResponse.statusText)
+          setRecentActivity([])
+        }
 
         setLoading(false)
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
+        // Initialize with empty data instead of mock data
+        setMetrics([])
+        setRecentActivity([])
         setLoading(false)
       }
     }

@@ -147,6 +147,7 @@ export default function NewProposalPage() {
   // Update the handleSubmit function to handle the case where we're sending a proposal directly
   const handleSubmit = async () => {
     try {
+      // Immediately disable the button to prevent double clicks
       setIsSubmitting(true)
 
       // Validate required fields
@@ -174,9 +175,14 @@ export default function NewProposalPage() {
       const result = await createProposal(formData)
 
       if (result.success) {
+        // Message varies if it was a duplicate prevention
+        const message = result.isDuplicate 
+          ? "Prevented duplicate proposal creation"
+          : `Proposal ${result.proposalNumber} has been created successfully`
+        
         toast({
           title: "Proposal created",
-          description: `Proposal ${result.proposalNumber} has been created successfully`,
+          description: message,
         })
 
         // Update the formData with the new proposal ID
@@ -186,10 +192,8 @@ export default function NewProposalPage() {
           proposalNumber: result.proposalNumber,
         }))
 
-        // If we're on the last step, don't redirect
-        if (currentStep < steps.length - 1) {
-          router.push("/dashboard")
-        }
+        // Always redirect immediately after creation to prevent repeated submissions
+        router.push("/dashboard")
       } else {
         toast({
           title: "Error",

@@ -3,6 +3,7 @@
 import { executeQuery } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { auth } from "@clerk/nextjs/server"
+import { logActivity, logProposalCreation } from "@/lib/activity-logger"
 
 // Get dashboard metrics
 export async function getDashboardMetrics() {
@@ -76,7 +77,7 @@ export async function getRecentProposals(limit = 5) {
       LEFT JOIN 
         services s ON ps.service_id = s.id
       GROUP BY 
-        p.id, c.name
+        p.id, p.proposal_number, c.name, p.status, p.total, p.created_at
       ORDER BY 
         p.created_at DESC
       LIMIT $1
@@ -218,6 +219,26 @@ export async function createProposal(data: any) {
     
     if (!userId) {
       throw new Error("User not authenticated");
+    }
+    
+    // Check for recent duplicate submissions (within last 5 seconds)
+    const recentProposalCheck = await executeQuery(
+      `
+      SELECT id FROM proposals 
+      WHERE customer_id IN (SELECT id FROM customers WHERE email = $1) 
+      AND created_at > NOW() - INTERVAL '5 seconds'
+      `,
+      [data.customer.email]
+    );
+    
+    if (recentProposalCheck.length > 0) {
+      console.log("Duplicate proposal detected - preventing creation");
+      return {
+        success: true,
+        proposalId: recentProposalCheck[0].id,
+        proposalNumber: "Existing proposal used to prevent duplication",
+        isDuplicate: true
+      };
     }
 
     // Start a transaction
@@ -399,19 +420,21 @@ export async function createProposal(data: any) {
     }
 
     // 6. Log the activity
-    await executeQuery(
-      `
-      INSERT INTO activity_log (proposal_id, user_id, action, details)
-      VALUES ($1, $2, $3, $4)
-    `,
-      [proposalId, userId, "create_proposal", JSON.stringify({ proposalNumber })],
-    )
+    await logProposalCreation(
+      userId,
+      proposalId,
+      proposalNumber,
+      data.customer.name,
+      data.services
+    );
 
     // Commit the transaction
     await executeQuery("COMMIT")
 
     // Revalidate the dashboard path to update metrics
     revalidatePath("/dashboard")
+    // Revalidate the proposals path to ensure consistency
+    revalidatePath("/proposals")
 
     return {
       success: true,
@@ -491,6 +514,7 @@ export async function updateProposalStatus(id: string, status: string, userId?: 
 
     // Revalidate the dashboard path to update metrics
     revalidatePath("/dashboard")
+    revalidatePath("/proposals")
     revalidatePath(`/proposals/view/${id}`)
 
     return { success: true }

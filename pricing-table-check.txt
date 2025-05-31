@@ -1,0 +1,45 @@
+Checking pricing table structure...
+
+Current pricing table structure:
+[
+  {
+    "column_name": "id",
+    "data_type": "integer"
+  },
+  {
+    "column_name": "plan_number",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "rate_name",
+    "data_type": "character varying"
+  },
+  {
+    "column_name": "payment_factor",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "merchant_fee",
+    "data_type": "numeric"
+  },
+  {
+    "column_name": "notes",
+    "data_type": "text"
+  },
+  {
+    "column_name": "visible",
+    "data_type": "boolean"
+  },
+  {
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone"
+  },
+  {
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone"
+  }
+]
+
+WARNING: Some columns still exist:
+- payment_factor column still exists
+- merchant_fee column still exists

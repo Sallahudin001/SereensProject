@@ -1,57 +1,42 @@
 // Script to check the structure of the pricing table
-const { neon } = require('@neondatabase/serverless');
-const dotenv = require('dotenv');
-
-// Load environment variables
-dotenv.config();
+const fs = require('fs');
+const { sql } = require('../lib/db');
 
 async function checkPricingTable() {
-  console.log('Checking pricing table structure...');
-  
-  if (!process.env.DATABASE_URL) {
-    console.error('DATABASE_URL environment variable is not defined.');
-    process.exit(1);
-  }
-  
   try {
-    // Connect to database
-    const sql = neon(process.env.DATABASE_URL);
-    console.log('Connected to database');
+    let output = 'Checking pricing table structure...\n\n';
     
-    // Check if pricing table exists
-    const tableExists = await sql.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_name = 'pricing'
-      );
+    // Get column information from the pricing table
+    const result = await sql.query(`
+      SELECT column_name, data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'pricing'
+      ORDER BY ordinal_position;
     `);
     
-    console.log('Table exists:', tableExists[0].exists);
+    output += 'Current pricing table structure:\n';
+    output += JSON.stringify(result, null, 2) + '\n\n';
     
-    if (tableExists[0].exists) {
-      // Get table structure
-      const columns = await sql.query(`
-        SELECT column_name, data_type, is_nullable
-        FROM information_schema.columns
-        WHERE table_name = 'pricing'
-        ORDER BY ordinal_position;
-      `);
-      
-      console.log('Table structure:');
-      console.table(columns);
-      
-      // Get sample data
-      const sampleData = await sql.query(`
-        SELECT * FROM pricing LIMIT 3;
-      `);
-      
-      console.log('Sample data:');
-      console.log(JSON.stringify(sampleData, null, 2));
+    // Check if specific columns exist
+    const paymentFactorExists = result.some(col => col.column_name === 'payment_factor');
+    const merchantFeeExists = result.some(col => col.column_name === 'merchant_fee');
+    
+    if (!paymentFactorExists && !merchantFeeExists) {
+      output += 'SUCCESS: payment_factor and merchant_fee columns have been removed!\n';
+    } else {
+      output += 'WARNING: Some columns still exist:\n';
+      if (paymentFactorExists) output += '- payment_factor column still exists\n';
+      if (merchantFeeExists) output += '- merchant_fee column still exists\n';
     }
     
+    // Write results to file
+    fs.writeFileSync('pricing-table-check.txt', output);
+    console.log('Check completed. Results written to pricing-table-check.txt');
+    
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error checking pricing table:', error);
+    fs.writeFileSync('pricing-table-check-error.txt', JSON.stringify(error, null, 2));
   }
 }
 
-checkPricingTable().catch(console.error); 
+checkPricingTable(); 

@@ -218,7 +218,7 @@ export default function ProposalsPage() {
                     variants={staggerContainer}
                   >
                     {filteredProposals.map((proposal, index) => (
-                      <motion.tr key={index} className="border-b" variants={tableRowVariants}>
+                      <motion.tr key={proposal.id || `proposal-${index}`} className="border-b" variants={tableRowVariants}>
                         <td className="py-3 px-4">{proposal.proposal_number}</td>
                         <td className="py-3 px-4">{proposal.customer_name}</td>
                         <td className="py-3 px-4">

@@ -50,15 +50,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { href: "/admin", label: "Dashboard", icon: Home },
-    { href: "/admin/calendar", label: "Calendar", icon: Calendar },
     { href: "/admin/contracts", label: "Contracts", icon: FileText },
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/financing", label: "Financing", icon: DollarSign },
     { href: "/admin/pricing", label: "Pricing", icon: BarChart3 },
-    { href: "/admin/database", label: "Database", icon: Database },
-    { href: "/admin/users", label: "Users", icon: Users },
-    { href: "/admin/permissions", label: "Permissions", icon: ShieldCheck },
-    { href: "/admin/settings", label: "Settings", icon: Settings },
+    { href: "/admin/permissions", label: "User Permissions", icon: ShieldCheck },
   ]
 
   return (

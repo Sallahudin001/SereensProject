@@ -40,7 +40,7 @@ export async function GET() {
       LEFT JOIN 
         services s ON ps.service_id = s.id
       GROUP BY 
-        p.id, c.name
+        p.id, p.proposal_number, c.name, p.status, p.total, p.created_at
       ORDER BY 
         p.created_at DESC
     `

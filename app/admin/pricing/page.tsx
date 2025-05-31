@@ -42,8 +42,6 @@ interface PricingItem {
   id: number;
   plan_number: string;
   rate_name: string;
-  payment_factor: number;
-  merchant_fee: number;
   notes: string;
   visible: boolean;
   created_at: string;
@@ -61,8 +59,6 @@ export default function PricingPage() {
   // Form state
   const [formPlanNumber, setFormPlanNumber] = useState("");
   const [formRateName, setFormRateName] = useState("");
-  const [formPaymentFactor, setFormPaymentFactor] = useState("");
-  const [formMerchantFee, setFormMerchantFee] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [formVisible, setFormVisible] = useState(true);
 
@@ -102,8 +98,6 @@ export default function PricingPage() {
     setEditingItem(item);
     setFormPlanNumber(item.plan_number);
     setFormRateName(item.rate_name);
-    setFormPaymentFactor(item.payment_factor.toString());
-    setFormMerchantFee(item.merchant_fee.toString());
     setFormNotes(item.notes || "");
     setFormVisible(item.visible);
     setShowAddDialog(true);
@@ -178,8 +172,6 @@ export default function PricingPage() {
   const resetForm = () => {
     setFormPlanNumber("");
     setFormRateName("");
-    setFormPaymentFactor("");
-    setFormMerchantFee("");
     setFormNotes("");
     setFormVisible(true);
   };
@@ -195,23 +187,12 @@ export default function PricingPage() {
       return;
     }
 
-    if (isNaN(Number(formPaymentFactor)) || isNaN(Number(formMerchantFee))) {
-      toast({
-        title: "Validation Error",
-        description: "Payment factor and merchant fee must be numbers.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setSaving(true);
 
     try {
       const pricingData = {
         plan_number: formPlanNumber,
         rate_name: formRateName,
-        payment_factor: Number(formPaymentFactor),
-        merchant_fee: Number(formMerchantFee),
         notes: formNotes,
         visible: formVisible
       };
@@ -285,8 +266,6 @@ export default function PricingPage() {
       pricingItems.map(item => ({
         'Plan #': item.plan_number,
         'Rate Name': item.rate_name,
-        'Payment Factor': item.payment_factor,
-        'Merchant Fee': item.merchant_fee,
         'Notes': item.notes || ''
       }))
     );
@@ -326,7 +305,7 @@ export default function PricingPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Price Management</h1>
           <p className="text-muted-foreground mt-1">
-            Manage pricing, payment factors, and merchant fees
+            Manage pricing plans and visibility
           </p>
         </div>
         <div className="flex gap-2">
@@ -357,7 +336,7 @@ export default function PricingPage() {
             <div>
               <CardTitle>Pricing List</CardTitle>
               <CardDescription>
-                Manage pricing plans, payment factors, and merchant fees.
+                Manage pricing plans and their visibility.
               </CardDescription>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -384,8 +363,6 @@ export default function PricingPage() {
                   <TableRow>
                     <TableHead>Plan #</TableHead>
                     <TableHead>Rate Name</TableHead>
-                    <TableHead>Payment Factor</TableHead>
-                    <TableHead>Merchant Fee</TableHead>
                     <TableHead>Notes</TableHead>
                     <TableHead>Visible</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -397,8 +374,6 @@ export default function PricingPage() {
                       <TableRow key={item.id}>
                         <TableCell>{item.plan_number}</TableCell>
                         <TableCell>{item.rate_name}</TableCell>
-                        <TableCell>{item.payment_factor}</TableCell>
-                        <TableCell>{item.merchant_fee}%</TableCell>
                         <TableCell>{item.notes}</TableCell>
                         <TableCell>
                           <Switch 
@@ -430,7 +405,7 @@ export default function PricingPage() {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-4">
+                      <TableCell colSpan={5} className="text-center py-4">
                         No pricing items found.
                       </TableCell>
                     </TableRow>
@@ -474,32 +449,6 @@ export default function PricingPage() {
                 id="rateName"
                 value={formRateName}
                 onChange={(e) => setFormRateName(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="paymentFactor" className="text-right">
-                Payment Factor
-              </Label>
-              <Input
-                id="paymentFactor"
-                type="number"
-                step="0.01"
-                value={formPaymentFactor}
-                onChange={(e) => setFormPaymentFactor(e.target.value)}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="merchantFee" className="text-right">
-                Merchant Fee (%)
-              </Label>
-              <Input
-                id="merchantFee"
-                type="number"
-                step="0.1"
-                value={formMerchantFee}
-                onChange={(e) => setFormMerchantFee(e.target.value)}
                 className="col-span-3"
               />
             </div>

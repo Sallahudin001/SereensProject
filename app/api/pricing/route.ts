@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { plan_number, rate_name, payment_factor, merchant_fee, notes, visible } = body;
+    const { plan_number, rate_name, notes, visible } = body;
     
     // Validate required fields
     if (!rate_name) {
@@ -37,15 +37,13 @@ export async function POST(req: NextRequest) {
     const result = await executeQuery(
       `
       INSERT INTO pricing (
-        plan_number, rate_name, payment_factor, merchant_fee, notes, visible
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+        plan_number, rate_name, notes, visible
+      ) VALUES ($1, $2, $3, $4)
       RETURNING *
       `,
       [
         plan_number || null,
         rate_name,
-        payment_factor || 0,
-        merchant_fee || 0,
         notes || null,
         visible !== undefined ? visible : true
       ]
@@ -65,7 +63,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, plan_number, rate_name, payment_factor, merchant_fee, notes, visible } = body;
+    const { id, plan_number, rate_name, notes, visible } = body;
     
     // Validate required fields
     if (!id) {
@@ -89,10 +87,8 @@ export async function PUT(req: NextRequest) {
       SET 
         plan_number = $2,
         rate_name = $3,
-        payment_factor = $4,
-        merchant_fee = $5,
-        notes = $6,
-        visible = $7,
+        notes = $4,
+        visible = $5,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
       RETURNING *
@@ -101,8 +97,6 @@ export async function PUT(req: NextRequest) {
         id,
         plan_number || null,
         rate_name,
-        payment_factor || 0,
-        merchant_fee || 0,
         notes || null,
         visible !== undefined ? visible : true
       ]

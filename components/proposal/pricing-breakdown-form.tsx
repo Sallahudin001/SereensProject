@@ -576,7 +576,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       
       toast({
         title: "Approval Request Sent",
-        description: `Your discount request has been sent to ${result.approverName} for approval. The proposal has been saved as draft.`,
+        description: `Your discount request has been sent to Manager for approval. The proposal has been saved as draft.`,
         className: "bg-blue-50 border-blue-200"
       })
       
@@ -821,7 +821,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
               <div className="flex-1">
                 <h4 className="font-medium text-blue-900">Discount Approval Pending</h4>
                 <p className="text-sm text-blue-700">
-                  Discount of ${parseFloat(pendingApprovalRequest.requestedValue).toFixed(2)} sent to {pendingApprovalRequest.approverName} for approval.
+                  Discount of ${parseFloat(pendingApprovalRequest.requestedValue).toFixed(2)} sent to Manager for approval.
                 </p>
               </div>
             </div>
@@ -840,7 +840,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
               <div className="flex-1">
                 <h4 className="font-medium text-green-900">Discount Approved</h4>
                 <p className="text-sm text-green-700">
-                  Requested discount of ${parseFloat(pendingApprovalRequest.requestedValue).toFixed(2)} has been approved by {pendingApprovalRequest.approverName}.
+                  Requested discount of ${parseFloat(pendingApprovalRequest.requestedValue).toFixed(2)} has been approved by Manager.
                 </p>
               </div>
             </div>
@@ -859,7 +859,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
               <div className="flex-1">
                 <h4 className="font-medium text-red-900">Discount Rejected</h4>
                 <p className="text-sm text-red-700">
-                  Requested discount of ${parseFloat(pendingApprovalRequest.requestedValue).toFixed(2)} was rejected by {pendingApprovalRequest.approverName}.
+                  Requested discount of ${parseFloat(pendingApprovalRequest.requestedValue).toFixed(2)} was rejected by Manager.
                   {pendingApprovalRequest.notes && (
                     <span className="block mt-1 font-medium">Reason: {pendingApprovalRequest.notes}</span>
                   )}
@@ -932,7 +932,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
               <h4 className="font-medium text-green-800 mb-1">Approval Request Sent</h4>
               <p className="text-sm text-green-700">
-                Request #{pendingApprovalRequest.id} sent to {pendingApprovalRequest.approverName}
+                Request #{pendingApprovalRequest.id} sent to Manager
               </p>
               <p className="text-xs text-green-600 mt-1">
                 <Clock className="h-3 w-3 inline-block mr-1" />
