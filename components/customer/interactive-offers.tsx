@@ -429,7 +429,7 @@ export default function InteractiveOffers({
                   <div className="text-right">
                     {selectedUpsells.size > 0 && (
                       <div className="text-blue-700 text-sm font-medium">
-                        Enhancements added: +${Array.from(selectedUpsells).reduce((total, upsellId) => {
+                        Enhancements added: +${Array.from(selectedUpsells).reduce((total: number, upsellId: number) => {
                           const upsell = lifestyleUpsells.find(u => u.id === upsellId)
                           return total + (upsell ? upsell.base_price : 0)
                         }, 0).toLocaleString()}

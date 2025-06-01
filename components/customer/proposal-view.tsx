@@ -26,6 +26,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import Image from 'next/image'
 import { useProposalOffers } from "@/lib/use-proposal-offers"
 import InteractiveOffers from "./interactive-offers"
+import { 
+  calculateMonthlyPaymentWithFactor, 
+  calculateMonthlyPayment, 
+  calculateAddonMonthlyImpact,
+  calculateTotalWithAdjustments,
+  formatCurrency as formatCurrencyUtil
+} from "@/lib/financial-utils"
 
 // Animation variants
 const fadeIn = {
@@ -54,12 +61,7 @@ const slideIn = {
 }
 
 // Helper function to format currency
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount)
-}
+const formatCurrency = formatCurrencyUtil;
 
 // Enhanced interfaces
 interface Addon {
@@ -181,8 +183,8 @@ const EnhanceYourProject = ({
                           </div>
                         </div>
                         <div className="text-right flex flex-col items-end gap-2">
-                          <div className="text-xl font-bold text-green-700">${addon.price.toLocaleString()}</div>
-                          <div className="text-sm text-blue-600">+${addon.monthly_impact}/month</div>
+                          <div className="text-xl font-bold text-green-700">{formatCurrency(addon.price)}</div>
+                          <div className="text-sm text-blue-600">+{formatCurrency(addon.monthly_impact)}/month</div>
                           <label className="inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -205,13 +207,13 @@ const EnhanceYourProject = ({
             <div className="flex justify-between items-center">
               <div>
                 <div className="text-gray-700 font-medium">Current Project Total</div>
-                <div className="text-2xl font-bold text-blue-900">${currentTotal.toLocaleString()}</div>
-                <div className="text-sm text-green-700 font-medium">Monthly payment: ${monthlyPayment.toLocaleString()}/mo</div>
+                <div className="text-2xl font-bold text-blue-900">{formatCurrency(currentTotal)}</div>
+                <div className="text-sm text-green-700 font-medium">Monthly payment: {formatCurrency(monthlyPayment)}/mo</div>
               </div>
               <div className="text-right">
                 {currentTotal > originalTotal && (
                   <div className="text-blue-700 text-sm font-medium">
-                    Enhancements added: +${(currentTotal - originalTotal).toLocaleString()}
+                    Enhancements added: +{formatCurrency(currentTotal - originalTotal)}
                   </div>
                 )}
               </div>
@@ -290,20 +292,55 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     let addonsTotalPrice = 0;
     let addonsMonthlyImpactTotal = 0;
 
+    // Get payment factor if available (either directly or calculated from existing values)
+    const paymentFactor = initialProposal.pricing.paymentFactor || 
+                         (initialProposal.pricing.total && initialProposal.pricing.monthlyPayment ? 
+                          (initialProposal.pricing.monthlyPayment / initialProposal.pricing.total * 100) : 
+                          null);
+    
+    // Calculate addons price and monthly impact
     Object.values(selectedAddons).flat().forEach(addon => {
       if (addon.selected) {
         addonsTotalPrice += addon.price;
-        // Ensure monthly_impact is a number, default to 0 if not provided or invalid
-        const monthlyImpact = typeof addon.monthly_impact === 'number' ? addon.monthly_impact : 0;
-        // Fallback for monthly impact calculation if not directly provided
-        const termMonths = initialProposal.pricing.financingTerm || 60; // Default to 60 months if not specified
-        addonsMonthlyImpactTotal += monthlyImpact || (addon.price / termMonths);
+        
+        // Calculate monthly impact using standardized function
+        addonsMonthlyImpactTotal += calculateAddonMonthlyImpact(
+          addon.price,
+          paymentFactor,
+          initialProposal.pricing.financingTerm
+        );
       }
     });
 
     newSubtotal += addonsTotalPrice; // Addons typically add to subtotal before final total calculation
-    newTotal = initialProposal.pricing.subtotal + addonsTotalPrice - initialProposal.pricing.discount;
-    newMonthlyPayment = initialProposal.pricing.monthlyPayment + addonsMonthlyImpactTotal;
+    
+    // Use the standardized calculation for the total
+    newTotal = calculateTotalWithAdjustments(
+      initialProposal.pricing.subtotal, 
+      addonsTotalPrice, 
+      0, // No savings to apply here
+      initialProposal.pricing.discount
+    );
+    
+    // Calculate the new monthly payment using the proper financing method
+    if (paymentFactor) {
+      // Use payment factor calculation (most accurate)
+      newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, paymentFactor);
+    } else if (initialProposal.pricing.financingTerm && initialProposal.pricing.interestRate) {
+      // Use standard amortization formula
+      newMonthlyPayment = calculateMonthlyPayment(
+        newTotal, 
+        initialProposal.pricing.financingTerm, 
+        initialProposal.pricing.interestRate
+      );
+    } else {
+      // Fallback to simple addition of the monthly impact
+      newMonthlyPayment = initialProposal.pricing.monthlyPayment + addonsMonthlyImpactTotal;
+    }
+    
+    // Update UI state values immediately for real-time display
+    setCurrentTotal(newTotal);
+    setCurrentMonthlyPayment(newMonthlyPayment);
     
     setProposal((prev: any) => ({
       ...prev, // Keep other proposal details
@@ -314,33 +351,51 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
         total: newTotal,       // Recalculated total
         monthlyPayment: newMonthlyPayment, // Recalculated monthly payment
         // Ensure other fields like discount, financingPlanId, etc., are preserved from prev.pricing
-        // If addons could affect discounts, that logic would need to be here too.
       },
-      // Persist selected addons in the main proposal object if your backend expects it here
-      // This depends on your data model for when `updateProposalStatus` or a similar action is called.
-      // For example: addons: Object.values(selectedAddons).flat().filter(a => a.selected).map(a => a.id),
     }));
-  }, [initialProposal, selectedAddons, setProposal]); // Added setProposal to dependencies
+  }, [initialProposal, selectedAddons]);
   
   // Initialize selected addons and refresh data on initial load or if initialProposal changes
   useEffect(() => {
     const initialSelected: Record<string, Addon[]> = {};
     const proposalAddonIds = new Set(initialProposal?.addons?.map((a: any) => a.id || a) || []); // Handle if addons are objects or just IDs
 
+    // Extract payment factor from proposal to ensure consistent calculations
+    const paymentFactor = initialProposal?.pricing?.paymentFactor || 
+                         (initialProposal?.pricing?.total && initialProposal?.pricing?.monthlyPayment ? 
+                          (initialProposal.pricing.monthlyPayment / initialProposal.pricing.total * 100) : 
+                          null);
+
     Object.keys(availableAddons).forEach(serviceKey => {
-      initialSelected[serviceKey] = availableAddons[serviceKey].map(addon => ({
-        ...addon,
-        selected: proposalAddonIds.has(addon.id)
-      }));
+      initialSelected[serviceKey] = availableAddons[serviceKey].map(addon => {
+        // If we have a payment factor, recalculate the monthly impact using consistent approach
+        let monthlyImpact = addon.monthly_impact;
+        if (paymentFactor && typeof addon.price === 'number') {
+          monthlyImpact = calculateAddonMonthlyImpact(addon.price, paymentFactor);
+        }
+
+        return {
+          ...addon,
+          monthly_impact: monthlyImpact,
+          selected: proposalAddonIds.has(addon.id)
+        };
+      });
     });
     setSelectedAddons(initialSelected);
-  }, [initialProposal, availableAddons]); // Removed refreshProposalData from here to avoid potential loop with its own dependencies
+  }, [initialProposal, availableAddons]);
 
   // Effect to run refreshProposalData when selectedAddons change or initialProposal changes (after selectedAddons initialized)
   useEffect(() => {
     refreshProposalData();
   }, [selectedAddons, refreshProposalData]); // refreshProposalData is now a dependency
 
+  // Add an effect to update the currentTotal and currentMonthlyPayment when proposal pricing changes
+  useEffect(() => {
+    if (proposal?.pricing) {
+      setCurrentTotal(proposal.pricing.total);
+      setCurrentMonthlyPayment(proposal.pricing.monthlyPayment);
+    }
+  }, [proposal?.pricing]);
 
   const handleAddonToggle = async (serviceKey: string, addonId: string, checked: boolean) => {
     // Optimistically update selectedAddons state
@@ -630,46 +685,94 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     }
   }
   
-  // Calculate total addons price and updates from the state
-  const totalAddonsPrice = Object.values(selectedAddons).flat().reduce((acc, addon) => {
-    return addon.selected ? acc + addon.price : acc;
-  }, 0);
+  // Calculate total with offers, addons, and other adjustments
+  const calculateTotalWithOffers = () => {
+    let total = proposal?.pricing?.total || 0;
+    let additionalCost = 0;
+    let savings = 0;
 
-  // Calculate the current total including all selected addons
-  const calculateCurrentTotal = useCallback(() => {
-    let addonTotal = 0;
-    Object.values(selectedAddons).forEach(serviceAddons => {
-      serviceAddons.forEach(addon => {
-        if (addon.selected) {
-          addonTotal += addon.price || 0;
-        }
-      });
+    // Calculate addon costs (already included in proposal.pricing.total)
+    // This is just for reference in the breakdown
+
+    // Calculate lifestyle upsell costs
+    selectedUpsells.forEach(upsellId => {
+      const upsell = lifestyleUpsells.find(u => u.id === upsellId)
+      if (upsell) {
+        additionalCost += upsell.base_price;
+      }
     });
-    
-    return (proposal?.pricing?.total || 0) + addonTotal;
-  }, [selectedAddons, proposal?.pricing?.total]);
-  
-  // Calculate the current monthly payment with selected addons
-  const calculateCurrentMonthlyPayment = useCallback(() => {
-    let additionalMonthly = 0;
-    Object.values(selectedAddons).forEach(serviceAddons => {
-      serviceAddons.forEach(addon => {
-        if (addon.selected) {
-          additionalMonthly += addon.monthly_impact || 0;
+
+    // Calculate offer savings
+    selectedOffers.forEach(offerId => {
+      const offer = specialOffers.find(o => o.id === offerId)
+      if (offer) {
+        if (offer.discount_amount) {
+          savings += offer.discount_amount;
+        } else if (offer.discount_percentage) {
+          savings += total * (offer.discount_percentage / 100);
         }
-      });
+      }
     });
+
+    // Calculate the new total based on adjustments
+    const newTotal = calculateTotalWithAdjustments(
+      proposal?.pricing?.total || 0,
+      additionalCost,
+      savings
+    );
     
-    return (proposal?.pricing?.monthlyPayment || 0) + additionalMonthly;
-  }, [selectedAddons, proposal?.pricing?.monthlyPayment]);
-  
-  // Update calculated values when addons change
-  useEffect(() => {
-    if (proposal?.pricing) {
-      setCurrentTotal(calculateCurrentTotal());
-      setCurrentMonthlyPayment(calculateCurrentMonthlyPayment());
+    // Calculate the updated monthly payment using the proper financing calculation
+    let newMonthlyPayment = 0;
+    
+    // Get payment factor if available (either directly or calculated from existing values)
+    const paymentFactor = proposal?.pricing?.paymentFactor || 
+                         (proposal?.pricing?.total && proposal?.pricing?.monthlyPayment ? 
+                          (proposal.pricing.monthlyPayment / proposal.pricing.total * 100) : 
+                          null);
+    
+    if (paymentFactor) {
+      // Use payment factor calculation (most accurate)
+      newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, paymentFactor);
+    } else if (proposal?.pricing?.financingTerm && proposal?.pricing?.interestRate) {
+      // Use standard amortization formula
+      newMonthlyPayment = calculateMonthlyPayment(
+        newTotal, 
+        proposal.pricing.financingTerm, 
+        proposal.pricing.interestRate
+      );
+    } else {
+      // Fallback to simple adjustment of existing monthly payment
+      const baseMonthlyPayment = proposal?.pricing?.monthlyPayment || 0;
+      const termMonths = proposal?.pricing?.financingTerm || 60;
+      
+      // Calculate impacts using standardized function
+      const additionalMonthlyImpact = Array.from(selectedUpsells).reduce((total: number, upsellId: number) => {
+        const upsell = lifestyleUpsells.find(u => u.id === upsellId);
+        if (upsell) {
+          return total + calculateAddonMonthlyImpact(upsell.base_price, paymentFactor, termMonths);
+        }
+        return total;
+      }, 0);
+      
+      const savingsMonthlyImpact = savings / termMonths;
+      newMonthlyPayment = baseMonthlyPayment + additionalMonthlyImpact - savingsMonthlyImpact;
     }
-  }, [selectedAddons, proposal?.pricing, calculateCurrentTotal, calculateCurrentMonthlyPayment]);
+
+    return {
+      newTotal,
+      additionalCost,
+      savings,
+      originalTotal: total,
+      newMonthlyPayment
+    };
+  };
+
+  // Use useEffect to update state based on calculation results
+  useEffect(() => {
+    const calculationResults = calculateTotalWithOffers();
+    setCurrentTotal(calculationResults.newTotal);
+    setCurrentMonthlyPayment(calculationResults.newMonthlyPayment);
+  }, [selectedOffers, selectedUpsells, proposal?.pricing?.total, proposal?.pricing?.monthlyPayment]);
 
   // Simplified stub for lifestyle upsells (not fully implemented)
   const toggleLifestyleUpsell = (upsellId: number) => {
@@ -696,41 +799,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     }
   }
 
-  // Calculate totals with applied offers
-  const calculateTotalWithOffers = () => {
-    let total = proposal?.pricing?.total || 0
-    let additionalCost = 0
-    let savings = 0
-
-    // Since we're still using selectedUpsells from state, we need to keep this
-    // In a full implementation, this would also be handled by the hook
-    selectedUpsells.forEach(upsellId => {
-      const upsell = lifestyleUpsells.find(u => u.id === upsellId)
-      if (upsell) {
-        additionalCost += upsell.base_price
-      }
-    })
-
-    // Calculate offer savings
-    selectedOffers.forEach(offerId => {
-      const offer = specialOffers.find(o => o.id === offerId)
-      if (offer) {
-        if (offer.discount_amount) {
-          savings += offer.discount_amount
-        } else if (offer.discount_percentage) {
-          savings += total * (offer.discount_percentage / 100)
-        }
-      }
-    })
-
-    return {
-      newTotal: total + additionalCost - savings,
-      additionalCost,
-      savings,
-      originalTotal: total
-    }
-  }
-
+  // Get calculation results for rendering without setting state
   const { newTotal, additionalCost, savings, originalTotal } = calculateTotalWithOffers()
 
   return (

@@ -30,6 +30,11 @@ import FinancingSelector from "./financing-selector"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "@/hooks/use-toast"
 import { createProposal } from "@/app/actions/proposal-actions"
+import { 
+  calculateMonthlyPaymentWithFactor, 
+  calculateMonthlyPayment,
+  calculateTotalWithAdjustments
+} from "@/lib/financial-utils"
 
 
 interface FinancingPlan {
@@ -57,6 +62,7 @@ interface PricingData {
   financingPlanName?: string
   merchantFee?: number
   financingNotes?: string
+  paymentFactor?: number
 }
 
 interface PricingBreakdownFormProps {
@@ -116,9 +122,42 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       financingPlanId: data.financingPlanId,
       financingPlanName: data.financingPlanName,
       merchantFee: data.merchantFee,
-      financingNotes: data.financingNotes
+      financingNotes: data.financingNotes,
+      paymentFactor: data.paymentFactor
     }
   })
+
+  // Real-time sync effect - ensures all calculated values stay in sync
+  useEffect(() => {
+    // Only run after initial load
+    if (hasUpdatedRef.current) return;
+
+    const total = formData.subtotal - formData.discount;
+    
+    // Check if total needs to be updated
+    if (total !== formData.total) {
+      setFormData(prev => {
+        const updatedData = { ...prev, total };
+        
+        // Recalculate monthly payment based on selected financing plan
+        if (prev.financingPlanId) {
+          const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId);
+          if (selectedPlan) {
+            updatedData.monthlyPayment = calculateMonthlyPaymentWithFactor(total, selectedPlan.payment_factor);
+          } else {
+            updatedData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate);
+          }
+        } else {
+          updatedData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate);
+        }
+        
+        return updatedData;
+      });
+    }
+    
+    // Don't call updateData here - it will be handled by the dedicated effect below
+    hasUpdatedRef.current = false; // Set to false so the dedicated effect will run
+  }, [formData.subtotal, formData.discount, formData.financingPlanId, financingPlans]);
 
   // Fetch financing plans and user permissions from API
   useEffect(() => {
@@ -261,18 +300,13 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   }
 
   // Calculate monthly payment using financing plan's payment factor
-  function calculateMonthlyPaymentWithFactor(total: number, paymentFactor: number): number {
-    return total * (paymentFactor / 100)
+  function calculateMonthlyPaymentWithFactorLocal(total: number, paymentFactor: number): number {
+    return calculateMonthlyPaymentWithFactor(total, paymentFactor);
   }
 
   // Calculate monthly payment using standard amortization formula (fallback)
-  function calculateMonthlyPayment(total: number, term: number, rate: number): number {
-    if (term === 0 || rate === 0) return 0
-    const monthlyRate = rate / 100 / 12
-    if (monthlyRate === 0) return total / term
-    const numerator = total * monthlyRate * Math.pow(1 + monthlyRate, term)
-    const denominator = Math.pow(1 + monthlyRate, term) - 1
-    return denominator === 0 ? 0 : numerator / denominator
+  function calculateMonthlyPaymentLocal(total: number, term: number, rate: number): number {
+    return calculateMonthlyPayment(total, term, rate);
   }
 
   // Handle discount change with approval validation
@@ -325,7 +359,14 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
       // Recalculate total and monthly payment when relevant fields change
       if (field === "subtotal" || field === "discount") {
-        const total = field === "subtotal" ? value - prev.discount : prev.subtotal - value
+        // Use the standardized calculation for total
+        const total = calculateTotalWithAdjustments(
+          field === "subtotal" ? value : prev.subtotal,
+          0, // No additional costs
+          0, // No savings
+          field === "discount" ? value : prev.discount
+        );
+        
         newData.total = total
         
         // Use payment factor if available, otherwise use standard calculation
@@ -337,7 +378,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
             newData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate)
           }
         } else {
-        newData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate)
+          newData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate)
         }
       }
 
@@ -615,7 +656,8 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
           financingTerm: selectedPlan.term_months,
           merchantFee: selectedPlan.merchant_fee,
           monthlyPayment: monthlyPayment,
-          financingNotes: selectedPlan.notes
+          financingNotes: selectedPlan.notes,
+          paymentFactor: selectedPlan.payment_factor // Make sure to store payment factor for later use
         }
       })
       
@@ -787,17 +829,28 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
           projectTotal={formData.total}
           onFinancingChange={(plan, monthlyPayment) => {
             if (plan) {
-              setFormData(prev => ({
-                ...prev,
-                financingPlanId: plan.id,
-                financingPlanName: `${plan.provider} - ${plan.plan_name}`,
-                interestRate: plan.interest_rate,
-                financingTerm: plan.term_months,
-                merchantFee: plan.merchant_fee,
-                monthlyPayment: monthlyPayment,
-                financingNotes: plan.notes
-              }))
-              hasUpdatedRef.current = false
+              // Calculate net amount after merchant fee
+              const merchantFeeAmount = formData.total * (plan.merchant_fee / 100);
+              const netAmount = formData.total - merchantFeeAmount;
+              
+              setFormData(prev => {
+                const updatedData = {
+                  ...prev,
+                  financingPlanId: plan.id,
+                  financingPlanName: `${plan.provider} - ${plan.plan_name}`,
+                  interestRate: plan.interest_rate,
+                  financingTerm: plan.term_months,
+                  merchantFee: plan.merchant_fee,
+                  monthlyPayment: monthlyPayment,
+                  financingNotes: plan.notes,
+                  paymentFactor: plan.payment_factor // Store payment factor for consistent calculations
+                };
+                
+                return updatedData;
+              });
+              
+              // Mark that we need to update the parent
+              hasUpdatedRef.current = false;
             }
           }}
           className="shadow-sm"
@@ -805,8 +858,14 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
         />
         
         {formData.financingPlanId && (
-          <div className="flex justify-center mt-4 text-sm text-gray-500">
-            <p>Selected plan: <span className="font-medium">{formData.financingPlanName}</span></p>
+          <div className="flex flex-col justify-center mt-4 text-sm">
+            <p className="text-center text-gray-500">Selected plan: <span className="font-medium">{formData.financingPlanName}</span></p>
+            {formData.merchantFee && formData.merchantFee > 0 && (
+              <div className="flex justify-between items-center mt-2 bg-gray-50 p-2 rounded">
+                <span className="text-gray-600">Merchant Fee ({formData.merchantFee}%):</span>
+                <span className="text-red-600 font-medium">-${(formData.total * formData.merchantFee / 100).toFixed(2)}</span>
+              </div>
+            )}
           </div>
         )}
       </div>

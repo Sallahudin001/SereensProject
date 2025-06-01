@@ -49,6 +49,7 @@ export default function FinancingSelector({
   const [financingPlans, setFinancingPlans] = useState<FinancingPlan[]>([])
   const [selectedPlan, setSelectedPlan] = useState<FinancingPlan | null>(null)
   const [monthlyPayment, setMonthlyPayment] = useState(0)
+  const [netAmount, setNetAmount] = useState(projectTotal)
   const [loading, setLoading] = useState(true)
 
   // Fetch financing plans
@@ -82,7 +83,7 @@ export default function FinancingSelector({
             (p: FinancingPlan) => p.plan_number === '1519' || p.plan_number === '4158'
           ) || uniquePlans[0]
           setSelectedPlan(defaultPlan)
-          calculatePayment(defaultPlan)
+          calculatePaymentAndFees(defaultPlan, projectTotal)
         }
       } catch (error) {
         console.error('Error fetching financing plans:', error)
@@ -92,19 +93,25 @@ export default function FinancingSelector({
     }
     
     fetchFinancingPlans()
-  }, [])
+  }, [projectTotal]) // Add projectTotal dependency to rerun when it changes
   
   // Recalculate when project total changes
   useEffect(() => {
     if (selectedPlan) {
-      calculatePayment(selectedPlan)
+      calculatePaymentAndFees(selectedPlan, projectTotal)
     }
-  }, [projectTotal])
+  }, [projectTotal, selectedPlan])
   
-  // Calculate monthly payment using plan's payment factor
-  const calculatePayment = (plan: FinancingPlan) => {
-    const payment = projectTotal * (plan.payment_factor / 100)
+  // Calculate monthly payment and net amount after merchant fee
+  const calculatePaymentAndFees = (plan: FinancingPlan, total: number) => {
+    const payment = total * (plan.payment_factor / 100)
+    const merchantFeeAmount = total * (plan.merchant_fee / 100)
+    const net = total - merchantFeeAmount
+    
     setMonthlyPayment(payment)
+    setNetAmount(net)
+    
+    // Pass up to parent component - include payment_factor for consistent calculations
     onFinancingChange(plan, payment)
   }
   
@@ -112,7 +119,7 @@ export default function FinancingSelector({
     const plan = financingPlans.find(p => p.id === Number(planId))
     if (plan) {
       setSelectedPlan(plan)
-      calculatePayment(plan)
+      calculatePaymentAndFees(plan, projectTotal)
     }
   }
 
@@ -121,13 +128,13 @@ export default function FinancingSelector({
       <CardContent className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="financing-plan">Financing Plan</Label>
+            <Label htmlFor={`financing-plan-${uniqueId}`}>Financing Plan</Label>
             <Select 
               value={selectedPlan?.id?.toString() || ""}
               onValueChange={handlePlanChange}
               disabled={loading}
             >
-              <SelectTrigger id="financing-plan">
+              <SelectTrigger id={`financing-plan-${uniqueId}`}>
                 <SelectValue placeholder="Select a financing plan" />
               </SelectTrigger>
               <SelectContent>
@@ -147,11 +154,11 @@ export default function FinancingSelector({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="project-total">Project Total</Label>
+            <Label htmlFor={`project-total-${uniqueId}`}>Project Total</Label>
             <div className="relative">
               <DollarSign className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <Input
-                id="project-total"
+                id={`project-total-${uniqueId}`}
                 type="text"
                 className="pl-8"
                 value={projectTotal.toLocaleString('en-US', {
@@ -208,6 +215,9 @@ export default function FinancingSelector({
                   <div className="text-sm font-medium text-muted-foreground">Merchant Fee Amount</div>
                   <div className="text-xl font-bold text-red-600">
                     -${(projectTotal * selectedPlan.merchant_fee / 100).toFixed(2)}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    Net Amount: <span className="font-semibold">${netAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
