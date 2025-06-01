@@ -3,6 +3,7 @@ import { executeQuery } from '@/lib/db'
 import { NotificationService } from '@/lib/notifications'
 import { auth } from '@clerk/nextjs/server'
 import { logDiscountRequestWithClerkId } from '@/lib/activity-logger'
+import { getUserNamesFromClerk } from '@/lib/user-utils'
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,13 +26,10 @@ export async function GET(request: NextRequest) {
     let query = `
       SELECT 
         ar.*,
-        au_requestor.first_name || ' ' || au_requestor.last_name as requestor_name,
-        au_approver.first_name || ' ' || au_approver.last_name as approver_name,
         p.proposal_number,
+        p.subtotal as proposal_subtotal,
         c.name as customer_name
       FROM approval_requests ar
-      LEFT JOIN admin_users au_requestor ON ar.requestor_id = au_requestor.id
-      LEFT JOIN admin_users au_approver ON ar.approver_id = au_approver.id
       LEFT JOIN proposals p ON ar.proposal_id = p.id
       LEFT JOIN customers c ON p.customer_id = c.id
       WHERE 1=1
@@ -56,10 +54,53 @@ export async function GET(request: NextRequest) {
     
     const requests = await executeQuery(query, params)
     
-    return NextResponse.json(requests)
+    // Extract unique user_ids and get clerk_ids from users table
+    const userIds = new Set<number>()
+    requests.forEach(req => {
+      if (req.requestor_id) userIds.add(req.requestor_id)
+      if (req.approver_id) userIds.add(req.approver_id)
+    })
+    
+    // Get clerk_ids from users table (not admin_users)
+    let userClerkMapping: Record<number, string> = {}
+    if (userIds.size > 0) {
+      const users = await executeQuery(
+        `SELECT id, clerk_id FROM users WHERE id = ANY($1)`,
+        [Array.from(userIds)]
+      )
+      
+      users.forEach(user => {
+        if (user.clerk_id) {
+          userClerkMapping[user.id] = user.clerk_id
+        }
+      })
+    }
+    
+    // Get unique clerk_ids for batch name resolution
+    const clerkIds = Object.values(userClerkMapping).filter(Boolean)
+    
+    // Fetch user names from Clerk in batch
+    const userNames = clerkIds.length > 0 ? await getUserNamesFromClerk(clerkIds) : {}
+    
+    // Add user names to requests
+    const requestsWithNames = requests.map(request => {
+      const requestorClerkId = userClerkMapping[request.requestor_id]
+      const approverClerkId = userClerkMapping[request.approver_id]
+      
+      return {
+        ...request,
+        requestor_name: requestorClerkId ? userNames[requestorClerkId] || 'Unknown User' : 'Unknown User',
+        approver_name: request.approver_id && approverClerkId ? userNames[approverClerkId] || 'Not assigned' : 'Not assigned'
+      }
+    })
+    
+    return NextResponse.json(requestsWithNames)
   } catch (error) {
     console.error('Error fetching approval requests:', error)
-    return NextResponse.json({ error: 'Failed to fetch approval requests' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to fetch approval requests',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 

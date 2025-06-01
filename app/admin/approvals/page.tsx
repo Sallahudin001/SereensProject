@@ -54,6 +54,7 @@ interface ApprovalRequest {
   approver_name: string
   proposal_number: string
   customer_name: string
+  proposal_subtotal?: number
 }
 
 export default function ApprovalsPage() {
@@ -339,10 +340,6 @@ export default function ApprovalsPage() {
     })
   }
 
-  const calculateDiscountPercent = (original: number, requested: number) => {
-    return (((original - requested) / original) * 100).toFixed(1)
-  }
-
   const pendingCount = approvalRequests.filter(req => req.status === 'pending').length
   const approvedCount = approvalRequests.filter(req => req.status === 'approved').length
   const rejectedCount = approvalRequests.filter(req => req.status === 'rejected').length
@@ -390,7 +387,7 @@ export default function ApprovalsPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Discount Approvals</h1>
-          <p className="text-muted-foreground">Review and approve discount requests from sales reps</p>
+          <p className="text-muted-foreground">Review and approve discount requests from team members</p>
         </div>
         
         {/* Quick Stats */}
@@ -498,30 +495,24 @@ export default function ApprovalsPage() {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Customer</p>
                           <p className="font-medium">{request.customer_name || 'N/A'}</p>
                         </div>
                         <div className="space-y-1">
                           <p className="text-sm font-medium text-muted-foreground">Original Value</p>
-                          <p className="text-lg font-semibold">{formatCurrency(request.original_value)}</p>
+                          <p className="text-lg font-semibold">{formatCurrency(request.proposal_subtotal || 0)}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">Requested Value</p>
+                          <p className="text-sm font-medium text-muted-foreground">Requested Discount</p>
                           <p className="text-lg font-bold text-red-600">{formatCurrency(request.requested_value)}</p>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">Discount</p>
-                          <p className="text-lg font-bold text-orange-600">
-                            {calculateDiscountPercent(request.original_value, request.requested_value)}%
-                          </p>
                         </div>
                       </div>
 
                       {request.notes && (
                         <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">Notes from Rep</p>
+                          <p className="text-sm font-medium text-muted-foreground">Request Notes</p>
                           <p className="text-sm bg-gray-50 p-3 rounded-md">{request.notes}</p>
                         </div>
                       )}
@@ -573,15 +564,17 @@ export default function ApprovalsPage() {
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-sm font-medium">Original Value</p>
-                        <p className="text-lg">{formatCurrency(request.original_value)}</p>
+                        <p className="text-lg">{formatCurrency(request.proposal_subtotal || 0)}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Approved Value</p>
+                        <p className="text-sm font-medium">Approved Discount</p>
                         <p className="text-lg font-bold text-green-600">{formatCurrency(request.requested_value)}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Discount</p>
-                        <p className="text-lg">{calculateDiscountPercent(request.original_value, request.requested_value)}%</p>
+                        <p className="text-sm font-medium">Final Value</p>
+                        <p className="text-lg font-bold text-green-600">
+                          {formatCurrency((request.proposal_subtotal || 0) - request.requested_value)}
+                        </p>
                       </div>
                     </div>
                     <div className="flex justify-end mt-4">
@@ -621,15 +614,15 @@ export default function ApprovalsPage() {
                     <div className="grid grid-cols-3 gap-4">
                       <div>
                         <p className="text-sm font-medium">Original Value</p>
-                        <p className="text-lg">{formatCurrency(request.original_value)}</p>
+                        <p className="text-lg">{formatCurrency(request.proposal_subtotal || 0)}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Requested Value</p>
+                        <p className="text-sm font-medium">Requested Discount</p>
                         <p className="text-lg font-bold text-red-600">{formatCurrency(request.requested_value)}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium">Discount</p>
-                        <p className="text-lg">{calculateDiscountPercent(request.original_value, request.requested_value)}%</p>
+                        <p className="text-sm font-medium">Status</p>
+                        <p className="text-lg font-bold text-red-600">Rejected</p>
                       </div>
                     </div>
                     {request.notes && (
@@ -671,8 +664,10 @@ export default function ApprovalsPage() {
               {selectedRequest && (
                 <>
                   Proposal #{selectedRequest.proposal_number} - 
-                  {formatCurrency(selectedRequest.requested_value)} 
-                  ({calculateDiscountPercent(selectedRequest.original_value, selectedRequest.requested_value)}% discount)
+                  Requested discount: {formatCurrency(selectedRequest.requested_value)}
+                  {selectedRequest.proposal_subtotal && (
+                    <> from original value of {formatCurrency(selectedRequest.proposal_subtotal)}</>
+                  )}
                 </>
               )}
             </DialogDescription>

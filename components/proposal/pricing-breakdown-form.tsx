@@ -378,7 +378,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
             newData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate)
           }
         } else {
-          newData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate)
+        newData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate)
         }
       }
 
@@ -835,13 +835,13 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
               
               setFormData(prev => {
                 const updatedData = {
-                  ...prev,
-                  financingPlanId: plan.id,
-                  financingPlanName: `${plan.provider} - ${plan.plan_name}`,
-                  interestRate: plan.interest_rate,
-                  financingTerm: plan.term_months,
-                  merchantFee: plan.merchant_fee,
-                  monthlyPayment: monthlyPayment,
+                ...prev,
+                financingPlanId: plan.id,
+                financingPlanName: `${plan.provider} - ${plan.plan_name}`,
+                interestRate: plan.interest_rate,
+                financingTerm: plan.term_months,
+                merchantFee: plan.merchant_fee,
+                monthlyPayment: monthlyPayment,
                   financingNotes: plan.notes,
                   paymentFactor: plan.payment_factor // Store payment factor for consistent calculations
                 };

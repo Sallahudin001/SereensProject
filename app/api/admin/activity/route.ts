@@ -2,6 +2,7 @@ import { executeQuery } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { formatDistanceToNow } from "date-fns";
 import { auth } from "@clerk/nextjs/server";
+import { getUserNamesFromClerk } from '@/lib/user-utils';
 
 /**
  * GET /api/admin/activity
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
     // Add limit parameter
     queryParams.push(limit);
     
-    // Query recent activities with user information and related data
+    // Query recent activities with basic data first
     const activities = await executeQuery(`
       SELECT 
         al.id,
@@ -73,22 +74,11 @@ export async function GET(request: NextRequest) {
         al.after_state,
         al.status,
         al.created_at,
-        COALESCE(
-          CASE 
-            WHEN al.actor_id = 'system' THEN 'System' 
-            WHEN al.actor_id IS NULL THEN 'System'
-            ELSE au.first_name || ' ' || au.last_name
-          END,
-          al.actor_name,
-          'Unknown User'
-        ) as user_name,
         p.proposal_number,
         p.customer_id,
         c.name as customer_name
       FROM 
         activity_log al
-      LEFT JOIN 
-        admin_users au ON al.actor_id = au.clerk_id
       LEFT JOIN 
         proposals p ON al.proposal_id = p.id
       LEFT JOIN
@@ -98,6 +88,48 @@ export async function GET(request: NextRequest) {
         al.created_at DESC
       LIMIT $${paramIndex}
     `, queryParams);
+    
+    // Extract unique actor_ids that are numeric (database IDs) and need resolution
+    const databaseIds = new Set<number>()
+    const directClerkIds = new Set<string>()
+    
+    activities.forEach(activity => {
+      if (activity.actor_id && activity.actor_id !== 'system' && activity.actor_id !== 'null') {
+        // Check if actor_id looks like a number (database ID) or a Clerk ID
+        if (/^\d+$/.test(activity.actor_id)) {
+          // Numeric ID - likely a database ID that needs resolution
+          databaseIds.add(parseInt(activity.actor_id))
+        } else {
+          // Non-numeric ID - likely already a Clerk ID
+          directClerkIds.add(activity.actor_id)
+        }
+      }
+    })
+    
+    // Resolve database IDs to clerk_ids through users table (not admin_users)
+    let userIdToClerkId: Record<number, string> = {}
+    if (databaseIds.size > 0) {
+      const userMappings = await executeQuery(
+        `SELECT id, clerk_id FROM users WHERE id = ANY($1) AND clerk_id IS NOT NULL`,
+        [Array.from(databaseIds)]
+      )
+      
+      userMappings.forEach(mapping => {
+        if (mapping.clerk_id) {
+          // Filter out fake/test clerk_ids - only process real Clerk IDs
+          if (!isTestClerkId(mapping.clerk_id)) {
+            userIdToClerkId[mapping.id] = mapping.clerk_id
+            directClerkIds.add(mapping.clerk_id)
+          }
+        }
+      })
+    }
+    
+    // Also filter direct clerk_ids to remove any test IDs
+    const filteredDirectClerkIds = Array.from(directClerkIds).filter(id => !isTestClerkId(id))
+    
+    // Fetch user names from Clerk in batch for all real clerk_ids only
+    const userNames = filteredDirectClerkIds.length > 0 ? await getUserNamesFromClerk(filteredDirectClerkIds) : {}
     
     // Transform the data for the frontend
     const formattedActivities = activities.map(activity => {
@@ -109,6 +141,38 @@ export async function GET(request: NextRequest) {
       // Format the timestamp as a relative time (e.g., "2 hours ago")
       const timestamp = formatDistanceToNow(new Date(activity.created_at), { addSuffix: true });
       
+      // Determine user name with proper fallbacks
+      let userName = 'Unknown User';
+      if (activity.actor_id === 'system' || activity.actor_id === null) {
+        userName = 'System';
+      } else if (activity.actor_id) {
+        // Check if actor_id is a numeric database ID that needs resolution
+        if (/^\d+$/.test(activity.actor_id)) {
+          const databaseId = parseInt(activity.actor_id)
+          const clerkId = userIdToClerkId[databaseId]
+          if (clerkId && userNames[clerkId]) {
+            userName = userNames[clerkId]
+          } else if (activity.actor_name) {
+            userName = activity.actor_name
+          } else {
+            // Fallback for database IDs without resolved names
+            userName = `User #${databaseId}`
+          }
+        } else {
+          // Direct Clerk ID - check if it's not a test ID
+          if (!isTestClerkId(activity.actor_id) && userNames[activity.actor_id]) {
+            userName = userNames[activity.actor_id]
+          } else if (activity.actor_name) {
+            userName = activity.actor_name
+          } else if (isTestClerkId(activity.actor_id)) {
+            // Provide a better name for test users
+            userName = formatTestUserName(activity.actor_id)
+          }
+        }
+      } else if (activity.actor_name) {
+        userName = activity.actor_name;
+      }
+      
       // Map action to a type for the frontend
       let type = determineActivityType(activity.action, activity.target_type);
       let formattedDetails = activity.description || formatActivityDetails(activity, metadata);
@@ -116,7 +180,7 @@ export async function GET(request: NextRequest) {
       return {
         id: activity.id,
         type,
-        user: activity.user_name,
+        user: userName,
         timestamp,
         details: formattedDetails,
         proposalId: activity.proposal_id,
@@ -362,4 +426,48 @@ function determineActionCategory(action: string): string {
 function capitalize(str: string): string {
   if (!str) return '';
   return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Helper function to check if a clerk_id is a test ID
+ */
+function isTestClerkId(clerk_id: string): boolean {
+  if (!clerk_id) return true;
+  
+  // Common patterns for fake/test clerk IDs
+  const testPatterns = [
+    /^test_/i,              // Starts with "test_"
+    /^demo_/i,              // Starts with "demo_"
+    /^fake_/i,              // Starts with "fake_"
+    /^admin-default$/i,     // Exact match "admin-default"
+    /^user_\d+_\d+$/,      // Pattern like "user_38_774589"
+    /test.*user/i,          // Contains "test" and "user"
+    /demo.*user/i,          // Contains "demo" and "user"
+    /^\d+$/,                // Just numeric (database ID)
+  ];
+  
+  // Check if clerk_id matches any test pattern
+  return testPatterns.some(pattern => pattern.test(clerk_id));
+}
+
+/**
+ * Helper function to format test user name
+ */
+function formatTestUserName(clerk_id: string): string {
+  if (!clerk_id) return 'Test User';
+  
+  // Extract meaningful parts from test clerk_ids
+  if (clerk_id.startsWith('demo_manager')) return 'Demo Manager';
+  if (clerk_id.startsWith('demo_rep')) return 'Demo Sales Rep';
+  if (clerk_id.startsWith('demo_')) return 'Demo User';
+  if (clerk_id.startsWith('test_')) return 'Test User';
+  if (clerk_id === 'admin-default') return 'Default Admin';
+  if (/^user_\d+_\d+$/.test(clerk_id)) {
+    // Extract the first number from patterns like "test_user_38_774589"
+    const match = clerk_id.match(/user_(\d+)_/);
+    return match ? `Test User #${match[1]}` : 'Test User';
+  }
+  
+  // Generic fallback
+  return 'Test User';
 } 

@@ -3,6 +3,7 @@ import { executeQuery } from '@/lib/db'
 import { NotificationService } from '@/lib/notifications'
 import { auth } from '@clerk/nextjs/server'
 import { logDiscountDecision, logDiscountDecisionWithClerkId } from "@/lib/activity-logger";
+import { getUserNamesFromClerk, getUserDetailsFromClerk } from '@/lib/user-utils'
 
 export async function GET(
   request: NextRequest,
@@ -28,15 +29,9 @@ export async function GET(
       SELECT 
         ar.*,
         p.proposal_number,
-        req.first_name || ' ' || req.last_name as requestor_name,
-        CASE WHEN app.id IS NOT NULL 
-          THEN app.first_name || ' ' || app.last_name 
-          ELSE 'Not assigned' 
-        END as approver_name
+        p.subtotal as proposal_subtotal
       FROM approval_requests ar
       LEFT JOIN proposals p ON ar.proposal_id = p.id
-      LEFT JOIN admin_users req ON ar.requestor_id = req.id
-      LEFT JOIN admin_users app ON ar.approver_id = app.id
       WHERE ar.id = $1
     `, [requestId])
     
@@ -44,7 +39,42 @@ export async function GET(
       return NextResponse.json({ error: 'Approval request not found' }, { status: 404 })
     }
     
-    return NextResponse.json(requestDetails[0])
+    const request = requestDetails[0]
+    
+    // Get clerk_ids from users table for this request (not admin_users)
+    const userIds = []
+    if (request.requestor_id) userIds.push(request.requestor_id)
+    if (request.approver_id) userIds.push(request.approver_id)
+    
+    let userClerkMapping: Record<number, string> = {}
+    if (userIds.length > 0) {
+      const users = await executeQuery(
+        `SELECT id, clerk_id FROM users WHERE id = ANY($1)`,
+        [userIds]
+      )
+      
+      users.forEach(user => {
+        if (user.clerk_id) {
+          userClerkMapping[user.id] = user.clerk_id
+        }
+      })
+    }
+    
+    // Get unique clerk_ids for name resolution
+    const clerkIds = Object.values(userClerkMapping).filter(Boolean)
+    const userNames = clerkIds.length > 0 ? await getUserNamesFromClerk(clerkIds) : {}
+    
+    // Add user names to the request
+    const requestorClerkId = userClerkMapping[request.requestor_id]
+    const approverClerkId = userClerkMapping[request.approver_id]
+    
+    const requestWithNames = {
+      ...request,
+      requestor_name: requestorClerkId ? userNames[requestorClerkId] || 'Unknown User' : 'Unknown User',
+      approver_name: request.approver_id && approverClerkId ? userNames[approverClerkId] || 'Not assigned' : 'Not assigned'
+    }
+    
+    return NextResponse.json(requestWithNames)
     
   } catch (error) {
     console.error('Error fetching approval request:', error)
@@ -142,19 +172,25 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update approval request' }, { status: 500 })
     }
     
-    // Get requestor and approver details for notification
-    const userDetails = await executeQuery(
-      `SELECT 
-        req.first_name as requestor_first_name, 
-        req.last_name as requestor_last_name, 
-        req.email as requestor_email,
-        app.first_name as approver_first_name, 
-        app.last_name as approver_last_name
-       FROM admin_users req
-       JOIN admin_users app ON app.id = $1
-       WHERE req.id = $2`,
-      [validApproverId, request_data.requestor_id]
+    // Get user details from Clerk for notification
+    const userIds = [request_data.requestor_id, validApproverId]
+    
+    // Get clerk_ids from users table (not admin_users)
+    let userClerkMapping: Record<number, string> = {}
+    const users = await executeQuery(
+      `SELECT id, clerk_id FROM users WHERE id = ANY($1)`,
+      [userIds]
     )
+    
+    users.forEach(user => {
+      if (user.clerk_id) {
+        userClerkMapping[user.id] = user.clerk_id
+      }
+    })
+    
+    // Get unique clerk_ids for detail resolution
+    const clerkIds = Object.values(userClerkMapping).filter(Boolean)
+    const userDetails = clerkIds.length > 0 ? await getUserDetailsFromClerk(clerkIds) : {}
     
     // Get proposal details
     const proposalDetails = await executeQuery(
@@ -162,28 +198,32 @@ export async function PATCH(
       [request_data.proposal_id]
     )
     
-    // Notify the requestor about the decision
-    if (userDetails && userDetails.length > 0) {
-      const notificationData = {
-        requestId,
-        proposalId: request_data.proposal_id,
-        proposalNumber: proposalDetails[0]?.proposal_number,
-        requestType: request_data.request_type,
-        originalValue: request_data.original_value,
-        requestedValue: request_data.requested_value,
-        status,
-        approverName: `${userDetails[0].approver_first_name} ${userDetails[0].approver_last_name}`,
-        requestorEmail: userDetails[0].requestor_email,
-        requestorName: `${userDetails[0].requestor_first_name} ${userDetails[0].requestor_last_name}`,
-        notes
-      }
-      
-      try {
-        await NotificationService.notifyRequestorOfDecision(notificationData)
-      } catch (notificationError) {
-        console.error('Error sending notification:', notificationError)
-        // Continue even if notification fails
-      }
+    // Prepare notification data with Clerk user details
+    const requestorClerkId = userClerkMapping[request_data.requestor_id]
+    const approverClerkId = userClerkMapping[validApproverId]
+    
+    const requestorDetails = requestorClerkId ? userDetails[requestorClerkId] || { name: 'Unknown User', email: 'no-email@example.com' } : { name: 'Unknown User', email: 'no-email@example.com' }
+    const approverDetails = approverClerkId ? userDetails[approverClerkId] || { name: 'Unknown Approver', email: 'no-email@example.com' } : { name: 'Unknown Approver', email: 'no-email@example.com' }
+    
+    const notificationData = {
+      requestId,
+      proposalId: request_data.proposal_id,
+      proposalNumber: proposalDetails[0]?.proposal_number,
+      requestType: request_data.request_type,
+      originalValue: request_data.original_value,
+      requestedValue: request_data.requested_value,
+      status,
+      approverName: approverDetails.name,
+      requestorName: requestorDetails.name,
+      requestorEmail: requestorDetails.email,
+      notes
+    }
+    
+    try {
+      await NotificationService.notifyRequestorOfDecision(notificationData)
+    } catch (notificationError) {
+      console.error('Error sending notification:', notificationError)
+      // Continue even if notification fails
     }
     
     // Log the activity using the specialized function

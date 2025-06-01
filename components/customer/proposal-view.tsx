@@ -335,7 +335,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
       );
     } else {
       // Fallback to simple addition of the monthly impact
-      newMonthlyPayment = initialProposal.pricing.monthlyPayment + addonsMonthlyImpactTotal;
+    newMonthlyPayment = initialProposal.pricing.monthlyPayment + addonsMonthlyImpactTotal;
     }
     
     // Update UI state values immediately for real-time display
@@ -375,9 +375,9 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
         }
 
         return {
-          ...addon,
+        ...addon,
           monthly_impact: monthlyImpact,
-          selected: proposalAddonIds.has(addon.id)
+        selected: proposalAddonIds.has(addon.id)
         };
       });
     });
@@ -713,7 +713,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
         }
       }
     });
-
+    
     // Calculate the new total based on adjustments
     const newTotal = calculateTotalWithAdjustments(
       proposal?.pricing?.total || 0,
@@ -766,7 +766,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
       newMonthlyPayment
     };
   };
-
+  
   // Use useEffect to update state based on calculation results
   useEffect(() => {
     const calculationResults = calculateTotalWithOffers();

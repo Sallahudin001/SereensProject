@@ -214,20 +214,6 @@ export default function DashboardPage() {
                 </Button>
               </Link>
             </motion.div>
-            <div className="flex gap-2">
-              <Link href="/test-discount">
-                <Button variant="outline" className="hidden sm:flex">
-                  <AlertCircle className="mr-2 h-4 w-4 text-orange-600" />
-                  Test Discount
-                </Button>
-              </Link>
-              <Link href="/admin/approvals">
-                <Button variant="outline" className="hidden sm:flex">
-                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                  Approvals
-                </Button>
-              </Link>
-            </div>
           </div>
         </motion.div>
 

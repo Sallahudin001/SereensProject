@@ -506,40 +506,10 @@ export default function FinancingPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/admin/financing/import">
-            <Button variant="outline" className="flex items-center gap-2">
-              <FileUp className="h-4 w-4" />
-              <span>Import from Excel</span>
-            </Button>
-          </Link>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={handleExportToExcel}
-          >
-            <Download className="h-4 w-4" />
-            <span>Export to Excel</span>
-              </Button>
-          <Button 
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={cleanupDuplicatePlans}
-          >
-            <Trash2 className="h-4 w-4" />
-            <span>Remove Duplicates</span>
-          </Button>
-          <Button 
-            variant="outline"
-            className="flex items-center gap-2"
-            onClick={addHomerunPacePlans}
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add Homerun PACE</span>
-          </Button>
           <Button className="flex items-center gap-2" onClick={handleAddPlan}>
             <Plus className="h-4 w-4" />
             <span>Add Plan</span>
-                </Button>
+          </Button>
         </div>
       </div>
 
