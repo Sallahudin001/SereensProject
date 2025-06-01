@@ -1,6 +1,7 @@
 "use server"
 
 import { executeQuery } from "@/lib/db"
+import { logProposalSentWithClerkId } from '@/lib/activity-logger';
 
 interface EmailData {
   to: string
@@ -26,9 +27,9 @@ export async function sendEmail(data: EmailData) {
     }
 
     throw new Error("No email service configuration found")
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error sending email:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
   }
 }
 
@@ -36,9 +37,12 @@ async function sendWithResend(data: EmailData) {
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
+    
+    // EMAIL_FROM is checked in the parent function
+    const emailFrom = process.env.EMAIL_FROM as string;
 
     const result = await resend.emails.send({
-      from: process.env.EMAIL_FROM,
+      from: emailFrom,
       to: data.to,
       subject: data.subject,
       html: data.html,
@@ -80,7 +84,7 @@ async function sendWithSMTP(data: EmailData) {
 }
 
 // Function to format a date
-export async function formatDate(date: Date | string): string {
+export async function formatDate(date: Date | string): Promise<string> {
   if (!date) return ""
   const d = typeof date === "string" ? new Date(date) : date
   return d.toLocaleDateString("en-US", {
@@ -91,7 +95,7 @@ export async function formatDate(date: Date | string): string {
 }
 
 // Function to format currency
-export async function formatCurrency(amount: number): string {
+export async function formatCurrency(amount: number): Promise<string> {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
@@ -322,7 +326,7 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
                     <div class="service-content">
                       ${productData.scopeNotes
                         .split("\n")
-                        .map((line) => `<p>${line}</p>`)
+                        .map((line: string) => `<p>${line}</p>`)
                         .join("")}
                     </div>
                   </div>
@@ -439,19 +443,45 @@ export async function sendProposalEmail(proposalId: string, baseUrl: string) {
         [proposalId],
       )
 
-      // Log the activity
+      // Log the activity - this correctly uses actor_id column in the activity_log table
       await executeQuery(
         `
-        INSERT INTO activity_log (proposal_id, user_id, action, details)
-        VALUES ($1, $2, $3, $4)
+        INSERT INTO activity_log (
+          action, action_category, actor_id, 
+          proposal_id, metadata
+        )
+        VALUES ($1, $2, $3, $4, $5)
         `,
-        [proposalId, "system", "send_proposal_email", JSON.stringify({ to: proposal.customer_email })],
-      )
+        [
+          "send_proposal_email", 
+          "proposal", 
+          "system", 
+          proposalId, 
+          JSON.stringify({ to: proposal.customer_email })
+        ]
+      );
+
+      // Get the user who sent the proposal from the proposals table
+      const proposalUser = await executeQuery(
+        `SELECT user_id FROM proposals WHERE id = $1`, 
+        [proposalId]
+      );
+
+      const userId = proposalUser[0]?.user_id || 'system';
+
+      // Log the proposal sent activity with clerk_id
+      await logProposalSentWithClerkId(
+        userId, // Sender's clerk_id
+        parseInt(proposalId),
+        proposal.proposal_number,
+        proposal.customer_email,
+        proposal.customer_name
+      );
     }
 
     return result
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error sending proposal email:", error)
-    return { success: false, error: error.message }
+    return { success: false, error: error instanceof Error ? error.message : String(error) }
   }
 }

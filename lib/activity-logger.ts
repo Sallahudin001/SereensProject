@@ -47,21 +47,26 @@ export async function logActivity({
       return false;
     }
 
+    // Map entityType to action_category
+    const actionCategory = entityType;
+    
     // Build the query
     const result = await executeQuery(
       `INSERT INTO activity_log (
-        action, user_id, details, entity_type, entity_id, 
-        user_reference_id, proposal_id, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        action, action_category, actor_id, 
+        target_type, target_id, target_identifier,
+        proposal_id, metadata, status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING id`,
       [
         action,
+        actionCategory,
         userId.toString(),
-        JSON.stringify(details),
         entityType,
         entityId || null,
         userReferenceId || null,
         proposalId || null,
+        JSON.stringify(details),
         status
       ]
     );
@@ -115,12 +120,13 @@ export async function logActivityViaApi({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         action,
-        user_id: userId,
-        details,
-        entity_type: entityType,
-        entity_id: entityId,
-        user_reference_id: userReferenceId,
+        action_category: entityType,
+        actor_id: userId,
+        target_type: entityType,
+        target_id: entityId,
+        target_identifier: userReferenceId,
         proposal_id: proposalId,
+        metadata: details,
         status
       })
     });
@@ -132,6 +138,79 @@ export async function logActivityViaApi({
     return true;
   } catch (error) {
     console.error("Error logging activity via API:", error);
+    return false;
+  }
+}
+
+/**
+ * Log an activity using clerk_id for tracking
+ * This updated version ensures all activity is tracked with clerk_id
+ */
+export async function logActivityWithClerkId({
+  action,
+  actionCategory,
+  clerkId,
+  description,
+  targetType,
+  targetId,
+  targetIdentifier,
+  proposalId,
+  approvalRequestId,
+  metadata = {},
+  beforeState = null,
+  afterState = null,
+  status = 'success',
+  errorMessage = null
+}: {
+  action: string;
+  actionCategory: string;
+  clerkId: string;
+  description?: string;
+  targetType?: string;
+  targetId?: number;
+  targetIdentifier?: string;
+  proposalId?: number;
+  approvalRequestId?: number;
+  metadata?: any;
+  beforeState?: any;
+  afterState?: any;
+  status?: string;
+  errorMessage?: string | null;
+}): Promise<boolean> {
+  try {
+    // Insert the activity log entry
+    await executeQuery(
+      `INSERT INTO activity_log (
+        action, action_category, actor_id, description,
+        target_type, target_id, target_identifier,
+        proposal_id, approval_request_id,
+        metadata, before_state, after_state,
+        status, error_message
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+      )`,
+      [
+        action,
+        actionCategory,
+        clerkId,
+        description || '',
+        targetType || null,
+        targetId || null,
+        targetIdentifier || null,
+        proposalId || null,
+        approvalRequestId || null,
+        JSON.stringify(metadata || {}),
+        beforeState ? JSON.stringify(beforeState) : null,
+        afterState ? JSON.stringify(afterState) : null,
+        status,
+        errorMessage
+      ]
+    );
+    
+    console.log(`Activity logged: ${action} by ${clerkId}`);
+    return true;
+  } catch (error) {
+    console.error("Error logging activity:", error);
     return false;
   }
 }
@@ -171,17 +250,20 @@ export async function logProposalCreation(
   customerName: string,
   services?: string[]
 ): Promise<boolean> {
-  return logActivity({
+  return logActivityWithClerkId({
     action: 'create_proposal',
-    userId,
-    details: {
+    actionCategory: 'proposal',
+    clerkId: userId,
+    description: `Created proposal #${proposalNumber} for ${customerName}`,
+    targetType: 'proposal',
+    targetId: proposalId,
+    targetIdentifier: proposalNumber,
+    proposalId,
+    metadata: {
       proposalNumber,
       customerName,
       services
-    },
-    entityType: 'proposal',
-    entityId: proposalId,
-    proposalId
+    }
   });
 }
 
@@ -196,16 +278,20 @@ export async function logProposalStatusUpdate(
   status: string,
   additionalDetails: Record<string, any> = {}
 ): Promise<boolean> {
-  return logActivity({
+  return logActivityWithClerkId({
     action: `update_status_${status}`,
-    userId,
-    details: {
+    actionCategory: 'proposal',
+    clerkId: userId,
+    description: `Proposal #${proposalNumber} status changed to ${status}`,
+    targetType: 'proposal',
+    targetId: proposalId,
+    targetIdentifier: proposalNumber,
+    proposalId,
+    metadata: {
       proposalNumber,
+      status,
       ...additionalDetails
-    },
-    entityType: 'proposal',
-    entityId: proposalId,
-    proposalId
+    }
   });
 }
 
@@ -397,5 +483,138 @@ export async function logFinancingUpdateViaApi(
     },
     entityType: 'financing',
     entityId: planId ? Number(planId) : undefined
+  });
+}
+
+// SPECIALIZED LOGGING FUNCTIONS USING CLERK_ID
+// These replace the old implementations
+
+/**
+ * Log permission change with clerk_id
+ */
+export async function logPermissionChangeWithClerkId(
+  adminClerkId: string,
+  targetClerkId: string,
+  targetUserName: string,
+  previousRole: string,
+  newRole: string
+): Promise<boolean> {
+  return logActivityWithClerkId({
+    action: 'update_permissions',
+    actionCategory: 'user',
+    clerkId: adminClerkId,
+    description: `Changed role for ${targetUserName} from ${previousRole} to ${newRole}`,
+    targetType: 'user',
+    targetIdentifier: targetClerkId,
+    metadata: {
+      targetClerkId,
+      targetUserName,
+      previousRole,
+      newRole
+    },
+    beforeState: {
+      role: previousRole
+    },
+    afterState: {
+      role: newRole
+    }
+  });
+}
+
+/**
+ * Log proposal sent with clerk_id
+ */
+export async function logProposalSentWithClerkId(
+  clerkId: string,
+  proposalId: number,
+  proposalNumber: string,
+  customerEmail: string,
+  customerName: string
+): Promise<boolean> {
+  return logActivityWithClerkId({
+    action: 'send_proposal',
+    actionCategory: 'proposal',
+    clerkId,
+    description: `Proposal #${proposalNumber} sent to ${customerName}`,
+    targetType: 'proposal',
+    targetId: proposalId,
+    targetIdentifier: proposalNumber,
+    proposalId,
+    metadata: {
+      customerEmail,
+      customerName
+    }
+  });
+}
+
+/**
+ * Log discount request with clerk_id
+ */
+export async function logDiscountRequestWithClerkId(
+  clerkId: string,
+  proposalId: number,
+  proposalNumber: string,
+  originalValue: number,
+  requestedValue: number,
+  discountPercent: number,
+  approvalRequestId: number,
+  notes?: string
+): Promise<boolean> {
+  return logActivityWithClerkId({
+    action: 'request_discount',
+    actionCategory: 'approval',
+    clerkId,
+    description: `Discount of ${discountPercent}% requested for proposal #${proposalNumber}`,
+    targetType: 'approval_request',
+    targetId: approvalRequestId,
+    targetIdentifier: `Request for Proposal #${proposalNumber}`,
+    proposalId,
+    approvalRequestId,
+    metadata: {
+      originalValue,
+      requestedValue,
+      discountPercent,
+      notes
+    }
+  });
+}
+
+/**
+ * Log discount decision with clerk_id
+ */
+export async function logDiscountDecisionWithClerkId(
+  clerkId: string,
+  proposalId: number,
+  proposalNumber: string,
+  originalValue: number,
+  requestedValue: number,
+  approvalRequestId: number,
+  approved: boolean,
+  notes?: string
+): Promise<boolean> {
+  const action = approved ? 'approve_discount' : 'reject_discount';
+  const status = approved ? 'approved' : 'rejected';
+  
+  return logActivityWithClerkId({
+    action,
+    actionCategory: 'approval',
+    clerkId,
+    description: `Discount ${status} for proposal #${proposalNumber}`,
+    targetType: 'approval_request',
+    targetId: approvalRequestId,
+    targetIdentifier: `Request for Proposal #${proposalNumber}`,
+    proposalId,
+    approvalRequestId,
+    metadata: {
+      originalValue,
+      requestedValue,
+      notes
+    },
+    beforeState: {
+      status: 'pending'
+    },
+    afterState: {
+      status
+    }
   });
 } 

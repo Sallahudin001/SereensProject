@@ -49,8 +49,9 @@ async function seedActivityLog() {
       // User permission changes
       {
         proposal_id: null,
-        user_id: userId,
+        actor_id: userId,
         action: 'update_permissions',
+        action_category: 'user',
         details: JSON.stringify({
           targetUserId: 'user123',
           targetUserName: 'Jane Smith',
@@ -61,8 +62,9 @@ async function seedActivityLog() {
       // Proposal creation
       {
         proposal_id: proposalId,
-        user_id: userId,
+        actor_id: userId,
         action: 'create_proposal',
+        action_category: 'proposal',
         details: JSON.stringify({
           proposalNumber,
           customerName: 'John Doe',
@@ -72,8 +74,9 @@ async function seedActivityLog() {
       // Discount request
       {
         proposal_id: proposalId,
-        user_id: userId,
+        actor_id: userId,
         action: 'request_discount',
+        action_category: 'approval',
         details: JSON.stringify({
           proposalNumber,
           originalValue: 5000,
@@ -85,8 +88,9 @@ async function seedActivityLog() {
       // Discount approval
       {
         proposal_id: proposalId,
-        user_id: userId,
+        actor_id: userId,
         action: 'approved_discount',
+        action_category: 'approval',
         details: JSON.stringify({
           proposalNumber,
           originalValue: 5000,
@@ -97,8 +101,9 @@ async function seedActivityLog() {
       // Pricing table update
       {
         proposal_id: null,
-        user_id: userId,
+        actor_id: userId,
         action: 'update_pricing_table',
+        action_category: 'pricing',
         details: JSON.stringify({
           category: 'Roofing',
           action: 'update',
@@ -109,8 +114,9 @@ async function seedActivityLog() {
       // Financing table update
       {
         proposal_id: null,
-        user_id: userId,
+        actor_id: userId,
         action: 'update_financing_table',
+        action_category: 'financing',
         details: JSON.stringify({
           planId: 123,
           planNumber: 'FIN-001',
@@ -122,8 +128,9 @@ async function seedActivityLog() {
       // Proposal sent
       {
         proposal_id: proposalId,
-        user_id: userId,
+        actor_id: userId,
         action: 'update_status_sent',
+        action_category: 'proposal',
         details: JSON.stringify({
           proposalNumber,
           sentTo: 'customer@example.com'
@@ -132,8 +139,9 @@ async function seedActivityLog() {
       // Proposal viewed
       {
         proposal_id: proposalId,
-        user_id: 'system',
+        actor_id: 'system',
         action: 'update_status_viewed',
+        action_category: 'proposal',
         details: JSON.stringify({
           proposalNumber,
           viewedAt: new Date().toISOString()
@@ -142,8 +150,9 @@ async function seedActivityLog() {
       // Proposal signed
       {
         proposal_id: proposalId,
-        user_id: 'system',
+        actor_id: 'system',
         action: 'update_status_signed',
+        action_category: 'proposal',
         details: JSON.stringify({
           proposalNumber,
           signedAt: new Date().toISOString(),
@@ -158,9 +167,9 @@ async function seedActivityLog() {
       const hoursAgo = i * 2; // Each log is 2 hours apart
       
       await executeQuery(`
-        INSERT INTO activity_log (proposal_id, user_id, action, details, created_at)
-        VALUES ($1, $2, $3, $4, NOW() - INTERVAL '${hoursAgo} hours')
-      `, [log.proposal_id, log.user_id, log.action, log.details]);
+        INSERT INTO activity_log (proposal_id, actor_id, action, action_category, metadata, created_at)
+        VALUES ($1, $2, $3, $4, $5, NOW() - INTERVAL '${hoursAgo} hours')
+      `, [log.proposal_id, log.actor_id, log.action, log.action_category, log.details]);
       
       console.log(`  ✅ Added: ${log.action}`);
     }

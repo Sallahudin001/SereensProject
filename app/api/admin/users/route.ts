@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient } from '@clerk/nextjs/server'
+import { logPermissionChangeWithClerkId } from '@/lib/activity-logger'
 
 interface ClerkUser {
   id: string
@@ -160,6 +161,15 @@ export async function PUT(request: NextRequest) {
         lastName: last_name
       })
     }
+
+    // Log the permission change with clerk_id tracking
+    await logPermissionChangeWithClerkId(
+      userId, // Admin clerk_id
+      clerk_id, // Target user's clerk_id
+      `${first_name || targetUser.firstName || ''} ${last_name || targetUser.lastName || ''}`.trim(),
+      targetUser.publicMetadata?.role?.toString() || 'user',
+      role
+    );
 
     return NextResponse.json({
       success: true,

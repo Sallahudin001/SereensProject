@@ -30,10 +30,19 @@ export async function POST(
     // Log the activity
     await executeQuery(
       `
-      INSERT INTO activity_log (proposal_id, user_id, action, details)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO activity_log (
+        action, action_category, actor_id, 
+        proposal_id, metadata
+      )
+      VALUES ($1, $2, $3, $4, $5)
       `,
-      [id, "customer", "view_proposal", JSON.stringify({ method: "api" })]
+      [
+        "view_proposal", 
+        "proposal", 
+        "customer", 
+        id, 
+        JSON.stringify({ method: "api" })
+      ]
     )
 
     return NextResponse.json({ success: true })

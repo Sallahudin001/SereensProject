@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeQuery } from '@/lib/db'
 import { NotificationService } from '@/lib/notifications'
 import { auth } from '@clerk/nextjs/server'
+import { logDiscountRequestWithClerkId } from '@/lib/activity-logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -203,6 +204,18 @@ export async function POST(request: NextRequest) {
       
       // Send notification using the notification service
       await NotificationService.notifyManagerOfApprovalRequest(notificationData)
+      
+      // Log the discount request activity
+      await logDiscountRequestWithClerkId(
+        requestorId.toString(), // Use requestorId as the clerk_id
+        proposalId,
+        await executeQuery(`SELECT proposal_number FROM proposals WHERE id = $1`, [proposalId]).then(result => result[0]?.proposal_number || ''),
+        parseFloat(originalValue),
+        parseFloat(requestedValue),
+        parseFloat(discountPercent),
+        result[0].id, // The new approval request ID
+        notes
+      );
       
       return NextResponse.json({ 
         success: true, 

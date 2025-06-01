@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeQuery } from '@/lib/db'
 import { NotificationService } from '@/lib/notifications'
 import { auth } from '@clerk/nextjs/server'
-import { logDiscountDecision } from "@/lib/activity-logger";
+import { logDiscountDecision, logDiscountDecisionWithClerkId } from "@/lib/activity-logger";
 
 export async function GET(
   request: NextRequest,
@@ -187,14 +187,15 @@ export async function PATCH(
     }
     
     // Log the activity using the specialized function
-    await logDiscountDecision(
-      validApproverId,
+    await logDiscountDecisionWithClerkId(
+      validApproverId.toString(),
       request_data.proposal_id,
-      request_data.proposal_number || '',
+      proposalDetails[0]?.proposal_number || '',
       parseFloat(request_data.original_value) || 0,
       parseFloat(request_data.requested_value) || 0,
+      requestId,
       status === 'approved',
-      notes
+      notes || ''
     );
     
     // Update the proposal based on approval status

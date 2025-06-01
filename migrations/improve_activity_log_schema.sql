@@ -134,4 +134,30 @@ BEGIN
     
     RAISE NOTICE 'Updated existing activity log records with entity types and references';
   END IF;
-END $$; 
+END $$;
+
+SELECT
+  "id",
+  "action",
+  "action_category",
+  "description",
+  "actor_type",
+  "clerk_id",
+  "actor_name",
+  "target_type",
+  "target_id",
+  "target_identifier",
+  "proposal_id",
+  "approval_request_id",
+  "admin_user_id",
+  "metadata",
+  "before_state",
+  "after_state",
+  "status",
+  "created_at"
+FROM
+  "activity_log"
+ORDER BY
+  "activity_log"."id"
+LIMIT
+  50 

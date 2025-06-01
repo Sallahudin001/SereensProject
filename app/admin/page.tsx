@@ -40,9 +40,10 @@ export default function AdminDashboardPage() {
   // Fetch dashboard data
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true)
+      
+      // Fetch metrics data
       try {
-        setLoading(true)
-
         // Fetch real metrics data
         const metricsResponse = await fetch('/api/admin/dashboard')
         
@@ -52,14 +53,19 @@ export default function AdminDashboardPage() {
             setMetrics(metricsData.metrics)
           } else {
             console.error("Failed to fetch metrics data:", metricsData.error)
-            // Initialize with empty metrics instead of mock data
             setMetrics([])
           }
         } else {
           console.error("Failed to fetch metrics:", metricsResponse.statusText)
           setMetrics([])
         }
-
+      } catch (metricsError) {
+        console.error("Error fetching metrics data:", metricsError instanceof Error ? metricsError.message : String(metricsError))
+        setMetrics([])
+      }
+      
+      // Fetch activity data
+      try {
         // Fetch real activity data
         const activityResponse = await fetch('/api/admin/activity?limit=5')
         
@@ -70,20 +76,17 @@ export default function AdminDashboardPage() {
             setRecentActivity(activityData.activities)
           } else {
             console.error("Failed to fetch activity data:", activityData.error)
-            // Initialize with empty activity instead of mock data
             setRecentActivity([])
           }
         } else {
-          console.error("Failed to fetch activity data:", activityResponse.statusText)
+          const errorText = await activityResponse.text().catch(() => 'Unknown error')
+          console.error(`Failed to fetch activity data: ${activityResponse.status} ${activityResponse.statusText}`, errorText)
           setRecentActivity([])
         }
-
-        setLoading(false)
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error)
-        // Initialize with empty data instead of mock data
-        setMetrics([])
+      } catch (activityError) {
+        console.error("Error fetching activity data:", activityError instanceof Error ? activityError.message : String(activityError))
         setRecentActivity([])
+      } finally {
         setLoading(false)
       }
     }

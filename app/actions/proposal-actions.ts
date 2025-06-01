@@ -506,11 +506,20 @@ export async function updateProposalStatus(id: string, status: string, userId?: 
     // Log the activity
     await executeQuery(
       `
-      INSERT INTO activity_log (proposal_id, user_id, action, details)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO activity_log (
+        action, action_category, actor_id, 
+        proposal_id, metadata
+      )
+      VALUES ($1, $2, $3, $4, $5)
     `,
-      [id, userId || "system", `update_status_${status}`, JSON.stringify({ status })],
-    )
+      [
+        `update_status_${status}`, 
+        "proposal", 
+        userId || "system", 
+        id, 
+        JSON.stringify({ status })
+      ]
+    );
 
     // Revalidate the dashboard path to update metrics
     revalidatePath("/dashboard")
@@ -552,10 +561,19 @@ export async function markProposalAsSent(proposalId: string) {
     // Log the activity
     await executeQuery(
       `
-      INSERT INTO activity_log (proposal_id, user_id, action, details)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO activity_log (
+        action, action_category, actor_id, 
+        proposal_id, metadata
+      )
+      VALUES ($1, $2, $3, $4, $5)
       `,
-      [proposalId, "system", "send_proposal_email", JSON.stringify({ method: "api" })]
+      [
+        "send_proposal_email", 
+        "proposal", 
+        "system", 
+        proposalId, 
+        JSON.stringify({ method: "api" })
+      ]
     );
 
     return { success: true };
