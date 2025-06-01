@@ -801,6 +801,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
             }
           }}
           className="shadow-sm"
+          uniqueId="proposal-pricing-form"
         />
         
         {formData.financingPlanId && (

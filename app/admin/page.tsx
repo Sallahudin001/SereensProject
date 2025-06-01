@@ -61,9 +61,9 @@ export default function AdminDashboardPage() {
         }
       } catch (metricsError) {
         console.error("Error fetching metrics data:", metricsError instanceof Error ? metricsError.message : String(metricsError))
-        setMetrics([])
-      }
-      
+          setMetrics([])
+        }
+
       // Fetch activity data
       try {
         // Fetch real activity data

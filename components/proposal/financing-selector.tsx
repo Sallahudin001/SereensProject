@@ -37,12 +37,14 @@ interface FinancingSelectorProps {
   projectTotal: number
   onFinancingChange: (plan: FinancingPlan | null, monthlyPayment: number) => void
   className?: string
+  uniqueId?: string
 }
 
 export default function FinancingSelector({ 
   projectTotal, 
   onFinancingChange,
-  className 
+  className,
+  uniqueId = 'default'
 }: FinancingSelectorProps) {
   const [financingPlans, setFinancingPlans] = useState<FinancingPlan[]>([])
   const [selectedPlan, setSelectedPlan] = useState<FinancingPlan | null>(null)
@@ -59,13 +61,26 @@ export default function FinancingSelector({
         const plans = await response.json()
         // Only show active plans
         const activePlans = plans.filter((plan: FinancingPlan) => plan.is_active)
-        setFinancingPlans(activePlans)
+        
+        // Deduplicate plans
+        const uniqueKey = (plan: FinancingPlan) => 
+          `${plan.provider}-${plan.plan_number}-${plan.payment_factor}`
+        
+        const uniquePlans = Array.from(
+          new Map(activePlans.map((plan: FinancingPlan) => 
+            [uniqueKey(plan), plan]
+          )).values()
+        ) as FinancingPlan[];
+        
+        uniquePlans.sort((a, b) => a.provider.localeCompare(b.provider) || a.payment_factor - b.payment_factor);
+        
+        setFinancingPlans(uniquePlans)
         
         // Set default plan if any exists
-        if (activePlans.length > 0) {
-          const defaultPlan = activePlans.find(
+        if (uniquePlans.length > 0) {
+          const defaultPlan = uniquePlans.find(
             (p: FinancingPlan) => p.plan_number === '1519' || p.plan_number === '4158'
-          ) || activePlans[0]
+          ) || uniquePlans[0]
           setSelectedPlan(defaultPlan)
           calculatePayment(defaultPlan)
         }

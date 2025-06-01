@@ -1,6 +1,6 @@
-PlanNumber,RateName,PaymentFactor,MerchantFee,Notes,Status
-ROF-001,Standard Asphalt Shingles,450,10,Standard installation,active
-ROF-002,Premium Metal Roofing,850,12,Premium quality,active
-WIN-001,Vinyl Windows,650,15,Energy efficient,active
-PNT-001,Premium Paint Package,65,20,Interior/Exterior,active
-GAR-001,Standard Garage Door,1200,8,With installation,active 
+Name,Unit,Base Price,Min Price,Max Price,Cost,Notes,Status
+Asphalt Shingles,square,450.00,400.00,525.00,360.00,Standard installation,active
+Metal Roofing,square,850.00,750.00,950.00,680.00,Premium quality,active
+Vinyl Windows,window,650.00,575.00,750.00,520.00,Energy efficient,active
+Premium Paint Package,gallon,65.00,55.00,80.00,45.00,Interior/Exterior,active
+Standard Garage Door,unit,1200.00,1000.00,1400.00,950.00,With installation,active 

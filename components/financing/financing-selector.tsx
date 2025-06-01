@@ -37,12 +37,14 @@ interface FinancingSelectorProps {
   projectTotal: number
   onFinancingChange: (plan: FinancingPlan | null, monthlyPayment: number) => void
   className?: string
+  uniqueId?: string
 }
 
 export default function FinancingSelector({ 
   projectTotal, 
   onFinancingChange,
-  className 
+  className,
+  uniqueId = 'default'
 }: FinancingSelectorProps) {
   const [financingPlans, setFinancingPlans] = useState<FinancingPlan[]>([])
   const [selectedPlan, setSelectedPlan] = useState<FinancingPlan | null>(null)

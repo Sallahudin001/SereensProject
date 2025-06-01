@@ -1,26 +1,20 @@
-PlanNumber,RateName,PaymentFactor,MerchantFee,Notes,Status
-HVAC-001,AC Installation,3500,15,Complete system,active
-HVAC-002,Furnace Installation,2800,12,High efficiency,active
-HVAC-003,Heat Pump Installation,4200,10,Dual function system,active
-HVAC-004,Ductwork,35,30,Per linear foot,active
-HVAC-005,Thermostat Installation,180,18,Smart thermostat,active
-Name,Unit,Base Price,Min Price,Max Price
-AC Unit - 2 Ton,unit,3200.00,2800.00,3600.00
-AC Unit - 3 Ton,unit,4000.00,3600.00,4500.00
-AC Unit - 4 Ton,unit,4800.00,4400.00,5400.00
-AC Unit - 5 Ton,unit,5600.00,5200.00,6200.00
-Heat Pump - 2 Ton,unit,4400.00,4000.00,5000.00
-Heat Pump - 3 Ton,unit,5200.00,4800.00,5800.00
-Heat Pump - 4 Ton,unit,6000.00,5600.00,6600.00
-Furnace - 60k BTU,unit,3000.00,2600.00,3400.00
-Furnace - 80k BTU,unit,3400.00,3000.00,3800.00
-Furnace - 100k BTU,unit,3800.00,3400.00,4400.00
-Ductwork - Supply,linear foot,28.00,24.00,32.00
-Ductwork - Return,linear foot,24.00,20.00,28.00
-Thermostat - Standard,unit,125.00,100.00,150.00
-Thermostat - Smart,unit,275.00,225.00,325.00
-Air Handler,unit,2200.00,1800.00,2600.00
-Indoor Coil,unit,1200.00,1000.00,1400.00
-Condenser Replacement,unit,2200.00,1800.00,2600.00
-System Tune-Up,service,175.00,150.00,225.00
-HVAC Permit,permit,250.00,200.00,300.00 
+Name,Unit,Base Price,Min Price,Max Price,Cost,Notes,Status
+AC Unit - 2 Ton,unit,3200.00,2800.00,3600.00,2560.00,Smaller homes,active
+AC Unit - 3 Ton,unit,4000.00,3600.00,4500.00,3200.00,Medium homes,active
+AC Unit - 4 Ton,unit,4800.00,4400.00,5400.00,3840.00,Larger homes,active
+AC Unit - 5 Ton,unit,5600.00,5200.00,6200.00,4480.00,Large homes,active
+Heat Pump - 2 Ton,unit,4400.00,4000.00,5000.00,3520.00,Efficient heating/cooling,active
+Heat Pump - 3 Ton,unit,5200.00,4800.00,5800.00,4160.00,Medium size option,active
+Heat Pump - 4 Ton,unit,6000.00,5600.00,6600.00,4800.00,Larger option,active
+Furnace - 60k BTU,unit,3000.00,2600.00,3400.00,2400.00,Small house,active
+Furnace - 80k BTU,unit,3400.00,3000.00,3800.00,2720.00,Medium house,active
+Furnace - 100k BTU,unit,3800.00,3400.00,4400.00,3040.00,Large house,active
+Ductwork - Supply,linear foot,28.00,24.00,32.00,22.00,Fresh air delivery,active
+Ductwork - Return,linear foot,24.00,20.00,28.00,19.00,Air circulation,active
+Thermostat - Standard,unit,125.00,100.00,150.00,100.00,Basic control,active
+Thermostat - Smart,unit,275.00,225.00,325.00,220.00,WiFi & app control,active
+Air Handler,unit,2200.00,1800.00,2600.00,1760.00,Air distribution,active
+Indoor Coil,unit,1200.00,1000.00,1400.00,960.00,System component,active
+Condenser Replacement,unit,2200.00,1800.00,2600.00,1760.00,Outdoor unit only,active
+System Tune-Up,service,175.00,150.00,225.00,140.00,Maintenance,active
+HVAC Permit,permit,250.00,200.00,300.00,200.00,Required by code,active 

@@ -1,22 +1,16 @@
-PlanNumber,RateName,PaymentFactor,MerchantFee,Notes,Status
-WIN-001,Vinyl Windows,650,15,Energy efficient per unit,active
-WIN-002,Retrofit Windows,550,18,Easy installation per unit,active
-WIN-003,Dual-Pane Windows,750,12,Extra insulation per unit,active
-WIN-004,Bay Windows,1200,10,Premium feature per unit,active
-WIN-005,Window Installation,250,25,Labor only per window,active
-Name,Unit,Base Price,Min Price,Max Price
-Vinyl Window - Single Hung,window,325.00,275.00,375.00
-Vinyl Window - Double Hung,window,425.00,375.00,475.00
-Vinyl Window - Casement,window,475.00,425.00,550.00
-Vinyl Window - Sliding,window,375.00,325.00,450.00
-Wood Window - Double Hung,window,750.00,675.00,850.00
-Wood Window - Casement,window,850.00,775.00,950.00
-Fiberglass Window - Double Hung,window,650.00,575.00,750.00
-Fiberglass Window - Casement,window,725.00,650.00,850.00
-Window Installation - Standard,window,175.00,150.00,225.00
-Window Installation - Custom,window,275.00,225.00,325.00
-Entry Door - Steel,door,850.00,750.00,1000.00
-Entry Door - Fiberglass,door,1250.00,1100.00,1400.00
-Patio Door - Vinyl Sliding,door,1200.00,1000.00,1400.00
-Patio Door - French,door,1800.00,1600.00,2100.00
-Storm Door Installation,door,350.00,300.00,425.00 
+Name,Unit,Base Price,Min Price,Max Price,Cost,Notes,Status
+Vinyl Window - Single Hung,window,325.00,275.00,375.00,260.00,Budget friendly,active
+Vinyl Window - Double Hung,window,425.00,375.00,475.00,340.00,Better operation,active
+Vinyl Window - Casement,window,475.00,425.00,550.00,380.00,Side-hinged,active
+Vinyl Window - Sliding,window,375.00,325.00,450.00,300.00,Horizontal operation,active
+Wood Window - Double Hung,window,750.00,675.00,850.00,600.00,Premium appearance,active
+Wood Window - Casement,window,850.00,775.00,950.00,680.00,Premium side-hinged,active
+Fiberglass Window - Double Hung,window,650.00,575.00,750.00,520.00,Durable option,active
+Fiberglass Window - Casement,window,725.00,650.00,850.00,580.00,Durable side-hinged,active
+Window Installation - Standard,window,175.00,150.00,225.00,140.00,Basic install,active
+Window Installation - Custom,window,275.00,225.00,325.00,220.00,Complex install,active
+Entry Door - Steel,door,850.00,750.00,1000.00,680.00,Security focused,active
+Entry Door - Fiberglass,door,1250.00,1100.00,1400.00,1000.00,Weather resistant,active
+Patio Door - Vinyl Sliding,door,1200.00,1000.00,1400.00,960.00,Standard option,active
+Patio Door - French,door,1800.00,1600.00,2100.00,1440.00,Premium look,active
+Storm Door Installation,door,350.00,300.00,425.00,280.00,Added protection,active 

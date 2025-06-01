@@ -1,22 +1,16 @@
-PlanNumber,RateName,PaymentFactor,MerchantFee,Notes,Status
-PNT-001,Interior Paint - Light,55,25,Light tone per gallon,active
-PNT-002,Interior Paint - Medium,65,22,Medium tone per gallon,active
-PNT-003,Interior Paint - Dark,75,20,Dark tone per gallon,active
-PNT-004,Exterior Paint - Standard,75,27,Weather resistant per gallon,active
-PNT-005,Exterior Paint - Premium,95,18,Premium quality per gallon,active
-Name,Unit,Base Price,Min Price,Max Price
-Exterior Paint - One Color,square foot,2.75,2.25,3.50
-Exterior Paint - Two Color,square foot,3.25,2.75,4.00
-Exterior Paint - Three Color,square foot,3.75,3.25,4.50
-Interior Paint - One Color,square foot,2.25,1.75,3.00
-Interior Paint - Two Color,square foot,2.75,2.25,3.50
-Interior Paint - Accent Wall,linear foot,4.50,4.00,5.25
-Trim Painting - Standard,linear foot,3.00,2.50,3.50
-Trim Painting - Premium,linear foot,3.75,3.25,4.50
-Deck Staining,square foot,2.50,2.00,3.00
-Pressure Washing - Standard,square foot,0.75,0.60,0.90
-Pressure Washing - Heavy Duty,square foot,1.25,1.00,1.50
-Cabinet Painting - Standard,linear foot,35.00,30.00,45.00
-Cabinet Painting - Premium,linear foot,45.00,40.00,55.00
-Surface Preparation,hour,45.00,40.00,55.00
-Premium Paint Upgrade,gallon,25.00,20.00,35.00 
+Name,Unit,Base Price,Min Price,Max Price,Cost,Notes,Status
+Exterior Paint - One Color,square foot,2.75,2.25,3.50,2.20,Basic exterior,active
+Exterior Paint - Two Color,square foot,3.25,2.75,4.00,2.60,Standard contrast,active
+Exterior Paint - Three Color,square foot,3.75,3.25,4.50,3.00,Premium look,active
+Interior Paint - One Color,square foot,2.25,1.75,3.00,1.80,Basic interior,active
+Interior Paint - Two Color,square foot,2.75,2.25,3.50,2.20,With accent walls,active
+Interior Paint - Accent Wall,linear foot,4.50,4.00,5.25,3.60,Feature wall,active
+Trim Painting - Standard,linear foot,3.00,2.50,3.50,2.40,Basic trim,active
+Trim Painting - Premium,linear foot,3.75,3.25,4.50,3.00,Detailed work,active
+Deck Staining,square foot,2.50,2.00,3.00,2.00,Weather protection,active
+Pressure Washing - Standard,square foot,0.75,0.60,0.90,0.60,Surface prep,active
+Pressure Washing - Heavy Duty,square foot,1.25,1.00,1.50,1.00,Deep cleaning,active
+Cabinet Painting - Standard,linear foot,35.00,30.00,45.00,28.00,Kitchen refresh,active
+Cabinet Painting - Premium,linear foot,45.00,40.00,55.00,36.00,Detailed finish,active
+Surface Preparation,hour,45.00,40.00,55.00,36.00,Important prep work,active
+Premium Paint Upgrade,gallon,25.00,20.00,35.00,20.00,Higher quality paint,active 

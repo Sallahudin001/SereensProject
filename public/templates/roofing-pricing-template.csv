@@ -1,16 +1,16 @@
-Name,Unit,Base Price,Min Price,Max Price
-Asphalt Shingles - Standard,square,350.00,300.00,400.00
-Asphalt Shingles - Architectural,square,450.00,400.00,525.00
-Metal Roofing - Standing Seam,square,750.00,675.00,900.00
-Metal Roofing - Corrugated,square,500.00,450.00,600.00
-Tile Roofing - Concrete,square,650.00,600.00,800.00
-Tile Roofing - Clay,square,900.00,800.00,1100.00
-Flat Roof - TPO,square,550.00,500.00,625.00
-Flat Roof - EPDM,square,500.00,450.00,575.00
-Plywood Replacement,sheet,85.00,75.00,95.00
-Underlayment - Synthetic,square,45.00,40.00,55.00
-Ridge Vent,linear foot,12.00,10.00,14.00
-Flashing - Metal,linear foot,8.00,7.00,10.00
-Gutter - 5" Aluminum,linear foot,12.00,10.00,14.00
-Gutter - 6" Aluminum,linear foot,15.00,13.00,18.00
-Downspout,linear foot,8.00,7.00,10.00 
+Name,Unit,Base Price,Min Price,Max Price,Cost,Notes,Status
+Asphalt Shingles - Standard,square,350.00,300.00,400.00,280.00,Basic material,active
+Asphalt Shingles - Architectural,square,450.00,400.00,525.00,360.00,Better quality & look,active
+Metal Roofing - Standing Seam,square,750.00,675.00,900.00,600.00,Premium durability,active
+Metal Roofing - Corrugated,square,500.00,450.00,600.00,400.00,Good value option,active
+Tile Roofing - Concrete,square,650.00,600.00,800.00,520.00,Traditional look,active
+Tile Roofing - Clay,square,900.00,800.00,1100.00,720.00,Premium Spanish style,active
+Flat Roof - TPO,square,550.00,500.00,625.00,440.00,Commercial grade,active
+Flat Roof - EPDM,square,500.00,450.00,575.00,400.00,Rubber membrane,active
+Plywood Replacement,sheet,85.00,75.00,95.00,65.00,Structural repair,active
+Underlayment - Synthetic,square,45.00,40.00,55.00,35.00,Water barrier,active
+Ridge Vent,linear foot,12.00,10.00,14.00,9.00,Improved ventilation,active
+Flashing - Metal,linear foot,8.00,7.00,10.00,6.00,Water protection,active
+Gutter - 5" Aluminum,linear foot,12.00,10.00,14.00,9.00,Standard size,active
+Gutter - 6" Aluminum,linear foot,15.00,13.00,18.00,12.00,Large capacity,active
+Downspout,linear foot,8.00,7.00,10.00,6.00,Water drainage,active 

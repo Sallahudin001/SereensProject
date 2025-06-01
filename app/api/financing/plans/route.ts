@@ -20,7 +20,19 @@ export async function GET(req: NextRequest) {
     
     query += ` ORDER BY provider, plan_name ASC`;
     
-    const plans = await executeQuery(query, params);
+    let plans = await executeQuery(query, params);
+    
+    // Deduplicate plans
+    const uniquePlansMap = new Map();
+    plans.forEach(plan => {
+      const key = `${plan.provider}-${plan.plan_number}-${plan.payment_factor}`;
+      // Prefer active plans over inactive ones when deduplicating
+      if (!uniquePlansMap.has(key) || (plan.is_active && !uniquePlansMap.get(key).is_active)) {
+        uniquePlansMap.set(key, plan);
+      }
+    });
+    
+    plans = Array.from(uniquePlansMap.values());
     
     return NextResponse.json(plans, { status: 200 });
   } catch (error) {
