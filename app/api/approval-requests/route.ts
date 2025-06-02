@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { executeQuery } from '@/lib/db'
 import { NotificationService } from '@/lib/notifications'
-import { auth } from '@clerk/nextjs/server'
+import { getRBACContext, applyRBACFilter } from '@/lib/rbac'
 import { logDiscountRequestWithClerkId } from '@/lib/activity-logger'
 import { getUserNamesFromClerk } from '@/lib/user-utils'
 
 export async function GET(request: NextRequest) {
   try {
-    // Add authentication check
-    try {
-      const session = await auth()
-      // Don't require auth for development/testing purposes but log it
-      if (!session?.userId) {
-        console.warn('No authenticated user for GET /api/approval-requests')
-      }
-    } catch (authError) {
-      console.error('Authentication error in approval-requests GET:', authError)
-      // Continue execution but log the error
+    // Get RBAC context
+    const context = await getRBACContext();
+    
+    if (!context) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
     const { searchParams } = new URL(request.url)
@@ -50,6 +45,13 @@ export async function GET(request: NextRequest) {
       params.push(userId)
     }
     
+    // Apply RBAC filter - non-admin users only see their own approval requests
+    if (!context.isAdmin) {
+      paramCount++
+      query += ` AND p.user_id = $${paramCount}`
+      params.push(context.userId)
+    }
+    
     query += ` ORDER BY ar.created_at DESC`
     
     const requests = await executeQuery(query, params)
@@ -61,7 +63,7 @@ export async function GET(request: NextRequest) {
       if (req.approver_id) userIds.add(req.approver_id)
     })
     
-    // Get clerk_ids from users table (not admin_users)
+    // Get clerk_ids from users table
     let userClerkMapping: Record<number, string> = {}
     if (userIds.size > 0) {
       const users = await executeQuery(
@@ -76,46 +78,41 @@ export async function GET(request: NextRequest) {
       })
     }
     
-    // Get unique clerk_ids for batch name resolution
+    // Get Clerk user names
     const clerkIds = Object.values(userClerkMapping).filter(Boolean)
-    
-    // Fetch user names from Clerk in batch
     const userNames = clerkIds.length > 0 ? await getUserNamesFromClerk(clerkIds) : {}
     
-    // Add user names to requests
-    const requestsWithNames = requests.map(request => {
-      const requestorClerkId = userClerkMapping[request.requestor_id]
-      const approverClerkId = userClerkMapping[request.approver_id]
+    // Map names back to requests
+    const requestsWithNames = requests.map(req => {
+      const requestorClerkId = userClerkMapping[req.requestor_id]
+      const approverClerkId = userClerkMapping[req.approver_id]
       
       return {
-        ...request,
-        requestor_name: requestorClerkId ? userNames[requestorClerkId] || 'Unknown User' : 'Unknown User',
-        approver_name: request.approver_id && approverClerkId ? userNames[approverClerkId] || 'Not assigned' : 'Not assigned'
+        ...req,
+        requestor_name: requestorClerkId && userNames[requestorClerkId] 
+          ? userNames[requestorClerkId] 
+          : 'Unknown',
+        requestor_clerk_id: requestorClerkId,
+        approver_name: approverClerkId && userNames[approverClerkId] 
+          ? userNames[approverClerkId] 
+          : 'Manager'
       }
     })
     
     return NextResponse.json(requestsWithNames)
   } catch (error) {
     console.error('Error fetching approval requests:', error)
-    return NextResponse.json({ 
-      error: 'Failed to fetch approval requests',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch approval requests' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Add authentication check
-    try {
-      const session = await auth()
-      // Don't require auth for development/testing purposes but log it
-      if (!session?.userId) {
-        console.warn('No authenticated user for POST /api/approval-requests')
-      }
-    } catch (authError) {
-      console.error('Authentication error in approval-requests POST:', authError)
-      // Continue execution but log the error
+    // Get RBAC context
+    const context = await getRBACContext();
+    
+    if (!context) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
     
     const { 
@@ -139,6 +136,22 @@ export async function POST(request: NextRequest) {
     if (isNaN(safeProposalId) || safeProposalId < 1 || safeProposalId > 2147483647) {
       console.error('Invalid proposal ID format:', proposalId);
       return NextResponse.json({ error: 'Invalid proposal ID format' }, { status: 400 })
+    }
+
+    // For non-admin users, verify they own the proposal
+    if (!context.isAdmin) {
+      const proposalCheck = await executeQuery(
+        `SELECT user_id FROM proposals WHERE id = $1`,
+        [safeProposalId]
+      );
+      
+      if (proposalCheck.length === 0) {
+        return NextResponse.json({ error: 'Proposal not found' }, { status: 404 })
+      }
+      
+      if (proposalCheck[0].user_id !== context.userId) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+      }
     }
 
     try {

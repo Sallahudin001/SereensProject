@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Dot } from "recharts"
 import { formatDate, formatPercentage, themeGradients } from "@/lib/chart-utils"
+import { TrendingUp } from "lucide-react"
 
 // Custom dot component with rounded look
 const CustomDot = (props: any) => {
@@ -38,6 +39,7 @@ interface PerformanceData {
 export function DashboardPerformanceChart() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PerformanceData[]>([]);
+  const [hasData, setHasData] = useState(false);
 
   useEffect(() => {
     async function fetchPerformanceData() {
@@ -45,9 +47,14 @@ export function DashboardPerformanceChart() {
         setLoading(true);
         // Fetch from reports API with a 30-day timeframe
         const response = await fetch('/api/reports?timeRange=30');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const reportData = await response.json();
         
-        // Format data from conversion rate for the chart
+        // Check if we have actual data (not empty arrays)
         if (reportData.conversionRate && reportData.conversionRate.length > 0) {
           const chartData = reportData.conversionRate
             .map((item: any) => ({
@@ -64,17 +71,20 @@ export function DashboardPerformanceChart() {
           
           if (chartData.length > 0) {
             setData(chartData);
+            setHasData(true);
           } else {
-            // If no valid data after filtering, use demo data
-            setData(getDemoData());
+            setData([]);
+            setHasData(false);
           }
         } else {
-          // Fallback to demo data if no data available
-          setData(getDemoData());
+          // No data available - this is expected for new users
+          setData([]);
+          setHasData(false);
         }
       } catch (error) {
         console.error("Error fetching performance data:", error);
-        setData(getDemoData());
+        setData([]);
+        setHasData(false);
       } finally {
         setLoading(false);
       }
@@ -83,21 +93,25 @@ export function DashboardPerformanceChart() {
     fetchPerformanceData();
   }, []);
 
-  // Provide demo data if API fails or no data is available
-  const getDemoData = (): PerformanceData[] => {
-    return [
-      { date: "Jan", proposals: 28, conversion: 55.2 },
-      { date: "Feb", proposals: 32, conversion: 60.5 },
-      { date: "Mar", proposals: 37, conversion: 62.8 },
-      { date: "Apr", proposals: 42, conversion: 68.3 },
-      { date: "May", proposals: 48, conversion: 71.2 },
-    ];
-  };
-
   if (loading) {
     return (
       <div className="h-[200px] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+      </div>
+    );
+  }
+
+  // Show empty state if no data
+  if (!hasData || data.length === 0) {
+    return (
+      <div className="h-[200px] flex flex-col items-center justify-center text-center px-4">
+        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+          <TrendingUp className="h-6 w-6 text-slate-400" />
+        </div>
+        <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">No performance data yet</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-500 max-w-[200px]">
+          Create your first proposal to see performance trends over time.
+        </p>
       </div>
     );
   }

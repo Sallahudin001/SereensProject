@@ -512,45 +512,71 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     setSubmittingApproval(true)
     
     try {
-      // Get the parent component's data to save the entire proposal
-      const fallbackCustomer = {
-        name: "Draft Customer",
-        email: `draft-${Date.now()}@example.com`,
-        phone: "",
-        address: ""
+      let actualProposalId = proposalId
+      
+      // Only create a new proposal if we don't have one yet
+      if (!actualProposalId) {
+        // Get the parent component's data to save the entire proposal
+        const fallbackCustomer = {
+          name: "Draft Customer",
+          email: `draft-${Date.now()}@example.com`,
+          phone: "",
+          address: ""
+        }
+        
+        // Ensure we have valid customer data by checking all possible sources
+        let effectiveCustomerData = fallbackCustomer
+        
+        if (customerData && customerData.name && customerData.email) {
+          effectiveCustomerData = customerData
+        } else if (fullFormData && fullFormData.customer && 
+                  fullFormData.customer.name && fullFormData.customer.email) {
+          effectiveCustomerData = fullFormData.customer
+        }
+        
+        const entireFormData = {
+          customer: effectiveCustomerData,
+          services: services,
+          products: products,
+          pricing: formData,
+          id: proposalId ? proposalId.toString() : undefined,
+          status: "draft_discount_review" // Special status to indicate this is for discount review
+        }
+        
+        console.log('Saving proposal with customer data:', effectiveCustomerData)
+        
+        // First, save the proposal as draft to ensure we have a valid proposal ID
+        console.log('Saving proposal as draft before approval request')
+        const saveResult = await createProposal(entireFormData)
+        
+        if (!saveResult.success) {
+          console.error('Failed to save proposal before approval request:', saveResult.error)
+          throw new Error('Failed to save proposal before requesting approval')
+        }
+        
+        actualProposalId = saveResult.proposalId
+        console.log('Proposal saved with ID:', actualProposalId)
+      } else {
+        // If we already have a proposal ID, update it with the latest pricing data
+        console.log('Using existing proposal ID for approval request:', actualProposalId)
+        
+        // Update the existing proposal with latest pricing data
+        const updateData = {
+          id: actualProposalId.toString(),
+          customer: customerData || fullFormData?.customer || { name: "Unknown", email: "unknown@example.com" },
+          services: services,
+          products: products,
+          pricing: formData,
+          status: "draft_discount_review"
+        }
+        
+        const updateResult = await createProposal(updateData)
+        
+        if (!updateResult.success) {
+          console.error('Failed to update proposal:', updateResult.error)
+          // Continue with the existing ID even if update fails
+        }
       }
-      
-      // Ensure we have valid customer data by checking all possible sources
-      let effectiveCustomerData = fallbackCustomer
-      
-      if (customerData && customerData.name && customerData.email) {
-        effectiveCustomerData = customerData
-      } else if (fullFormData && fullFormData.customer && 
-                fullFormData.customer.name && fullFormData.customer.email) {
-        effectiveCustomerData = fullFormData.customer
-      }
-      
-      const entireFormData = {
-        customer: effectiveCustomerData,
-        services: services,
-        products: products,
-        pricing: formData,
-        id: proposalId ? proposalId.toString() : undefined,
-      }
-      
-      console.log('Saving proposal with customer data:', effectiveCustomerData)
-      
-      // First, save the proposal as draft to ensure we have a valid proposal ID
-      console.log('Saving proposal as draft before approval request')
-      const saveResult = await createProposal(entireFormData)
-      
-      if (!saveResult.success) {
-        console.error('Failed to save proposal before approval request:', saveResult.error)
-        throw new Error('Failed to save proposal before requesting approval')
-      }
-      
-      const actualProposalId = saveResult.proposalId
-      console.log('Proposal saved with ID:', actualProposalId)
       
       const discountPercent = formData.subtotal > 0 ? (pendingDiscount / formData.subtotal) * 100 : 0
       

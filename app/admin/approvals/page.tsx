@@ -501,7 +501,7 @@ export default function ApprovalsPage() {
                           <p className="font-medium">{request.customer_name || 'N/A'}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-sm font-medium text-muted-foreground">Original Value</p>
+                          <p className="text-sm font-medium text-muted-foreground">Project Total</p>
                           <p className="text-lg font-semibold">{formatCurrency(request.proposal_subtotal || 0)}</p>
                         </div>
                         <div className="space-y-1">

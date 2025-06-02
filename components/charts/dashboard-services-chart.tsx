@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Rectangle } from "recharts"
 import { chartColors, gradientColors, themeGradients } from "@/lib/chart-utils"
+import { BarChart3 } from "lucide-react"
 
 // Custom rounded bar shape
 const RoundedBar = (props: any) => {
@@ -29,6 +30,7 @@ interface ServiceData {
 export function DashboardServicesChart() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ServiceData[]>([]);
+  const [hasData, setHasData] = useState(false);
 
   useEffect(() => {
     async function fetchServicesData() {
@@ -36,32 +38,40 @@ export function DashboardServicesChart() {
         setLoading(true);
         // Fetch from reports API with a 30-day timeframe
         const response = await fetch('/api/reports?timeRange=30');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const reportData = await response.json();
         
-        // Format data from popular services for the chart
+        // Check if we have actual data (not empty arrays)
         if (reportData.popularServices && reportData.popularServices.length > 0) {
           const chartData = reportData.popularServices
             .map((item: any) => ({
-              name: item.product_type || "Unknown",
+              name: item.service || "Unknown",
               count: item.count || 0,
             }))
             // Filter out invalid data
-            .filter((item: any) => !isNaN(item.count) && item.name)
+            .filter((item: any) => !isNaN(item.count) && item.name && item.count > 0)
             .slice(0, 5); // Limit to top 5
           
           if (chartData.length > 0) {
             setData(chartData);
+            setHasData(true);
           } else {
-            // If no valid data after filtering, use demo data
-            setData(getDemoData());
+            setData([]);
+            setHasData(false);
           }
         } else {
-          // Fallback to demo data if no data available
-          setData(getDemoData());
+          // No data available - this is expected for new users
+          setData([]);
+          setHasData(false);
         }
       } catch (error) {
         console.error("Error fetching services data:", error);
-        setData(getDemoData());
+        setData([]);
+        setHasData(false);
       } finally {
         setLoading(false);
       }
@@ -70,21 +80,25 @@ export function DashboardServicesChart() {
     fetchServicesData();
   }, []);
 
-  // Provide demo data if API fails or no data is available
-  const getDemoData = (): ServiceData[] => {
-    return [
-      { name: "Roofing", count: 42 },
-      { name: "HVAC", count: 38 },
-      { name: "Windows", count: 34 },
-      { name: "Garage Doors", count: 26 },
-      { name: "Paint", count: 18 },
-    ];
-  };
-
   if (loading) {
     return (
       <div className="h-[200px] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+      </div>
+    );
+  }
+
+  // Show empty state if no data
+  if (!hasData || data.length === 0) {
+    return (
+      <div className="h-[200px] flex flex-col items-center justify-center text-center px-4">
+        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
+          <BarChart3 className="h-6 w-6 text-slate-400" />
+        </div>
+        <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">No service data yet</h3>
+        <p className="text-xs text-slate-500 dark:text-slate-500 max-w-[200px]">
+          Add services to your proposals to see popular service trends.
+        </p>
       </div>
     );
   }

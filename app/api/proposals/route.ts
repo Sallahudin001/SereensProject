@@ -1,24 +1,13 @@
 import { executeQuery } from "@/lib/db"
-import { NextResponse } from "next/server"
-import { applyUserFilter } from "@/lib/auth-utils"
-import { auth } from "@clerk/nextjs/server"
-
-// Helper function to get the current user ID
-async function getCurrentUserId() {
-  try {
-    const { userId } = await auth();
-    return userId;
-  } catch (error) {
-    console.error("Error getting current user ID:", error);
-    return null;
-  }
-}
+import { NextRequest, NextResponse } from "next/server"
+import { getRBACContext, applyRBACFilter } from "@/lib/rbac"
 
 export async function GET() {
   try {
-    const userId = await getCurrentUserId();
+    // Get RBAC context
+    const context = await getRBACContext();
     
-    if (!userId) {
+    if (!context) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
     
@@ -30,6 +19,7 @@ export async function GET() {
         p.status, 
         p.total, 
         p.created_at,
+        p.user_id,
         ARRAY_AGG(s.display_name) as services
       FROM 
         proposals p
@@ -40,18 +30,54 @@ export async function GET() {
       LEFT JOIN 
         services s ON ps.service_id = s.id
       GROUP BY 
-        p.id, p.proposal_number, c.name, p.status, p.total, p.created_at
+        p.id, p.proposal_number, c.name, p.status, p.total, p.created_at, p.user_id
       ORDER BY 
         p.created_at DESC
-    `
+    `;
     
-    // Apply user filtering based on role
-    const { query, params } = await applyUserFilter(baseQuery, [] as any[], 'user_id', 'p');
+    // Apply RBAC filter
+    const { query, params } = applyRBACFilter(baseQuery, [], context, 'user_id', 'p');
     const proposals = await executeQuery(query, params);
 
-    return NextResponse.json({ success: true, proposals })
+    return NextResponse.json({ 
+      success: true, 
+      proposals,
+      userRole: context.role,
+      totalCount: proposals.length
+    });
   } catch (error) {
-    console.error("Error fetching proposals:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch proposals" }, { status: 500 })
+    console.error("Error fetching proposals:", error);
+    return NextResponse.json({ success: false, error: "Failed to fetch proposals" }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    // Get RBAC context
+    const context = await getRBACContext();
+    
+    if (!context) {
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
+    }
+    
+    const data = await request.json();
+    
+    // Add the user_id to the proposal data
+    const proposalData = {
+      ...data,
+      user_id: context.userId,
+      created_by: context.userId
+    };
+    
+    // Here you would implement the proposal creation logic
+    // For now, returning a placeholder response
+    return NextResponse.json({ 
+      success: true, 
+      message: "Proposal creation endpoint - implement as needed",
+      data: proposalData
+    });
+  } catch (error) {
+    console.error("Error creating proposal:", error);
+    return NextResponse.json({ success: false, error: "Failed to create proposal" }, { status: 500 });
   }
 }

@@ -221,24 +221,246 @@ export async function createProposal(data: any) {
       throw new Error("User not authenticated");
     }
     
-    // Check for recent duplicate submissions (within last 5 seconds)
+    // If an ID is provided, this is an update to an existing proposal
+    if (data.id) {
+      // Start a transaction
+      await executeQuery("BEGIN")
+      
+      try {
+        // Update the customer data
+        const customerResult = await executeQuery(
+          `
+          UPDATE customers
+          SET name = $1,
+              phone = $2,
+              address = $3,
+              updated_at = CURRENT_TIMESTAMP
+          WHERE email = $4
+          RETURNING id
+          `,
+          [data.customer.name, data.customer.phone, data.customer.address, data.customer.email]
+        )
+        
+        let customerId: number
+        if (customerResult.length === 0) {
+          // Customer doesn't exist, create it
+          const newCustomerResult = await executeQuery(
+            `
+            INSERT INTO customers (name, email, phone, address, user_id)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id
+            `,
+            [data.customer.name, data.customer.email, data.customer.phone, data.customer.address, userId]
+          )
+          customerId = newCustomerResult[0].id
+        } else {
+          customerId = customerResult[0].id
+        }
+        
+        // Update the existing proposal
+        await executeQuery(
+          `
+          UPDATE proposals
+          SET customer_id = $1,
+              subtotal = $2,
+              discount = $3, 
+              total = $4,
+              monthly_payment = $5,
+              financing_term = $6,
+              interest_rate = $7,
+              financing_plan_id = $8,
+              financing_plan_name = $9,
+              merchant_fee = $10,
+              financing_notes = $11,
+              status = COALESCE($12, status),
+              updated_at = CURRENT_TIMESTAMP
+          WHERE id = $13
+          `,
+          [
+            customerId,
+            parseFloat(data.pricing.subtotal) || 0,
+            parseFloat(data.pricing.discount) || 0,
+            parseFloat(data.pricing.total) || 0,
+            parseFloat(data.pricing.monthlyPayment) || 0,
+            parseInt(data.pricing.financingTerm) || 60,
+            parseFloat(data.pricing.interestRate) || 5.99,
+            data.pricing.financingPlanId || null,
+            data.pricing.financingPlanName || null,
+            data.pricing.merchantFee ? parseFloat(data.pricing.merchantFee) : null,
+            data.pricing.financingNotes || null,
+            data.status || null,
+            data.id
+          ]
+        )
+        
+        // Get the proposal number for response
+        const proposalData = await executeQuery(
+          `SELECT proposal_number FROM proposals WHERE id = $1`,
+          [data.id]
+        )
+        
+        // Update services - delete existing and re-add
+        await executeQuery(
+          `DELETE FROM proposal_services WHERE proposal_id = $1`,
+          [data.id]
+        )
+        
+        await executeQuery(
+          `DELETE FROM products WHERE proposal_id = $1`,
+          [data.id]
+        )
+        
+        // Re-add services and products
+        for (const serviceName of data.services) {
+          const serviceResult = await executeQuery(
+            `SELECT id FROM services WHERE name = $1`,
+            [serviceName]
+          )
+          
+          if (serviceResult.length > 0) {
+            const serviceId = serviceResult[0].id
+            
+            await executeQuery(
+              `INSERT INTO proposal_services (proposal_id, service_id) VALUES ($1, $2)`,
+              [data.id, serviceId]
+            )
+            
+            if (data.products && data.products[serviceName]) {
+              const productData = data.products[serviceName]
+              const scopeNotes = productData.scopeNotes || ""
+              const { scopeNotes: _, ...productDataWithoutNotes } = productData
+              
+              await executeQuery(
+                `
+                INSERT INTO products (proposal_id, service_id, product_data, scope_notes)
+                VALUES ($1, $2, $3, $4)
+                `,
+                [data.id, serviceId, JSON.stringify(productDataWithoutNotes), scopeNotes]
+              )
+            }
+          }
+        }
+        
+        // Handle offers during update
+        try {
+          // Clear existing offers
+          await executeQuery(
+            `DELETE FROM proposal_offers WHERE proposal_id = $1`,
+            [data.id]
+          )
+          
+          // Apply rep-selected special offers if any
+          if (data.selectedOffers && data.selectedOffers.length > 0) {
+            for (const offerId of data.selectedOffers) {
+              const offerQuery = `
+                SELECT id, name, category, discount_amount, discount_percentage, 
+                       expiration_type, expiration_value, is_active
+                FROM special_offers 
+                WHERE id = $1 AND is_active = true
+              `
+              
+              const offerResult = await executeQuery(offerQuery, [offerId])
+              
+              if (offerResult.length > 0) {
+                const offer = offerResult[0]
+                const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+                
+                await executeQuery(
+                  `
+                  INSERT INTO proposal_offers (
+                    proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
+                  ) VALUES ($1, $2, $3, $4, $5, $6)
+                  ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+                `,
+                  [
+                    data.id,
+                    'special_offer',
+                    offer.id,
+                    offer.discount_amount || 0,
+                    expirationDate,
+                    'active'
+                  ]
+                )
+              }
+            }
+          }
+          
+          // Apply bundle rules if multiple services
+          if (data.services.length >= 2) {
+            const bundleRulesQuery = `
+              SELECT id, name, required_services, discount_type, discount_value, free_service
+              FROM bundle_rules 
+              WHERE is_active = true 
+              AND required_services <@ $1::text[]
+              AND array_length(required_services, 1) <= $2
+              ORDER BY priority DESC
+              LIMIT 3
+            `
+            
+            const bundleRules = await executeQuery(bundleRulesQuery, [data.services, data.services.length])
+            
+            for (const bundle of bundleRules) {
+              const expirationDate = calculateOfferExpirationDate('days', 7) // Default 7 days for bundles
+              
+              await executeQuery(
+                `
+                INSERT INTO proposal_offers (
+                  proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
+                ) VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+              `,
+                [
+                  data.id,
+                  'bundle_rule',
+                  bundle.id,
+                  bundle.discount_value || 0,
+                  expirationDate,
+                  'active'
+                ]
+              )
+            }
+          }
+        } catch (offerError) {
+          console.error("Error updating offers:", offerError)
+          // Don't fail the entire update if offer assignment fails
+        }
+        
+        // Commit the transaction
+        await executeQuery("COMMIT")
+        
+        return {
+          success: true,
+          proposalId: data.id,
+          proposalNumber: proposalData[0]?.proposal_number,
+          isDuplicate: false
+        }
+      } catch (error) {
+        // Rollback on error
+        await executeQuery("ROLLBACK")
+        throw error
+      }
+    }
+    
+    // Enhanced duplicate check for new proposals - look for drafts created recently
     const recentProposalCheck = await executeQuery(
       `
-      SELECT id FROM proposals 
-      WHERE customer_id IN (SELECT id FROM customers WHERE email = $1) 
-      AND created_at > NOW() - INTERVAL '5 seconds'
+      SELECT p.id, p.proposal_number FROM proposals p
+      JOIN customers c ON p.customer_id = c.id
+      WHERE c.email = $1 
+      AND p.created_at > NOW() - INTERVAL '24 hours'
+      AND p.status IN ('draft', 'draft_in_progress', 'draft_complete')
+      ORDER BY p.created_at DESC
+      LIMIT 1
       `,
       [data.customer.email]
     );
     
     if (recentProposalCheck.length > 0) {
-      console.log("Duplicate proposal detected - preventing creation");
-      return {
-        success: true,
-        proposalId: recentProposalCheck[0].id,
-        proposalNumber: "Existing proposal used to prevent duplication",
-        isDuplicate: true
-      };
+      console.log("Using existing draft proposal instead of creating duplicate:", recentProposalCheck[0].id);
+      
+      // Update the existing draft instead of creating a new one
+      const updateData = { ...data, id: recentProposalCheck[0].id };
+      return await createProposal(updateData);
     }
 
     // Start a transaction
@@ -278,7 +500,7 @@ export async function createProposal(data: any) {
       [
         proposalNumber,
         customerId,
-        "draft",
+        data.status || "draft",
         parseFloat(data.pricing.subtotal) || 0,
         parseFloat(data.pricing.discount) || 0,
         parseFloat(data.pricing.total) || 0,
@@ -440,6 +662,7 @@ export async function createProposal(data: any) {
       success: true,
       proposalId,
       proposalNumber,
+      isDuplicate: false
     }
   } catch (error) {
     // Rollback on error

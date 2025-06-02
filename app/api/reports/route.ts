@@ -1,118 +1,135 @@
-import { NextResponse } from "next/server"
-import { sql } from "@/lib/db"
-import { auth } from "@clerk/nextjs/server"
-import { isAdmin } from "@/lib/auth-utils"
+import { executeQuery } from "@/lib/db"
+import { NextRequest, NextResponse } from "next/server"
+import { getRBACContext, applyRBACFilter } from "@/lib/rbac"
 
-// Helper to format date for SQL queries
-const formatDateForSQL = (daysAgo: number) => {
-  const date = new Date()
-  date.setDate(date.getDate() - daysAgo)
-  return date.toISOString().split("T")[0]
-}
-
-// Helper function to get the current user ID
-async function getCurrentUserId() {
+export async function GET(request: NextRequest) {
   try {
-    const { userId } = await auth();
-    return userId;
-  } catch (error) {
-    console.error("Error getting current user ID:", error);
-    return null;
-  }
-}
-
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const timeRange = searchParams.get("timeRange") || "30"
-    const daysAgo = Number.parseInt(timeRange)
-
-    const startDate = formatDateForSQL(daysAgo)
+    // Get RBAC context
+    const context = await getRBACContext();
     
-    // Get user info for filtering
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    if (!context) {
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
     
-    // Check if user is admin
-    const admin = await isAdmin();
+    const { searchParams } = new URL(request.url);
+    const timeRange = parseInt(searchParams.get('timeRange') || '30');
     
-    // User filter condition
-    const userFilter = admin ? "" : "AND p.user_id = $2";
-    const userParams = admin ? [] : [userId];
-
-    // Fetch proposal status distribution
-    const statusDistribution = await sql`
-      SELECT status, COUNT(*) as count
-      FROM proposals p
-      WHERE created_at >= ${startDate} ${userFilter ? sql`AND p.user_id = ${userId}` : sql``}
-      GROUP BY status
-      ORDER BY count DESC
-    ` || [];
-
-    // Fetch revenue trend (monthly)
-    const revenueTrend = await sql`
+    // 1. Status Distribution with RBAC
+    const statusQuery = `
       SELECT 
-        DATE_TRUNC('month', created_at) as month,
-        SUM(total) as revenue
-      FROM proposals p
-      WHERE created_at >= ${startDate} ${userFilter ? sql`AND p.user_id = ${userId}` : sql``}
-      GROUP BY DATE_TRUNC('month', created_at)
-      ORDER BY month
-    ` || [];
-
-    // Fetch popular services
-    const popularServices = await sql`
-      SELECT 
-        s.name as product_type, 
+        status,
         COUNT(*) as count
-      FROM proposal_services ps
-      JOIN proposals p ON p.id = ps.proposal_id
-      JOIN services s ON s.id = ps.service_id
-      WHERE p.created_at >= ${startDate} ${userFilter ? sql`AND p.user_id = ${userId}` : sql``}
-      GROUP BY s.name
-      ORDER BY count DESC
-      LIMIT 5
-    ` || [];
-
-    // Fetch conversion rate
-    const conversionRate = await sql`
-      WITH proposal_counts AS (
-        SELECT 
-          DATE_TRUNC('week', created_at) as week,
-          COUNT(*) as total,
-          COUNT(CASE WHEN status = 'signed' THEN 1 END) as signed
-        FROM proposals p
-        WHERE created_at >= ${startDate} ${userFilter ? sql`AND p.user_id = ${userId}` : sql``}
-        GROUP BY DATE_TRUNC('week', created_at)
-      )
+      FROM proposals
+      WHERE created_at >= NOW() - INTERVAL '${timeRange} days'
+      GROUP BY status
+    `;
+    const { query: statusFilteredQuery, params: statusParams } = applyRBACFilter(
+      statusQuery,
+      [],
+      context
+    );
+    const statusDistribution = await executeQuery(statusFilteredQuery, statusParams);
+    
+    // 2. Revenue Trend with RBAC
+    const revenueQuery = `
       SELECT 
-        week,
-        total,
-        signed,
+        DATE_TRUNC('week', created_at) as week,
+        SUM(total) as revenue
+      FROM proposals
+      WHERE created_at >= NOW() - INTERVAL '${timeRange} days'
+        AND status IN ('signed', 'completed')
+      GROUP BY week
+      ORDER BY week
+    `;
+    const { query: revenueFilteredQuery, params: revenueParams } = applyRBACFilter(
+      revenueQuery,
+      [],
+      context
+    );
+    const revenueTrend = await executeQuery(revenueFilteredQuery, revenueParams);
+    
+    // 3. Popular Services with RBAC
+    const servicesQuery = `
+      SELECT 
+        s.display_name as service,
+        COUNT(ps.proposal_id) as count
+      FROM services s
+      LEFT JOIN proposal_services ps ON s.id = ps.service_id
+      LEFT JOIN proposals p ON ps.proposal_id = p.id
+      WHERE p.created_at >= NOW() - INTERVAL '${timeRange} days'
+      GROUP BY s.display_name
+      ORDER BY count DESC
+      LIMIT 10
+    `;
+    const { query: servicesFilteredQuery, params: servicesParams } = applyRBACFilter(
+      servicesQuery,
+      [],
+      context,
+      'user_id',
+      'p'
+    );
+    const popularServices = await executeQuery(servicesFilteredQuery, servicesParams);
+    
+    // 4. Conversion Rate Trend with RBAC
+    const conversionQuery = `
+      SELECT 
+        DATE_TRUNC('week', created_at) as week,
+        COUNT(*) as total,
+        COUNT(CASE WHEN status IN ('signed', 'completed') THEN 1 END) as converted,
         CASE 
-          WHEN total > 0 THEN (signed * 100.0 / total)::numeric(10,2)
+          WHEN COUNT(*) > 0 THEN 
+            ROUND((COUNT(CASE WHEN status IN ('signed', 'completed') THEN 1 END) * 100.0 / COUNT(*))::numeric, 1)
           ELSE 0 
         END as rate
-      FROM proposal_counts
+      FROM proposals
+      WHERE created_at >= NOW() - INTERVAL '${timeRange} days'
+      GROUP BY week
       ORDER BY week
-    ` || [];
-
+    `;
+    const { query: conversionFilteredQuery, params: conversionParams } = applyRBACFilter(
+      conversionQuery,
+      [],
+      context
+    );
+    const conversionRate = await executeQuery(conversionFilteredQuery, conversionParams);
+    
+    // 5. Top Customers with RBAC
+    const customersQuery = `
+      SELECT 
+        c.name as customer,
+        COUNT(p.id) as proposals,
+        SUM(CASE WHEN p.status IN ('signed', 'completed') THEN p.total ELSE 0 END) as revenue
+      FROM customers c
+      INNER JOIN proposals p ON c.id = p.customer_id
+      WHERE p.created_at >= NOW() - INTERVAL '${timeRange} days'
+      GROUP BY c.name
+      ORDER BY revenue DESC
+      LIMIT 10
+    `;
+    const { query: customersFilteredQuery, params: customersParams } = applyRBACFilter(
+      customersQuery,
+      [],
+      context,
+      'user_id',
+      'p'
+    );
+    const topCustomers = await executeQuery(customersFilteredQuery, customersParams);
+    
     return NextResponse.json({
-      statusDistribution: statusDistribution || [],
-      revenueTrend: revenueTrend || [],
-      popularServices: popularServices || [],
-      conversionRate: conversionRate || [],
-    })
+      statusDistribution,
+      revenueTrend,
+      popularServices,
+      conversionRate,
+      topCustomers,
+      timeRange,
+      userRole: context.role,
+      dataScope: context.isAdmin ? 'all' : 'user'
+    });
   } catch (error) {
-    console.error("Error fetching report data:", error)
+    console.error("Error fetching report data:", error);
     return NextResponse.json({ 
-      error: "Failed to fetch report data",
-      statusDistribution: [],
-      revenueTrend: [],
-      popularServices: [],
-      conversionRate: []
-    }, { status: 500 })
+      success: false, 
+      error: "Failed to fetch report data" 
+    }, { status: 500 });
   }
 }

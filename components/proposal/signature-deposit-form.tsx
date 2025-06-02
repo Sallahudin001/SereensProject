@@ -48,20 +48,47 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
         return
       }
 
-      // Always save the proposal first to ensure we have the latest data
-      const saveResult = await createProposal(formData)
-
-      if (!saveResult.success) {
-        toast({
-          title: "Error",
-          description: saveResult.error || "Failed to save proposal",
-          variant: "destructive",
+      // Only create/update the proposal if we have valid data
+      if (proposalId) {
+        // Update the existing proposal with the latest data and mark it ready to send
+        const updateResult = await createProposal({
+          ...formData,
+          id: proposalId,
+          status: "ready_to_send" // Update status to indicate it's ready to send
         })
-        setIsSubmitting(false)
-        return
-      }
 
-      proposalId = saveResult.proposalId
+        if (!updateResult.success) {
+          toast({
+            title: "Error",
+            description: updateResult.error || "Failed to update proposal",
+            variant: "destructive",
+          })
+          setIsSubmitting(false)
+          return
+        }
+        
+        // Ensure we use the same proposal ID
+        proposalId = updateResult.proposalId
+      } else {
+        // If somehow we don't have a proposal ID yet, create one
+        console.warn("No proposal ID found at final step - creating new proposal")
+        const saveResult = await createProposal({
+          ...formData,
+          status: "ready_to_send"
+        })
+
+        if (!saveResult.success) {
+          toast({
+            title: "Error",
+            description: saveResult.error || "Failed to save proposal",
+            variant: "destructive",
+          })
+          setIsSubmitting(false)
+          return
+        }
+        
+        proposalId = saveResult.proposalId
+      }
 
       // Send the proposal based on selected method
       if (signatureMethod === "email") {

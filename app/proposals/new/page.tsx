@@ -6,6 +6,7 @@ import DashboardLayout from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react"
+import { Progress } from "@/components/ui/progress"
 import CustomerInfoForm from "@/components/proposal/customer-info-form"
 import ScopeOfWorkForm from "@/components/proposal/scope-of-work-form"
 import ProductSelectionForm from "@/components/proposal/product-selection-form"
@@ -60,6 +61,8 @@ export default function NewProposalPage() {
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
+  const [draftProposalId, setDraftProposalId] = useState<string | null>(null)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [formData, setFormData] = useState<ProposalFormData>({
     customer: {
       name: "",
@@ -115,6 +118,8 @@ export default function NewProposalPage() {
             id: proposal.id,
             proposalNumber: proposal.proposalNumber,
           })
+          // Set the draft proposal ID if editing
+          setDraftProposalId(proposal.id)
         }
       }
     }
@@ -132,8 +137,54 @@ export default function NewProposalPage() {
     { id: "signature-deposit", label: "Signature & Deposit" },
   ]
 
-  const handleNext = () => {
+  // Function to create or update a draft proposal
+  const createOrUpdateDraftProposal = async (skipValidation = false) => {
+    try {
+      // Skip saving if we're on the first step and have no meaningful data
+      if (!skipValidation && currentStep === 0 && (!formData.customer.name || !formData.customer.email)) {
+        return null
+      }
+
+      setIsSavingDraft(true)
+
+      // If we already have a draft ID, include it in the form data to update instead of create
+      const dataToSave = {
+        ...formData,
+        id: draftProposalId || formData.id || undefined,
+        status: currentStep === steps.length - 1 ? "draft_complete" : "draft_in_progress"
+      }
+
+      const result = await createProposal(dataToSave)
+
+      if (result.success) {
+        // Store the proposal ID for future updates
+        if (!draftProposalId) {
+          setDraftProposalId(result.proposalId)
+          setFormData(prev => ({
+            ...prev,
+            id: result.proposalId,
+            proposalNumber: result.proposalNumber
+          }))
+        }
+        return result
+      } else {
+        console.error('Failed to save draft:', result.error)
+        return null
+      }
+    } catch (error) {
+      console.error("Error saving draft proposal:", error)
+      return null
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
+      // Save draft before proceeding to next step (only after customer info is filled)
+      if (currentStep >= 0 && formData.customer.name && formData.customer.email) {
+        await createOrUpdateDraftProposal()
+      }
       setCurrentStep(currentStep + 1)
     }
   }
@@ -149,6 +200,26 @@ export default function NewProposalPage() {
     try {
       // Immediately disable the button to prevent double clicks
       setIsSubmitting(true)
+
+      // If we have a draft proposal ID, check its current status
+      if (draftProposalId) {
+        try {
+          const response = await fetch(`/api/proposals/${draftProposalId}`)
+          if (response.ok) {
+            const proposalData = await response.json()
+            if (proposalData.status === 'sent' || proposalData.status === 'signed' || proposalData.status === 'completed') {
+              toast({
+                title: "Proposal already sent",
+                description: `This proposal has already been sent to the customer.`,
+              })
+              router.push("/dashboard")
+              return
+            }
+          }
+        } catch (error) {
+          console.error("Error checking proposal status:", error)
+        }
+      }
 
       // Validate required fields
       if (!formData.customer.name || !formData.customer.email) {
@@ -171,13 +242,13 @@ export default function NewProposalPage() {
         return
       }
 
-      // Submit the proposal to the database
-      const result = await createProposal(formData)
+      // Create or update the proposal with completed status
+      const result = await createOrUpdateDraftProposal(true)
 
-      if (result.success) {
+      if (result && result.success) {
         // Message varies if it was a duplicate prevention
         const message = result.isDuplicate 
-          ? "Prevented duplicate proposal creation"
+          ? "Using existing proposal to prevent duplication"
           : `Proposal ${result.proposalNumber} has been created successfully`
         
         toast({
@@ -185,19 +256,12 @@ export default function NewProposalPage() {
           description: message,
         })
 
-        // Update the formData with the new proposal ID
-        setFormData((prev) => ({
-          ...prev,
-          id: result.proposalId,
-          proposalNumber: result.proposalNumber,
-        }))
-
         // Always redirect immediately after creation to prevent repeated submissions
         router.push("/dashboard")
       } else {
         toast({
           title: "Error",
-          description: result.error || "Failed to create proposal",
+          description: result?.error || "Failed to create proposal",
           variant: "destructive",
         })
       }
@@ -316,7 +380,7 @@ export default function NewProposalPage() {
                 products={formData.products}
                 data={formData.pricing}
                 updateData={updatePricing}
-                proposalId={formData.id ? parseInt(formData.id) : undefined}
+                proposalId={draftProposalId ? parseInt(draftProposalId) : formData.id ? parseInt(formData.id) : undefined}
                 userId={currentUser?.id}
                 customerData={formData.customer}
                 fullFormData={formData}
@@ -338,8 +402,18 @@ export default function NewProposalPage() {
                 <Button 
                   onClick={handleNext} 
                   className="bg-rose-600 hover:bg-rose-700 px-6"
+                  disabled={isSavingDraft}
                 >
-                  Next <ArrowRight className="ml-2 h-4 w-4" />
+                  {isSavingDraft ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      Next <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               ) : (
                 <Button 
@@ -362,9 +436,18 @@ export default function NewProposalPage() {
               )}
             </div>
 
-            {/* Simple progress indicator */}
-            <div className="flex justify-start mt-8 text-sm text-gray-500">
-              Step {currentStep + 1} of {steps.length} • {Math.round((currentStep / (steps.length - 1)) * 100)}% Complete
+            {/* Progress indicator */}
+            <div className="mt-10 space-y-2">
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Step {currentStep + 1} of {steps.length}</span>
+                <span>{Math.round((currentStep / (steps.length - 1)) * 100)}% Complete</span>
+              </div>
+              <Progress value={(currentStep / (steps.length - 1)) * 100} className="h-2" />
+              {draftProposalId && (
+                <p className="text-xs text-gray-500 text-center mt-1">
+                  Draft saved: {formData.proposalNumber}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
