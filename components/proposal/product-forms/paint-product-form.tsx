@@ -130,13 +130,13 @@ export default function PaintProductForm({ data, updateData }: PaintProductFormP
           {serviceTypes.map((service) => (
             <Card
               key={service.value}
-              className={`cursor-pointer border ${formData.serviceType === service.value ? "border-rose-600" : ""}`}
+              className={`cursor-pointer border ${formData.serviceType === service.value ? "border-emerald-600" : ""}`}
             >
               <CardContent className="p-4 flex items-start gap-3">
                 <RadioGroupItem
                   value={service.value}
                   id={`service-${service.value}`}
-                  className={formData.serviceType === service.value ? "text-rose-600" : ""}
+                  className={formData.serviceType === service.value ? "text-emerald-600" : ""}
                 />
                 <div className="flex-1">
                   <Label htmlFor={`service-${service.value}`} className="font-medium cursor-pointer">
@@ -211,7 +211,7 @@ export default function PaintProductForm({ data, updateData }: PaintProductFormP
               id="include-prep"
               checked={formData.includePrep}
               onCheckedChange={(checked) => handleChange("includePrep", checked)}
-              className={formData.includePrep ? "text-rose-600" : ""}
+              className={formData.includePrep ? "text-emerald-600" : ""}
             />
             <div className="space-y-1">
               <Label htmlFor="include-prep" className="font-medium cursor-pointer">
@@ -226,7 +226,7 @@ export default function PaintProductForm({ data, updateData }: PaintProductFormP
               id="include-primer"
               checked={formData.includePrimer}
               onCheckedChange={(checked) => handleChange("includePrimer", checked)}
-              className={formData.includePrimer ? "text-rose-600" : ""}
+              className={formData.includePrimer ? "text-emerald-600" : ""}
             />
             <div className="space-y-1">
               <Label htmlFor="include-primer" className="font-medium cursor-pointer">

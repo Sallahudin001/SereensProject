@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import DashboardLayout from "@/components/dashboard-layout"
 import { BarChart, FileText, Plus, Users, TrendingUp, Clock, CheckCircle, AlertCircle, XCircle, Send } from "lucide-react"
 import { motion } from "framer-motion"
@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress"
 import { DashboardPerformanceChart } from "@/components/charts/dashboard-performance-chart"
 import { DashboardServicesChart } from "@/components/charts/dashboard-services-chart"
 import PendingApprovals from "@/components/dashboard/pending-approvals"
+import Image from "next/image"
 
 // Animation variants
 const fadeIn = {
@@ -52,6 +53,24 @@ interface Metrics {
   activeCustomers: number
   conversionRate: number
 }
+
+// Dashboard Footer Component
+const DashboardFooter = () => (
+  <div className="w-full bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left mt-8">
+    <div className="container mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
+      <div className="sm:col-span-1">
+        <Image src="/evergreen.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
+      </div>
+      <div className="sm:col-span-2 text-sm">
+        <p className="font-semibold text-lg text-white mb-1">Evergreen Energy Upgrades</p>
+        <p>C: (408) 826-7377 | O: (408)333-9831</p>
+        <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
+        <p>www.evergreenenergy.io</p>
+        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Energy Upgrades. All Rights Reserved.</p>
+      </div>
+    </div>
+  </div>
+)
 
 export default function DashboardPage() {
   const headerSection = useScrollAnimation({ threshold: 0.1 })
@@ -193,267 +212,292 @@ export default function DashboardPage() {
   }
 
   return (
-    <DashboardLayout>
-      <div className="px-1 sm:px-4 py-6">
-        <motion.div
-          ref={headerSection.ref}
-          initial="hidden"
-          animate={headerSection.isInView ? "visible" : "hidden"}
-          variants={fadeIn}
-          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8"
-        >
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Welcome back! Here's an overview of your business.</p>
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
-              <Link href="/proposals/new" className="w-full sm:w-auto">
-                <Button className="bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-700 hover:to-rose-600 text-white shadow-md w-full sm:w-auto">
-                  <Plus className="mr-2 h-4 w-4" /> New Proposal
-                </Button>
-              </Link>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          ref={statsSection.ref}
-          initial="hidden"
-          animate={statsSection.isInView ? "visible" : "hidden"}
-          variants={staggerContainer}
-          className="grid gap-4 md:grid-cols-3 mb-8"
-        >
-          {[
-            {
-              icon: FileText,
-              title: "Total Proposals",
-              value: loading ? "..." : metrics.totalProposals.toString(),
-              description: "All-time proposals created",
-              color: "from-blue-500 to-indigo-600",
-            },
-            {
-              icon: BarChart,
-              title: "Conversion Rate",
-              value: loading ? "..." : `${metrics.conversionRate}%`,
-              description: "Proposals to signed contracts",
-              color: "from-emerald-500 to-teal-600",
-            },
-            {
-              icon: Users,
-              title: "Active Customers",
-              value: loading ? "..." : metrics.activeCustomers.toString(),
-              description: "Customers with active projects",
-              color: "from-amber-500 to-orange-600",
-            },
-          ].map((stat, index) => (
-            <motion.div key={index} variants={fadeIn} className="h-full">
-              <Card className="h-full border-none shadow-md hover:shadow-lg transition-shadow duration-200">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                    <div className={`p-2 rounded-full bg-gradient-to-br ${stat.color} text-white`}>
-                      <stat.icon className="h-4 w-4" />
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-slate-200">
+      <DashboardLayout>
+        <div className="h-full">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="h-full flex flex-col"
+          >
+            <Card className="shadow-2xl rounded-xl overflow-hidden bg-white mb-8 mx-4 xl:mx-8">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+                <motion.div
+                  ref={headerSection.ref}
+                  initial="hidden"
+                  animate={headerSection.isInView ? "visible" : "hidden"}
+                  variants={fadeIn}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="bg-slate-100 p-2 rounded-lg shadow-sm">
+                      <Image src="/evergreen.png" alt="Evergreen Energy Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <motion.div
-                    className="flex flex-col"
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={statsSection.isInView ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
-                    transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
-                  >
-                    <span className="text-3xl font-bold">{stat.value}</span>
-                    <span className="text-xs text-muted-foreground mt-1">{stat.description}</span>
-                    {index === 1 && !loading && <Progress value={metrics.conversionRate} className="h-1.5 mt-3" />}
-                  </motion.div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* Pending Approvals Section */}
-        <motion.div
-          initial="hidden"
-          animate={statsSection.isInView ? "visible" : "hidden"}
-          variants={fadeIn}
-          className="mb-8"
-        >
-          <PendingApprovals />
-        </motion.div>
-
-        <motion.div
-          ref={proposalsSection.ref}
-          initial="hidden"
-          animate={proposalsSection.isInView ? "visible" : "hidden"}
-          variants={fadeIn}
-          className="mb-8"
-        >
-          <Card className="border-none shadow-md overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 pb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <CardTitle>Recent Proposals</CardTitle>
-                  <CardDescription>View and manage your recent proposals</CardDescription>
-                </div>
-                <Tabs value={activeFilter} onValueChange={setActiveFilter} className="w-full sm:w-auto">
-                  <TabsList className="grid grid-cols-4 w-full sm:w-auto">
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="signed">Signed</TabsTrigger>
-                    <TabsTrigger value="sent">Sent</TabsTrigger>
-                    <TabsTrigger value="rejected">Rejected</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              {loading ? (
-                <div className="flex justify-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rose-600"></div>
-                </div>
-              ) : filteredProposals.length === 0 ? (
-                <div className="text-center py-12 px-4">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <FileText className="h-8 w-8 text-slate-400" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">No proposals found</h3>
-                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                    {activeFilter === 'all' ? 
-                      "Create your first proposal to start tracking your sales pipeline." : 
-                      `No ${activeFilter} proposals found. Change filter or create a new proposal.`}
-                  </p>
-                  <Link href="/proposals/new">
-                    <Button className="bg-rose-600 hover:bg-rose-700">
-                      <Plus className="mr-2 h-4 w-4" /> Create Proposal
-                    </Button>
-                  </Link>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Customer</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Services</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
-                      </tr>
-                    </thead>
-                    <motion.tbody
-                      initial="hidden"
-                      animate={proposalsSection.isInView ? "visible" : "hidden"}
-                      variants={staggerContainer}
-                    >
-                      {filteredProposals.map((proposal, index) => (
-                        <motion.tr
-                          key={proposal.id || `proposal-${index}`}
-                          className="border-b hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
-                          variants={tableRowVariants}
-                          onClick={() => window.location.href = `/proposals/view/${proposal.id}?mode=admin`}
-                        >
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8 border-2 border-slate-50 shadow-sm">
-                                <AvatarImage src={`https://avatar.vercel.sh/${proposal.customer_name}`} />
-                                <AvatarFallback className="bg-rose-100 text-rose-800">{proposal.customer_name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="font-medium">{proposal.customer_name}</div>
-                                <div className="text-xs text-muted-foreground">#{proposal.proposal_number}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex flex-wrap gap-1 max-w-[200px]">
-                              {proposal.services.slice(0, 2).map((service, i) => (
-                                <Badge
-                                  key={i}
-                                  variant="outline"
-                                  className="bg-slate-50 dark:bg-slate-800 whitespace-nowrap"
-                                >
-                                  {service}
-                                </Badge>
-                              ))}
-                              {proposal.services.length > 2 && (
-                                <Badge variant="outline" className="bg-slate-50 dark:bg-slate-800">
-                                  +{proposal.services.length - 2} more
-                                </Badge>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 whitespace-nowrap">{formatDate(proposal.created_at)}</td>
-                          <td className="py-3 px-4">
-                            <div
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusStyle(proposal.status)}`}
-                            >
-                              {getStatusIcon(proposal.status)}
-                              {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 font-medium">${Number.parseFloat(proposal.total).toFixed(2)}</td>
-                        </motion.tr>
-                      ))}
-                    </motion.tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          ref={chartsSection.ref}
-          initial="hidden"
-          animate={chartsSection.isInView ? "visible" : "hidden"}
-          variants={staggerContainer}
-          className="grid gap-6 md:grid-cols-2"
-        >
-          {[
-            {
-              title: "Performance Overview",
-              description: "Your proposal performance for the last 30 days",
-              icon: TrendingUp,
-              color: "text-blue-500",
-              chart: <DashboardPerformanceChart />
-            },
-            {
-              title: "Popular Services",
-              description: "Most requested services in your proposals",
-              icon: BarChart,
-              color: "text-emerald-500",
-              chart: <DashboardServicesChart />
-            },
-          ].map((chart, index) => (
-            <motion.div key={index} variants={fadeIn}>
-              <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-200">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>{chart.title}</CardTitle>
-                      <CardDescription>{chart.description}</CardDescription>
-                    </div>
-                    <div className={`p-2 rounded-full bg-slate-100 dark:bg-slate-800 ${chart.color}`}>
-                      <chart.icon className="h-4 w-4" />
+                      <CardTitle className="text-3xl sm:text-4xl font-bold">Business Dashboard</CardTitle>
+                      <CardDescription className="text-green-100 text-sm sm:text-base">Comprehensive overview of your business performance</CardDescription>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={chartsSection.isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                    transition={{ delay: index * 0.2 + 0.3, duration: 0.5 }}
-                  >
-                    {chart.chart}
-                  </motion.div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </DashboardLayout>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
+                      <Link href="/proposals/new" className="w-full sm:w-auto">
+                        <Button className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white shadow-md w-full sm:w-auto border-none">
+                          <Plus className="mr-2 h-4 w-4" /> New Proposal
+                        </Button>
+                      </Link>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              </CardHeader>
+
+              <CardContent className="p-6 sm:p-8 flex-1">
+                <motion.div
+                  ref={statsSection.ref}
+                  initial="hidden"
+                  animate={statsSection.isInView ? "visible" : "hidden"}
+                  variants={staggerContainer}
+                  className="grid gap-4 md:grid-cols-3 mb-8"
+                >
+                  {[
+                    {
+                      icon: FileText,
+                      title: "Total Proposals",
+                      value: loading ? "..." : metrics.totalProposals.toString(),
+                      description: "All-time proposals created",
+                      color: "from-emerald-500 to-green-600",
+                    },
+                    {
+                      icon: BarChart,
+                      title: "Conversion Rate",
+                      value: loading ? "..." : `${metrics.conversionRate}%`,
+                      description: "Proposals to signed contracts",
+                      color: "from-green-500 to-emerald-600",
+                    },
+                    {
+                      icon: Users,
+                      title: "Active Customers",
+                      value: loading ? "..." : metrics.activeCustomers.toString(),
+                      description: "Customers with active projects",
+                      color: "from-teal-500 to-emerald-600",
+                    },
+                  ].map((stat, index) => (
+                    <motion.div key={index} variants={fadeIn} className="h-full">
+                      <Card className="h-full border-none shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+                            <div className={`p-2 rounded-full bg-gradient-to-br ${stat.color} text-white`}>
+                              <stat.icon className="h-4 w-4" />
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <motion.div
+                            className="flex flex-col"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={statsSection.isInView ? { scale: 1, opacity: 1 } : { scale: 0.9, opacity: 0 }}
+                            transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
+                          >
+                            <span className="text-3xl font-bold">{stat.value}</span>
+                            <span className="text-xs text-muted-foreground mt-1">{stat.description}</span>
+                            {index === 1 && !loading && <Progress value={metrics.conversionRate} className="h-1.5 mt-3 [&>div]:bg-emerald-600" />}
+                          </motion.div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                {/* Pending Approvals Section */}
+                <motion.div
+                  initial="hidden"
+                  animate={statsSection.isInView ? "visible" : "hidden"}
+                  variants={fadeIn}
+                  className="mb-8"
+                >
+                  <PendingApprovals />
+                </motion.div>
+
+                <motion.div
+                  ref={proposalsSection.ref}
+                  initial="hidden"
+                  animate={proposalsSection.isInView ? "visible" : "hidden"}
+                  variants={fadeIn}
+                  className="mb-8"
+                >
+                  <Card className="border-none shadow-md overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 pb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <CardTitle className="flex items-center text-gray-800">
+                            <FileText className="w-6 h-6 mr-3 text-emerald-600" /> Recent Proposals
+                          </CardTitle>
+                          <CardDescription>View and manage your recent proposals</CardDescription>
+                        </div>
+                        <Tabs value={activeFilter} onValueChange={setActiveFilter} className="w-full sm:w-auto">
+                          <TabsList className="grid grid-cols-4 w-full sm:w-auto">
+                            <TabsTrigger value="all" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">All</TabsTrigger>
+                            <TabsTrigger value="signed" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Signed</TabsTrigger>
+                            <TabsTrigger value="sent" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Sent</TabsTrigger>
+                            <TabsTrigger value="rejected" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Rejected</TabsTrigger>
+                          </TabsList>
+                        </Tabs>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {loading ? (
+                        <div className="flex justify-center py-12">
+                          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
+                        </div>
+                      ) : filteredProposals.length === 0 ? (
+                        <div className="text-center py-12 px-4">
+                          <div className="mx-auto w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center mb-4">
+                            <FileText className="h-8 w-8 text-emerald-500" />
+                          </div>
+                          <h3 className="text-lg font-medium mb-2">No proposals found</h3>
+                          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                            {activeFilter === 'all' ? 
+                              "Create your first proposal to start tracking your sales pipeline." : 
+                              `No ${activeFilter} proposals found. Change filter or create a new proposal.`}
+                          </p>
+                          <Link href="/proposals/new">
+                            <Button className="bg-emerald-600 hover:bg-emerald-700">
+                              <Plus className="mr-2 h-4 w-4" /> Create Proposal
+                            </Button>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full">
+                            <thead>
+                              <tr className="border-b">
+                                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Customer</th>
+                                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Services</th>
+                                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Date</th>
+                                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
+                                <th className="text-left py-3 px-4 font-medium text-muted-foreground">Amount</th>
+                              </tr>
+                            </thead>
+                            <motion.tbody
+                              initial="hidden"
+                              animate={proposalsSection.isInView ? "visible" : "hidden"}
+                              variants={staggerContainer}
+                            >
+                              {filteredProposals.map((proposal, index) => (
+                                <motion.tr
+                                  key={proposal.id || `proposal-${index}`}
+                                  className="border-b hover:bg-emerald-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                  variants={tableRowVariants}
+                                  onClick={() => window.location.href = `/proposals/view/${proposal.id}?mode=admin`}
+                                >
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center gap-3">
+                                      <Avatar className="h-8 w-8 border-2 border-emerald-50 shadow-sm">
+                                        <AvatarImage src={`https://avatar.vercel.sh/${proposal.customer_name}`} />
+                                        <AvatarFallback className="bg-emerald-100 text-emerald-800">{proposal.customer_name.charAt(0)}</AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <div className="font-medium">{proposal.customer_name}</div>
+                                        <div className="text-xs text-muted-foreground">#{proposal.proposal_number}</div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex flex-wrap gap-1 max-w-[200px]">
+                                      {proposal.services.slice(0, 2).map((service, i) => (
+                                        <Badge
+                                          key={i}
+                                          variant="outline"
+                                          className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-slate-800 whitespace-nowrap"
+                                        >
+                                          {service}
+                                        </Badge>
+                                      ))}
+                                      {proposal.services.length > 2 && (
+                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-slate-800">
+                                          +{proposal.services.length - 2} more
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 whitespace-nowrap">{formatDate(proposal.created_at)}</td>
+                                  <td className="py-3 px-4">
+                                    <div
+                                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${getStatusStyle(proposal.status)}`}
+                                    >
+                                      {getStatusIcon(proposal.status)}
+                                      {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
+                                    </div>
+                                  </td>
+                                  <td className="py-3 px-4 font-medium">${Number.parseFloat(proposal.total).toFixed(2)}</td>
+                                </motion.tr>
+                              ))}
+                            </motion.tbody>
+                          </table>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                <motion.div
+                  ref={chartsSection.ref}
+                  initial="hidden"
+                  animate={chartsSection.isInView ? "visible" : "hidden"}
+                  variants={staggerContainer}
+                  className="grid gap-6 md:grid-cols-2"
+                >
+                  {[
+                    {
+                      title: "Performance Overview",
+                      description: "Your proposal performance for the last 30 days",
+                      icon: TrendingUp,
+                      color: "text-emerald-500",
+                      chart: <DashboardPerformanceChart />
+                    },
+                    {
+                      title: "Popular Services",
+                      description: "Most requested services in your proposals",
+                      icon: BarChart,
+                      color: "text-green-500",
+                      chart: <DashboardServicesChart />
+                    },
+                  ].map((chart, index) => (
+                    <motion.div key={index} variants={fadeIn}>
+                      <Card className="border-none shadow-md hover:shadow-lg transition-shadow duration-200">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="flex items-center">
+                                <chart.icon className={`w-6 h-6 mr-3 ${chart.color}`} />
+                                {chart.title}
+                              </CardTitle>
+                              <CardDescription>{chart.description}</CardDescription>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={chartsSection.isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                            transition={{ delay: index * 0.2 + 0.3, duration: 0.5 }}
+                          >
+                            {chart.chart}
+                          </motion.div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </CardContent>
+            </Card>
+            
+            {/* Dashboard Footer - only appears on dashboard */}
+            <DashboardFooter />
+          </motion.div>
+        </div>
+      </DashboardLayout>
+    </div>
   )
 }

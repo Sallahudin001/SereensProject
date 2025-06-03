@@ -144,13 +144,13 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
           ].map((option) => (
             <Card
               key={option.value}
-              className={`cursor-pointer border ${formData.material === option.value ? "border-rose-600" : ""}`}
+              className={`cursor-pointer border ${formData.material === option.value ? "border-emerald-600" : ""}`}
             >
               <CardContent className="p-4 flex items-start gap-3">
                 <RadioGroupItem
                   value={option.value}
                   id={`material-${option.value}`}
-                  className={formData.material === option.value ? "text-rose-600" : ""}
+                  className={formData.material === option.value ? "text-emerald-600" : ""}
                 />
                 <div className="flex-1">
                   <Label htmlFor={`material-${option.value}`} className="font-medium cursor-pointer">
@@ -171,7 +171,7 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
             id="add-gutters"
             checked={formData.addGutters}
             onCheckedChange={(checked) => handleChange("addGutters", !!checked)}
-            className={formData.addGutters ? "text-rose-600" : ""}
+            className={formData.addGutters ? "text-emerald-600" : ""}
           />
           <div className="space-y-1">
             <Label htmlFor="add-gutters" className="font-medium cursor-pointer">
@@ -199,7 +199,7 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
             id="add-plywood"
             checked={formData.addPlywood}
             onCheckedChange={(checked) => handleChange("addPlywood", !!checked)}
-            className={formData.addPlywood ? "text-rose-600" : ""}
+            className={formData.addPlywood ? "text-emerald-600" : ""}
           />
           <div className="space-y-1">
             <Label htmlFor="add-plywood" className="font-medium cursor-pointer">
@@ -240,16 +240,16 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
+          <div className="space-y-2">
             <Label htmlFor="total-price">Roofing Price</Label>
-          <div className="relative max-w-xs">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-            <Input
+            <div className="relative max-w-xs">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
                 id="total-price"
-              placeholder="0.00"
+                placeholder="0.00"
                 value={formData.totalPrice}
                 onChange={(e) => handleChange("totalPrice", e.target.value)}
-              className="pl-8"
+                className="pl-8"
               />
             </div>
           </div>
@@ -329,4 +329,4 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
       </div>
     </div>
   )
-}
+} 

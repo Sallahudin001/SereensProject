@@ -144,13 +144,13 @@ export default function GarageDoorsProductForm({ data, updateData }: GarageDoors
           {models.map((model) => (
             <Card
               key={model.value}
-              className={`cursor-pointer border w-full ${formData.model === model.value ? "border-rose-600" : ""}`}
+              className={`cursor-pointer border w-full ${formData.model === model.value ? "border-emerald-600" : ""}`}
             >
               <CardContent className="p-4 flex items-start gap-3">
                 <RadioGroupItem
                   value={model.value}
                   id={`model-${model.value}`}
-                  className={formData.model === model.value ? "text-rose-600" : ""}
+                  className={formData.model === model.value ? "text-emerald-600" : ""}
                 />
                 <div className="flex-1">
                   <Label htmlFor={`model-${model.value}`} className="font-medium cursor-pointer">
@@ -158,7 +158,7 @@ export default function GarageDoorsProductForm({ data, updateData }: GarageDoors
                   </Label>
                   <p className="text-sm text-gray-500">{model.description}</p>
                   {(model.value === "4050" || model.value === "4053") && (
-                    <p className="text-xs text-rose-600 mt-1">Insulated upgrade</p>
+                    <p className="text-xs text-emerald-600 mt-1">Insulated upgrade</p>
                   )}
                 </div>
               </CardContent>
@@ -217,7 +217,7 @@ export default function GarageDoorsProductForm({ data, updateData }: GarageDoors
                 id={`addon-${addon.value}`}
                 checked={formData.addons.includes(addon.value)}
                 onCheckedChange={() => handleAddonToggle(addon.value)}
-                className={formData.addons.includes(addon.value) ? "text-rose-600" : ""}
+                className={formData.addons.includes(addon.value) ? "text-emerald-600" : ""}
               />
               <div className="space-y-1 flex-1">
                 <Label htmlFor={`addon-${addon.value}`} className="font-medium cursor-pointer">

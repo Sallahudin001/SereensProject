@@ -19,14 +19,14 @@ export default function ProposalStepper({ steps, currentStep }: ProposalStepperP
             <div className="flex flex-col items-center">
               <div
                 className={`w-10 h-10 flex items-center justify-center rounded-full border-2 ${
-                  index <= currentStep ? "border-rose-600 bg-rose-50 text-rose-600" : "border-gray-300 text-gray-500"
+                  index <= currentStep ? "border-emerald-600 bg-emerald-50 text-emerald-600" : "border-gray-300 text-gray-500"
                 }`}
               >
                 {index + 1}
               </div>
               <span
                 className={`mt-2 text-xs text-center ${
-                  index === currentStep ? "font-medium text-rose-600" : "text-gray-500"
+                  index === currentStep ? "font-medium text-emerald-600" : "text-gray-500"
                 }`}
               >
                 {step.label}
@@ -35,7 +35,7 @@ export default function ProposalStepper({ steps, currentStep }: ProposalStepperP
             {index < steps.length - 1 && (
               <div
                 className={`flex-1 h-0.5 mx-2 ${
-                  index < currentStep ? "bg-rose-600" : "bg-gray-300"
+                  index < currentStep ? "bg-emerald-600" : "bg-gray-300"
                 }`}
                 style={{ minWidth: 24 }}
               ></div>

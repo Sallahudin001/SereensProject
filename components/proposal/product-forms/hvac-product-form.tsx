@@ -143,13 +143,13 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
           {systemTypes.map((system) => (
             <Card
               key={system.value}
-              className={`cursor-pointer border ${formData.systemType === system.value ? "border-rose-600" : ""}`}
+              className={`cursor-pointer border ${formData.systemType === system.value ? "border-emerald-600" : ""}`}
             >
               <CardContent className="p-4 flex items-start gap-3">
                 <RadioGroupItem
                   value={system.value}
                   id={`system-${system.value}`}
-                  className={formData.systemType === system.value ? "text-rose-600" : ""}
+                  className={formData.systemType === system.value ? "text-emerald-600" : ""}
                 />
                 <div className="flex-1">
                   <Label htmlFor={`system-${system.value}`} className="font-medium cursor-pointer">
@@ -210,7 +210,7 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
                 id={`addon-${addon.value}`}
                 checked={formData.addons.includes(addon.value)}
                 onCheckedChange={() => handleAddonToggle(addon.value)}
-                className={formData.addons.includes(addon.value) ? "text-rose-600" : ""}
+                className={formData.addons.includes(addon.value) ? "text-emerald-600" : ""}
               />
               <div className="space-y-1">
                 <Label htmlFor={`addon-${addon.value}`} className="font-medium cursor-pointer">

@@ -4,8 +4,8 @@ import { useState, useCallback, memo, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { ArrowLeft, ArrowRight, Check, Loader2, Plus } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import CustomerInfoForm from "@/components/proposal/customer-info-form"
 import ScopeOfWorkForm from "@/components/proposal/scope-of-work-form"
@@ -16,6 +16,8 @@ import ProposalStepper from "@/components/proposal/proposal-stepper"
 import RepOfferSelector from "@/components/proposal/rep-offer-selector"
 import { createProposal, getProposalById } from "@/app/actions/proposal-actions"
 import { toast } from "@/hooks/use-toast"
+import Image from "next/image"
+import { motion } from "framer-motion"
 
 // Define interfaces for typesafety
 interface CustomerInfo {
@@ -134,7 +136,7 @@ export default function NewProposalPage() {
     { id: "product-selection", label: "Product Selection" },
     { id: "offer-selection", label: "Sales Offers" },
     { id: "pricing-breakdown", label: "Pricing Breakdown" },
-    { id: "signature-deposit", label: "Signature & Deposit" },
+    { id: "finalize", label: "Finalize" },
   ]
 
   // Function to create or update a draft proposal
@@ -324,134 +326,168 @@ export default function NewProposalPage() {
   }, [])
 
   return (
-    <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Create New Proposal</h1>
-        <p className="text-gray-500">Generate a detailed sales proposal for your customer</p>
-      </div>
-
-      <Card className="mb-6 overflow-hidden border-0 shadow-md">
-        <CardContent className="pt-6 pb-4">
-          <ProposalStepper steps={steps} currentStep={currentStep} />
-        </CardContent>
-      </Card>
-
-      <Card className="border-0 shadow-md">
-        <CardHeader className="bg-gradient-to-r from-rose-50 to-white border-b">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-rose-100 text-rose-600 font-medium">
-              {currentStep + 1}
-            </div>
-            <div>
-              <CardTitle>{steps[currentStep].label}</CardTitle>
-              <CardDescription>
-                {currentStep === 0 && "Enter customer details to personalize the proposal"}
-                {currentStep === 1 && "Select services to include in the customer's project scope"}
-                {currentStep === 2 && "Choose specific products and options for each selected service"}
-                {currentStep === 3 && "Select time-sensitive offers to create urgency and boost close rates"}
-                {currentStep === 4 && "Set pricing details and configure payment options"}
-                {currentStep === 5 && "Review and finalize the proposal for signature"}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-8">
-          {/* Use full width for all sections */}
-          <div className="w-full">
-            {currentStep === 0 && <MemoizedCustomerInfoForm data={formData.customer} updateData={updateCustomer} />}
-            {currentStep === 1 && <MemoizedScopeOfWorkForm data={formData.services} updateData={updateServices} />}
-            {currentStep === 2 && (
-              <MemoizedProductSelectionForm
-                services={formData.services}
-                data={formData.products}
-                updateData={updateProducts}
-              />
-            )}
-            {currentStep === 3 && (
-              <RepOfferSelector
-                services={formData.services}
-                selectedOffers={formData.selectedOffers}
-                onOffersChange={updateSelectedOffers}
-              />
-            )}
-            {currentStep === 4 && (
-              <MemoizedPricingBreakdownForm
-                services={formData.services}
-                products={formData.products}
-                data={formData.pricing}
-                updateData={updatePricing}
-                proposalId={draftProposalId ? parseInt(draftProposalId) : formData.id ? parseInt(formData.id) : undefined}
-                userId={currentUser?.id}
-                customerData={formData.customer}
-                fullFormData={formData}
-              />
-            )}
-            {currentStep === 5 && <MemoizedSignatureDepositForm formData={formData} />}
-
-            <div className="flex justify-between mt-10">
-              <Button 
-                variant="outline" 
-                onClick={handlePrevious} 
-                disabled={currentStep === 0}
-                className="px-6"
-              >
-                <ArrowLeft className="mr-2 h-4 w-4" /> Previous
-              </Button>
-
-              {currentStep < steps.length - 1 ? (
-                <Button 
-                  onClick={handleNext} 
-                  className="bg-rose-600 hover:bg-rose-700 px-6"
-                  disabled={isSavingDraft}
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-slate-200">
+      <DashboardLayout>
+        <div className="h-full">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="h-full flex flex-col"
+          >
+            <Card className="shadow-2xl rounded-xl overflow-hidden bg-white mb-8 mx-4 xl:mx-8 flex-1">
+              <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
                 >
-                  {isSavingDraft ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      Next <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={isSubmitting}
-                  className="bg-emerald-600 hover:bg-emerald-700 px-6"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                      Creating Proposal
-                    </>
-                  ) : (
-                    <>
-                      <Check className="mr-2 h-4 w-4" /> 
-                      Complete Proposal
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <CardTitle className="text-3xl sm:text-4xl font-bold flex items-center">
+                        <Plus className="w-8 h-8 mr-3" />
+                        Create New Proposal
+                      </CardTitle>
+                      <CardDescription className="text-green-100 text-sm sm:text-base">
+                        Generate a detailed sales proposal for your customer
+                      </CardDescription>
+                    </div>
+                  </div>
+                </motion.div>
+              </CardHeader>
 
-            {/* Progress indicator */}
-            <div className="mt-10 space-y-2">
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Step {currentStep + 1} of {steps.length}</span>
-                <span>{Math.round((currentStep / (steps.length - 1)) * 100)}% Complete</span>
-              </div>
-              <Progress value={(currentStep / (steps.length - 1)) * 100} className="h-2" />
-              {draftProposalId && (
-                <p className="text-xs text-gray-500 text-center mt-1">
-                  Draft saved: {formData.proposalNumber}
-                </p>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </DashboardLayout>
+              <CardContent className="p-6 sm:p-8 flex-1 flex flex-col">
+                <Card className="mb-6 overflow-hidden border-none shadow-md">
+                  <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 pb-4">
+                    <CardTitle className="text-gray-800">Proposal Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6 pb-4">
+                    <ProposalStepper steps={steps} currentStep={currentStep} />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-none shadow-md flex-1 flex flex-col">
+                  <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50 border-b">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center h-8 w-8 rounded-full bg-emerald-100 text-emerald-600 font-medium">
+                        {currentStep + 1}
+                      </div>
+                      <div>
+                        <CardTitle className="text-emerald-800">{steps[currentStep].label}</CardTitle>
+                        <CardDescription className="text-emerald-600">
+                          {currentStep === 0 && "Enter customer details to personalize the proposal"}
+                          {currentStep === 1 && "Select services to include in the customer's project scope"}
+                          {currentStep === 2 && "Choose specific products and options for each selected service"}
+                          {currentStep === 3 && "Select time-sensitive offers to create urgency and boost close rates"}
+                          {currentStep === 4 && "Set pricing details and configure payment options"}
+                          {currentStep === 5 && "Review and finalize the proposal for signature"}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-8 flex-1 flex flex-col">
+                    {/* Use full width for all sections */}
+                    <div className="w-full flex-1">
+                      {currentStep === 0 && <MemoizedCustomerInfoForm data={formData.customer} updateData={updateCustomer} />}
+                      {currentStep === 1 && <MemoizedScopeOfWorkForm data={formData.services} updateData={updateServices} />}
+                      {currentStep === 2 && (
+                        <MemoizedProductSelectionForm
+                          services={formData.services}
+                          data={formData.products}
+                          updateData={updateProducts}
+                        />
+                      )}
+                      {currentStep === 3 && (
+                        <RepOfferSelector
+                          services={formData.services}
+                          selectedOffers={formData.selectedOffers}
+                          onOffersChange={updateSelectedOffers}
+                        />
+                      )}
+                      {currentStep === 4 && (
+                        <MemoizedPricingBreakdownForm
+                          services={formData.services}
+                          products={formData.products}
+                          data={formData.pricing}
+                          updateData={updatePricing}
+                          proposalId={draftProposalId ? parseInt(draftProposalId) : formData.id ? parseInt(formData.id) : undefined}
+                          userId={currentUser?.id}
+                          customerData={formData.customer}
+                          fullFormData={formData}
+                        />
+                      )}
+                      {currentStep === 5 && <MemoizedSignatureDepositForm formData={formData} />}
+
+                      <div className="flex justify-between mt-10">
+                        <Button 
+                          variant="outline" 
+                          onClick={handlePrevious} 
+                          disabled={currentStep === 0}
+                          className="px-6 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                        >
+                          <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+                        </Button>
+
+                        {currentStep < steps.length - 1 ? (
+                          <Button 
+                            onClick={handleNext} 
+                            className="bg-emerald-600 hover:bg-emerald-700 px-6"
+                            disabled={isSavingDraft}
+                          >
+                            {isSavingDraft ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                Next <ArrowRight className="ml-2 h-4 w-4" />
+                              </>
+                            )}
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={handleSubmit} 
+                            disabled={isSubmitting}
+                            className="bg-emerald-600 hover:bg-emerald-700 px-6"
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                                Creating Proposal
+                              </>
+                            ) : (
+                              <>
+                                <Check className="mr-2 h-4 w-4" /> 
+                                Complete Proposal
+                              </>
+                            )}
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Progress indicator */}
+                      <div className="mt-10 space-y-2">
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>Step {currentStep + 1} of {steps.length}</span>
+                          <span>{Math.round((currentStep / (steps.length - 1)) * 100)}% Complete</span>
+                        </div>
+                        <Progress value={(currentStep / (steps.length - 1)) * 100} className="h-2 [&>div]:bg-emerald-600" />
+                        {draftProposalId && (
+                          <p className="text-xs text-emerald-600 text-center mt-1">
+                            Draft saved: {formData.proposalNumber}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </DashboardLayout>
+    </div>
   )
 }

@@ -165,13 +165,13 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
               {windowTypes.map((type) => (
                 <Card
                   key={type.value}
-                  className={`cursor-pointer border ${formData.windowType === type.value ? "border-rose-600" : ""}`}
+                  className={`cursor-pointer border ${formData.windowType === type.value ? "border-emerald-600" : ""}`}
                 >
                   <CardContent className="p-4 flex items-start gap-3">
                     <RadioGroupItem
                       value={type.value}
                       id={`window-${type.value}`}
-                      className={formData.windowType === type.value ? "text-rose-600" : ""}
+                      className={formData.windowType === type.value ? "text-emerald-600" : ""}
                     />
                     <div className="flex-1">
                       <Label htmlFor={`window-${type.value}`} className="font-medium cursor-pointer">
@@ -195,19 +195,19 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
               {windowColors.map((color) => (
                 <Card
                   key={color.value}
-                  className={`cursor-pointer border ${formData.windowColor === color.value ? "border-rose-600" : ""}`}
+                  className={`cursor-pointer border ${formData.windowColor === color.value ? "border-emerald-600" : ""}`}
                 >
                   <CardContent className="p-4 flex items-start gap-3">
                     <RadioGroupItem
                       value={color.value}
                       id={`color-${color.value}`}
-                      className={formData.windowColor === color.value ? "text-rose-600" : ""}
+                      className={formData.windowColor === color.value ? "text-emerald-600" : ""}
                     />
                     <div className="flex-1">
                       <Label htmlFor={`color-${color.value}`} className="font-medium cursor-pointer">
                         {color.label}
                       </Label>
-                      {color.premium && <p className="text-xs text-rose-600">Premium option</p>}
+                      {color.premium && <p className="text-xs text-emerald-600">Premium option</p>}
                     </div>
                   </CardContent>
                 </Card>
@@ -232,7 +232,7 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
               id="custom-colors"
               checked={formData.customColors}
               onCheckedChange={(checked) => handleChange("customColors", checked)}
-              className={formData.customColors ? "text-rose-600" : ""}
+              className={formData.customColors ? "text-emerald-600" : ""}
             />
             <div className="space-y-1">
               <Label htmlFor="custom-colors" className="font-medium cursor-pointer">
@@ -253,7 +253,7 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
                     id={`door-${door.value}`}
                     checked={formData.doorTypes.includes(door.value)}
                     onCheckedChange={() => handleDoorToggle(door.value)}
-                    className={formData.doorTypes.includes(door.value) ? "text-rose-600" : ""}
+                    className={formData.doorTypes.includes(door.value) ? "text-emerald-600" : ""}
                   />
                   <div className="space-y-1">
                     <Label htmlFor={`door-${door.value}`} className="font-medium cursor-pointer">

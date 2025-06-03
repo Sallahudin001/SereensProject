@@ -64,7 +64,7 @@ export default function ScopeOfWorkForm({ data, updateData }: ScopeOfWorkFormPro
   if (loading) {
     return (
       <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-rose-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
       </div>
     )
   }
@@ -78,16 +78,16 @@ export default function ScopeOfWorkForm({ data, updateData }: ScopeOfWorkFormPro
           <Card
             key={service.id}
             className={`cursor-pointer transition-all ${
-              selectedServices.includes(service.name) ? "border-rose-600 bg-rose-50" : "hover:border-gray-300"
+              selectedServices.includes(service.name) ? "border-emerald-600 bg-emerald-50" : "hover:border-gray-300"
             }`}
             onClick={() => handleServiceToggle(service.name)}
           >
             <CardContent className="p-4 flex items-center gap-4">
               <div
-                className={`p-2 rounded-full ${selectedServices.includes(service.name) ? "bg-rose-100" : "bg-gray-100"}`}
+                className={`p-2 rounded-full ${selectedServices.includes(service.name) ? "bg-emerald-100" : "bg-gray-100"}`}
               >
                 <div
-                  className={`h-5 w-5 ${selectedServices.includes(service.name) ? "text-rose-600" : "text-gray-500"}`}
+                  className={`h-5 w-5 ${selectedServices.includes(service.name) ? "text-emerald-600" : "text-gray-500"}`}
                 >
                   {/* Use the icon name from the database */}
                   {service.icon === "Home" && (
@@ -121,7 +121,7 @@ export default function ScopeOfWorkForm({ data, updateData }: ScopeOfWorkFormPro
                       <path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" />
                     </svg>
                   )}
-                  {service.icon === "AppWindowIcon" && (
+                  {service.icon === "RectangleHorizontal" && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="20"
@@ -183,7 +183,7 @@ export default function ScopeOfWorkForm({ data, updateData }: ScopeOfWorkFormPro
                 id={`service-${service.name}`}
                 checked={selectedServices.includes(service.name)}
                 onCheckedChange={() => handleServiceToggle(service.name)}
-                className={selectedServices.includes(service.name) ? "text-rose-600" : ""}
+                className={selectedServices.includes(service.name) ? "text-emerald-600" : ""}
               />
             </CardContent>
           </Card>

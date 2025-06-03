@@ -155,12 +155,14 @@ export default function PendingApprovals() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Pending Approvals</CardTitle>
+          <CardTitle className="text-lg font-medium flex items-center">
+            <Clock className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+          </CardTitle>
           <CardDescription>Proposals awaiting discount approval</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
           </div>
         </CardContent>
       </Card>
@@ -172,7 +174,9 @@ export default function PendingApprovals() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Pending Approvals</CardTitle>
+          <CardTitle className="text-lg font-medium flex items-center">
+            <Clock className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+          </CardTitle>
           <CardDescription>Proposals awaiting discount approval</CardDescription>
         </CardHeader>
         <CardContent>
@@ -189,12 +193,14 @@ export default function PendingApprovals() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Pending Approvals</CardTitle>
+          <CardTitle className="text-lg font-medium flex items-center">
+            <CheckCircle className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+          </CardTitle>
           <CardDescription>Proposals awaiting discount approval</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mb-2" />
+            <CheckCircle className="h-12 w-12 text-emerald-500 mb-2" />
             <p className="text-sm text-gray-500">No proposals awaiting approval</p>
           </div>
         </CardContent>
@@ -205,7 +211,9 @@ export default function PendingApprovals() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Pending Approvals</CardTitle>
+        <CardTitle className="text-lg font-medium flex items-center">
+          <Clock className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+        </CardTitle>
         <CardDescription>Proposals awaiting discount approval</CardDescription>
       </CardHeader>
       <CardContent>
@@ -216,14 +224,14 @@ export default function PendingApprovals() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+              className="border rounded-lg p-4 hover:bg-emerald-50 transition-colors"
             >
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="font-medium">{proposal.proposal_number}</h3>
                   <p className="text-sm text-gray-500">{proposal.customer_name}</p>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-1">
+                <Badge variant="outline" className="flex items-center gap-1 border-amber-300 text-amber-700 bg-amber-50">
                   <Clock className="h-3 w-3" /> Pending
                 </Badge>
               </div>
@@ -235,13 +243,13 @@ export default function PendingApprovals() {
                 </div>
                 <div>
                   <p className="text-gray-500">Requested Discount</p>
-                  <p className="font-semibold text-blue-600">
+                  <p className="font-semibold text-emerald-600">
                     {formatCurrency(proposal.requested_discount)}
                   </p>
                 </div>
               </div>
               
-              <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 text-xs text-gray-500 gap-2">
                 <div className="flex items-center">
                   <FileText className="h-3 w-3 mr-1" />
                   <span>Created: {formatDate(proposal.created_at)}</span>
@@ -255,7 +263,7 @@ export default function PendingApprovals() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1"
+                    className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                     onClick={() => router.push(`/proposals/view/${proposal.id}?mode=admin`)}
                   >
                     <FileText className="h-3 w-3 mr-1" /> View Proposal
@@ -263,7 +271,7 @@ export default function PendingApprovals() {
                   <Button
                     variant="default"
                     size="sm"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
                     onClick={() => router.push(`/admin/approvals?request=${proposal.approval_request_id}`)}
                   >
                     <Clock className="h-3 w-3 mr-1" /> Review Approval

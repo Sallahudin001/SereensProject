@@ -206,7 +206,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
                 </div>
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-gray-600">Monthly Payment</span>
-                  <span className="text-rose-600 font-medium">
+                  <span className="text-emerald-600 font-medium">
                     ${formData.pricing.monthlyPayment?.toFixed(2) || "0.00"}/mo
                   </span>
                 </div>
@@ -223,12 +223,12 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
           onValueChange={setSignatureMethod}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          <Card className={`cursor-pointer border ${signatureMethod === "email" ? "border-rose-600" : ""}`}>
+          <Card className={`cursor-pointer border ${signatureMethod === "email" ? "border-emerald-600" : ""}`}>
             <CardContent className="p-4 flex items-start gap-3">
               <RadioGroupItem
                 value="email"
                 id="method-email"
-                className={signatureMethod === "email" ? "text-rose-600" : ""}
+                className={signatureMethod === "email" ? "text-emerald-600" : ""}
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -248,12 +248,12 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
             </CardContent>
           </Card>
 
-          <Card className={`cursor-pointer border ${signatureMethod === "sms" ? "border-rose-600" : ""}`}>
+          <Card className={`cursor-pointer border ${signatureMethod === "sms" ? "border-emerald-600" : ""}`}>
             <CardContent className="p-4 flex items-start gap-3">
               <RadioGroupItem
                 value="sms"
                 id="method-sms"
-                className={signatureMethod === "sms" ? "text-rose-600" : ""}
+                className={signatureMethod === "sms" ? "text-emerald-600" : ""}
               />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
@@ -288,7 +288,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
           <Button
             onClick={handleSendProposal}
             disabled={isSubmitting || (signatureMethod === "email" && !formData.customer.email) || (signatureMethod === "sms" && !formData.customer.phone)}
-            className="w-full bg-rose-600 hover:bg-rose-700"
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
           >
             {isSubmitting ? (
               <>
