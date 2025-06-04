@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils"
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-  const [logoSrc, setLogoSrc] = useState("/evergreen.png")
+  const [logoSrc, setLogoSrc] = useState("/newlogo.png")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user } = useUser();
   const { isAdmin } = useIsAdmin();

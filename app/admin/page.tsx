@@ -41,7 +41,7 @@ const AdminFooter = () => (
   <div className="w-full bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left mt-8">
     <div className="container mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
       <div className="sm:col-span-1">
-        <Image src="/evergreen.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
+        <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
       </div>
       <div className="sm:col-span-2 text-sm">
         <p className="font-semibold text-lg text-white mb-1">Evergreen Energy Upgrades</p>

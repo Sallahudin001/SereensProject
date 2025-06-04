@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, BarChart3, FileText, Home, Users } from "lucide-react"
 import { motion } from "framer-motion"
@@ -18,6 +19,7 @@ import {
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // Animation variants
 const fadeIn = {
@@ -57,8 +59,8 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b sticky top-0 z-10 backdrop-blur-sm bg-white/90 shadow-sm">
-        <div className="flex justify-between items-center px-4 py-3">
+      <header className="border-b sticky top-0 z-10 bg-green-600 shadow-sm">
+        <div className="flex justify-between items-center px-4 py-2">
           <motion.div
             className="flex items-center"
             initial={{ opacity: 0, x: -10 }}
@@ -67,12 +69,16 @@ export default function LandingPage() {
           >
             <Link href="/" className="flex items-center">
               <div className="flex items-center">
-                <img 
-                  src="/evergreen.png" 
-                  alt="Evergreen Energy Upgrades Logo" 
-                  className="h-12 w-auto object-contain"
-                />
-                <span className="text-xl font-semibold text-gray-800 ml-3 hidden sm:inline-block">EverGreen Energy Proposals</span>
+                <div className="p-1 rounded-lg">
+                  <Image 
+                    src="/newlogo.png" 
+                    alt="Evergreen Energy Upgrades Logo" 
+                    width={100}
+                    height={40}
+                    className="h-10 w-auto object-contain"
+                  />
+                </div>
+                <span className="text-xl font-semibold text-white ml-3 hidden sm:inline-block">EverGreen Energy Proposals</span>
               </div>
             </Link>
           </motion.div>
@@ -80,12 +86,12 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <SignedOut>
               <SignInButton mode="modal">
-                <Button variant="ghost" size="sm" className="text-sm font-medium hover:bg-white/70 hover:text-gray-900 transition-colors">
+                <Button variant="ghost" size="sm" className="text-sm font-medium text-white hover:bg-white/20 hover:text-white transition-colors">
                   Login
                 </Button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <Button size="sm" className="text-sm font-medium bg-rose-600 hover:bg-rose-700 transition-colors whitespace-nowrap">
+                <Button size="sm" className="text-sm font-medium bg-white text-emerald-600 hover:bg-white/90 hover:text-emerald-700 transition-colors whitespace-nowrap">
                   Register
                 </Button>
               </SignUpButton>
@@ -95,7 +101,7 @@ export default function LandingPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="mr-2 hidden sm:flex items-center gap-2 border-rose-100 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                  className="mr-2 hidden sm:flex items-center gap-2 border-white/30 text-white hover:bg-white/20 hover:text-white"
                 >
                   <Home className="h-4 w-4" />
                   <span>Dashboard</span>
@@ -134,31 +140,31 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1">
-        <section className="py-16 md:py-28 bg-gradient-to-b from-white to-gray-50">
-          <div className="container mx-auto px-4 sm:px-6 md:px-8 text-center">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-gray-100 to-slate-200">
+          <div className="container mx-auto px-4 sm:px-6 md:px-8 text-center max-w-full">
             <motion.div
               ref={heroSection.ref}
               initial="hidden"
               animate={heroSection.isInView ? "visible" : "hidden"}
               variants={fadeIn}
-              className="max-w-4xl mx-auto space-y-6 md:space-y-8"
+              className="max-w-5xl mx-auto space-y-6 md:space-y-8"
             >
-              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight">Proposals Made Easy</h1>
-              <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold leading-tight text-gray-800">Proposals Made Easy</h1>
+              <p className="text-lg md:text-xl text-gray-600 max-w-4xl mx-auto px-4">
                 Generate detailed sales quotes for roofing, HVAC, windows & doors, garage doors, and paint services with
                 our all-in-one proposal tool.
               </p>
-              <div className="mt-8 md:mt-12">
+              <div className="mt-8 md:mt-10">
                 <SignedOut>
                   <SignUpButton mode="modal">
-                    <Button size="lg" className="text-base md:text-lg px-6 py-5 md:px-8 md:py-6 bg-rose-600 hover:bg-rose-700 hover:scale-105 transition-all duration-300 shadow-md">
+                    <Button size="lg" className="text-base md:text-lg px-6 py-4 md:px-8 md:py-5 bg-emerald-600 hover:bg-emerald-700 text-white hover:scale-105 transition-all duration-300 shadow-md">
                       Get Started <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </SignUpButton>
                 </SignedOut>
                 <SignedIn>
                   <Link href="/dashboard">
-                    <Button size="lg" className="text-base md:text-lg px-6 py-5 md:px-8 md:py-6 bg-rose-600 hover:bg-rose-700 hover:scale-105 transition-all duration-300 shadow-md">
+                    <Button size="lg" className="text-base md:text-lg px-6 py-4 md:px-8 md:py-5 bg-emerald-600 hover:bg-emerald-700 text-white hover:scale-105 transition-all duration-300 shadow-md">
                       Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </Link>
@@ -169,7 +175,7 @@ export default function LandingPage() {
         </section>
 
         <section className="py-16 bg-white">
-          <div className="container mx-auto px-4">
+          <div className="container mx-auto px-4 max-w-7xl">
             <motion.div
               ref={featuresSection.ref}
               initial="hidden"
@@ -177,7 +183,7 @@ export default function LandingPage() {
               variants={fadeIn}
               className="text-center mb-12"
             >
-              <h2 className="text-3xl font-bold">Key Features</h2>
+              <h2 className="text-3xl font-bold text-gray-800">Key Features</h2>
             </motion.div>
 
             <motion.div
@@ -210,12 +216,12 @@ export default function LandingPage() {
                   key={index}
                   variants={featureVariants}
                   whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                  className="bg-white p-6 rounded-xl shadow-md border border-gray-100 transition-all"
+                  className="bg-white p-6 rounded-xl shadow-md border border-emerald-100 transition-all"
                 >
-                  <div className="bg-rose-100 p-3 rounded-full w-fit mb-4">
-                    <feature.icon className="h-6 w-6 text-rose-600" />
+                  <div className="bg-emerald-100 p-3 rounded-full w-fit mb-4">
+                    <feature.icon className="h-6 w-6 text-emerald-600" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <h3 className="text-xl font-bold mb-3 text-gray-800">{feature.title}</h3>
                   <p className="text-gray-600">{feature.description}</p>
                 </motion.div>
               ))}
@@ -223,114 +229,119 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row items-center gap-10">
-              <motion.div
-                ref={streamlineSection.ref}
-                initial="hidden"
-                animate={streamlineSection.isInView ? "visible" : "hidden"}
-                variants={fadeIn}
-                className="md:w-1/2"
-              >
-                <h2 className="text-3xl font-bold mb-6">Streamline Your Sales Process</h2>
-                <p className="text-gray-600 mb-6">
-                  Our proposal generator helps your sales team create professional, detailed quotes in minutes instead
-                  of hours. With built-in upsell prompts and combo discounts, you'll close more deals and increase your
-                  average sale value.
-                </p>
-                <motion.ul
-                  ref={listItems.ref}
+        <section className="py-16 bg-gradient-to-br from-gray-100 to-slate-200">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <Card className="shadow-xl rounded-xl overflow-hidden bg-white">
+              <div className="flex flex-col md:flex-row items-center">
+                <motion.div
+                  ref={streamlineSection.ref}
                   initial="hidden"
-                  animate={listItems.isInView ? "visible" : "hidden"}
-                  variants={staggerContainer}
-                  className="space-y-3"
+                  animate={streamlineSection.isInView ? "visible" : "hidden"}
+                  variants={fadeIn}
+                  className="md:w-1/2 p-6 md:p-8"
                 >
-                  {[
-                    "Multi-service proposals with smart bundling",
-                    "E-signature and deposit collection",
-                    "Mobile-friendly customer view",
-                    "Automated scope descriptions",
-                    "Real-time payment calculations",
-                  ].map((item, i) => (
-                    <motion.li key={i} variants={featureVariants} className="flex items-start">
-                      <div className="bg-rose-100 p-1 rounded-full mr-3 mt-1">
-                        <ArrowRight className="h-3 w-3 text-rose-600" />
-                      </div>
-                      <span>{item}</span>
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                animate={streamlineSection.isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
-                transition={{ duration: 0.7, delay: 0.3 }}
-                className="md:w-1/2 bg-white p-6 rounded-xl shadow-lg border border-gray-200"
-              >
-                <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-gray-400">Proposal Preview</span>
-                </div>
-                <div className="space-y-3">
-                  <motion.div
-                    className="h-6 bg-gray-100 rounded w-3/4"
-                    initial={{ width: "0%" }}
-                    animate={streamlineSection.isInView ? { width: "75%" } : { width: "0%" }}
-                    transition={{ duration: 0.8, delay: 0.5 }}
-                  ></motion.div>
-                  <motion.div
-                    className="h-4 bg-gray-100 rounded w-full"
-                    initial={{ width: "0%" }}
-                    animate={streamlineSection.isInView ? { width: "100%" } : { width: "0%" }}
-                    transition={{ duration: 0.8, delay: 0.6 }}
-                  ></motion.div>
-                  <motion.div
-                    className="h-4 bg-gray-100 rounded w-5/6"
-                    initial={{ width: "0%" }}
-                    animate={streamlineSection.isInView ? { width: "83.333%" } : { width: "0%" }}
-                    transition={{ duration: 0.8, delay: 0.7 }}
-                  ></motion.div>
-                  <motion.div
-                    className="h-10 bg-rose-100 rounded w-1/3 mt-4"
-                    initial={{ width: "0%" }}
-                    animate={streamlineSection.isInView ? { width: "33.333%" } : { width: "0%" }}
-                    transition={{ duration: 0.8, delay: 0.8 }}
-                  ></motion.div>
-                </div>
-              </motion.div>
-            </div>
+                  <CardHeader className="p-0">
+                    <CardTitle className="text-3xl font-bold mb-6 text-gray-800">Streamline Your Sales Process</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <p className="text-gray-600 mb-6">
+                      Our proposal generator helps your sales team create professional, detailed quotes in minutes instead
+                      of hours. With built-in upsell prompts and combo discounts, you'll close more deals and increase your
+                      average sale value.
+                    </p>
+                    <motion.ul
+                      ref={listItems.ref}
+                      initial="hidden"
+                      animate={listItems.isInView ? "visible" : "hidden"}
+                      variants={staggerContainer}
+                      className="space-y-3"
+                    >
+                      {[
+                        "Multi-service proposals with smart bundling",
+                        "E-signature and deposit collection",
+                        "Mobile-friendly customer view",
+                        "Automated scope descriptions",
+                        "Real-time payment calculations",
+                      ].map((item, i) => (
+                        <motion.li key={i} variants={featureVariants} className="flex items-start">
+                          <div className="bg-emerald-600 p-1 rounded-full mr-3 mt-1">
+                            <ArrowRight className="h-3 w-3 text-white" />
+                          </div>
+                          <span className="text-gray-700">{item}</span>
+                        </motion.li>
+                      ))}
+                    </motion.ul>
+                  </CardContent>
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={streamlineSection.isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 50 }}
+                  transition={{ duration: 0.7, delay: 0.3 }}
+                  className="md:w-1/2 p-6 md:p-8"
+                >
+                  <div className="aspect-video bg-gray-100 rounded-lg mb-4 flex items-center justify-center">
+                    <span className="text-gray-400">Proposal Preview</span>
+                  </div>
+                  <div className="space-y-3">
+                    <motion.div
+                      className="h-6 bg-gray-100 rounded w-3/4"
+                      initial={{ width: "0%" }}
+                      animate={streamlineSection.isInView ? { width: "75%" } : { width: "0%" }}
+                      transition={{ duration: 0.8, delay: 0.5 }}
+                    ></motion.div>
+                    <motion.div
+                      className="h-4 bg-gray-100 rounded w-full"
+                      initial={{ width: "0%" }}
+                      animate={streamlineSection.isInView ? { width: "100%" } : { width: "0%" }}
+                      transition={{ duration: 0.8, delay: 0.6 }}
+                    ></motion.div>
+                    <motion.div
+                      className="h-4 bg-gray-100 rounded w-5/6"
+                      initial={{ width: "0%" }}
+                      animate={streamlineSection.isInView ? { width: "83.333%" } : { width: "0%" }}
+                      transition={{ duration: 0.8, delay: 0.7 }}
+                    ></motion.div>
+                    <motion.div
+                      className="h-10 bg-emerald-100 rounded w-1/3 mt-4"
+                      initial={{ width: "0%" }}
+                      animate={streamlineSection.isInView ? { width: "33.333%" } : { width: "0%" }}
+                      transition={{ duration: 0.8, delay: 0.8 }}
+                    ></motion.div>
+                  </div>
+                </motion.div>
+              </div>
+            </Card>
           </div>
         </section>
       </main>
 
-      <footer className="bg-gray-900 text-white py-6 md:py-8">
-        <div className="container mx-auto px-6 sm:px-8">
-          <motion.div
-            className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-0"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            viewport={{ once: true }}
-          >
-            <div className="flex items-center justify-center md:justify-start">
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm p-2">
-                <img 
-                  src="/evergreen.png" 
+      <footer className="bg-gray-800 text-gray-300 p-6">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between">
+            <div className="mb-6 sm:mb-0">
+              <div className="bg-white rounded-lg overflow-hidden shadow-sm p-2 w-[120px]">
+                <Image 
+                  src="/newlogo.png" 
                   alt="Evergreen Energy Upgrades Logo" 
-                  className="h-auto w-[120px] md:w-[150px]"
-                  style={{ minWidth: "120px" }} 
+                  width={120}
+                  height={48}
+                  className="h-auto w-full"
                 />
               </div>
             </div>
-            <div className="text-gray-300 text-md text-center md:text-right">
-              <p className="mb-2">© 2023 Evergreen Energy Upgrades. All rights reserved.</p>
-              <div className="flex justify-center md:justify-end gap-4 mt-2">
+            <div className="text-sm text-center sm:text-right">
+              <p className="font-semibold text-lg text-white mb-1">Evergreen Energy Upgrades</p>
+              <p>C: (408) 826-7377 | O: (408)333-9831</p>
+              <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
+              <p>www.evergreenenergy.io</p>
+              <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Energy Upgrades. All Rights Reserved.</p>
+              <div className="flex justify-center sm:justify-end gap-4 mt-2">
                 <a href="#" className="hover:text-white transition-colors text-sm">Privacy</a>
                 <a href="#" className="hover:text-white transition-colors text-sm">Terms</a>
                 <a href="#" className="hover:text-white transition-colors text-sm">Contact</a>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </footer>
     </div>

@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { user } = useUser();
   const { isAdmin } = useIsAdmin();
-  const [logoSrc, setLogoSrc] = useState("/evergreen.png");
+  const [logoSrc, setLogoSrc] = useState("/newlogo.png");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   
