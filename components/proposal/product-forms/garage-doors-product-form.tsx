@@ -233,14 +233,6 @@ export default function GarageDoorsProductForm({ data, updateData }: GarageDoors
       <div className="space-y-4 w-full">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Pricing</h3>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="show-pricing">Show to customer</Label>
-            <Switch
-              id="show-pricing"
-              checked={formData.showPricing}
-              onCheckedChange={(checked) => handleChange("showPricing", checked)}
-            />
-          </div>
         </div>
 
         <div className="space-y-2 w-full">
@@ -258,47 +250,44 @@ export default function GarageDoorsProductForm({ data, updateData }: GarageDoors
         </div>
 
         {formData.addons.length > 0 && (
-          <div className="space-y-4 border-t pt-4 w-full">
+          <div className="space-y-4 border-t pt-4">
             <h4 className="font-medium">Add-on Pricing</h4>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full">
-              {formData.addons.map((addon) => (
-                <div key={addon} className="space-y-2 w-full">
-                  <Label htmlFor={`addon-price-${addon}`}>
-                    {addon.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} Price
-                  </Label>
-                  <div className="relative w-full">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                    <Input
-                      id={`addon-price-${addon}`}
-                      placeholder="0.00"
-                      value={formData.addonPrices[addon] || ""}
-                      onChange={(e) => {
-                        const newAddonPrices = {...formData.addonPrices, [addon]: e.target.value};
-                        handleChange("addonPrices", newAddonPrices);
-                      }}
-                      className="pl-8 w-full"
-                    />
-                  </div>
+            {formData.addons.map((addon) => (
+              <div key={addon} className="space-y-2">
+                <Label htmlFor={`addon-price-${addon}`}>
+                  {addonOptions.find(opt => opt.value === addon)?.label || addon} Price
+                </Label>
+                <div className="relative max-w-xs">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    id={`addon-price-${addon}`}
+                    placeholder="0.00"
+                    value={formData.addonPrices[addon] || ""}
+                    onChange={(e) => {
+                      const newAddonPrices = {...formData.addonPrices, [addon]: e.target.value};
+                      handleChange("addonPrices", newAddonPrices);
+                    }}
+                    className="pl-8"
+                  />
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
             
             {formData.addons.length > 1 && (
               <div className="mt-4 space-y-2 w-full">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium">Total Add-ons Price: ${calculateTotalAddonPrice()}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-addon-price-breakdown"
-                    checked={formData.showAddonPriceBreakdown}
-                    onCheckedChange={(checked) => handleChange("showAddonPriceBreakdown", checked)}
-                    className="size-4"
-                  />
-                  <Label htmlFor="show-addon-price-breakdown" className="text-xs">
-                    Show individual add-on prices (or combine into total price)
-                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="show-addon-price-breakdown"
+                      checked={formData.showAddonPriceBreakdown}
+                      onCheckedChange={(checked) => handleChange("showAddonPriceBreakdown", checked)}
+                    />
+                    <Label htmlFor="show-addon-price-breakdown" className="text-sm">
+                      Show individual add-on prices (or combine into total price)
+                    </Label>
+                  </div>
                 </div>
               </div>
             )}

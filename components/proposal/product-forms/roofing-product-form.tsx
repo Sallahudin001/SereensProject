@@ -18,6 +18,9 @@ interface RoofingData {
   totalPrice: string
   squareCount: string
   gutterPrice: string
+  pricePerSquare: string
+  downspoutCount: string
+  downspoutPrice: string
   showPricePerSquare: boolean
   showPriceBreakdown: boolean
   showPricing: boolean
@@ -67,11 +70,30 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
     return price.toFixed(2)
   }
 
+  // Auto-calculate total price based on squares and price per square
+  const calculateTotalPrice = (squareCount: string, pricePerSquare: string) => {
+    if (!squareCount || !pricePerSquare) return "0.00"
+    const total = parseFloat(squareCount) * parseFloat(pricePerSquare)
+    return total.toFixed(2)
+  }
+
+  // Calculate total with gutters and downspouts
+  const calculateTotalWithAddons = (basePrice: string, gutterPrice: string, downspoutPrice: string) => {
+    const base = parseFloat(basePrice) || 0
+    const gutters = parseFloat(gutterPrice) || 0
+    const downspouts = parseFloat(downspoutPrice) || 0
+    return (base + gutters + downspouts).toFixed(2)
+  }
+
   // Initialize state with proper defaults
   const [formData, setFormData] = useState<RoofingData>(() => {
     const material = data.material || "shingles"
     const addGutters = data.addGutters || false
     const addPlywood = data.addPlywood || false
+    const squareCount = data.squareCount || ""
+    const pricePerSquare = data.pricePerSquare || ""
+    const totalPrice = data.totalPrice || (squareCount && pricePerSquare ? 
+      calculateTotalPrice(squareCount, pricePerSquare) : "")
 
     return {
       material,
@@ -79,9 +101,12 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
       gutterLength: data.gutterLength || "",
       addPlywood: addPlywood,
       plywoodPercentage: data.plywoodPercentage || "0",
-      totalPrice: data.totalPrice || "",
-      squareCount: data.squareCount || "",
+      totalPrice,
+      squareCount,
+      pricePerSquare,
       gutterPrice: data.gutterPrice || "",
+      downspoutCount: data.downspoutCount || "",
+      downspoutPrice: data.downspoutPrice || "",
       showPricePerSquare: data.showPricePerSquare !== undefined ? data.showPricePerSquare : false,
       showPriceBreakdown: data.showPriceBreakdown !== undefined ? data.showPriceBreakdown : true,
       showPricing: data.showPricing !== undefined ? data.showPricing : true,
@@ -105,6 +130,19 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
           field === "addPlywood" ? value : prev.addPlywood,
           field === "plywoodPercentage" ? value : prev.plywoodPercentage,
         )
+      }
+
+      // Auto-calculate price per square when total price or square count changes
+      if (field === "totalPrice" && prev.squareCount) {
+        newData.pricePerSquare = calculatePricePerSquare(value, prev.squareCount)
+      } 
+      else if (field === "squareCount" && prev.pricePerSquare) {
+        // If we have a price per square, recalculate total price
+        newData.totalPrice = calculateTotalPrice(value, prev.pricePerSquare)
+      }
+      else if (field === "pricePerSquare" && prev.squareCount) {
+        // If we have square count, recalculate total price
+        newData.totalPrice = calculateTotalPrice(prev.squareCount, value)
       }
 
       // Mark that we need to update the parent
@@ -165,6 +203,25 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
       </div>
 
       <div className="space-y-4">
+        <h3 className="text-lg font-medium">Roof Size</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="square-count">Number of Squares</Label>
+            <Input
+              id="square-count"
+              placeholder="0"
+              value={formData.squareCount}
+              onChange={(e) => handleChange("squareCount", e.target.value)}
+              className="max-w-xs"
+            />
+            <p className="text-xs text-gray-500">
+              1 square = 100 square feet of roof area
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4">
         <h3 className="text-lg font-medium">Add-ons</h3>
         <div className="flex items-start space-x-3">
           <Checkbox
@@ -182,15 +239,60 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
         </div>
 
         {formData.addGutters && (
-          <div className="pl-7 space-y-2">
-            <Label htmlFor="gutter-length">Linear Feet (optional)</Label>
-            <Input
-              id="gutter-length"
-              placeholder="Enter linear feet"
-              value={formData.gutterLength}
-              onChange={(e) => handleChange("gutterLength", e.target.value)}
-              className="max-w-xs"
-            />
+          <div className="pl-7 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="gutter-length">Gutter Linear Feet</Label>
+                <Input
+                  id="gutter-length"
+                  placeholder="Enter linear feet"
+                  value={formData.gutterLength}
+                  onChange={(e) => handleChange("gutterLength", e.target.value)}
+                  className="max-w-xs"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="gutter-price">Gutter Price</Label>
+                <div className="relative max-w-xs">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    id="gutter-price"
+                    placeholder="0.00"
+                    value={formData.gutterPrice}
+                    onChange={(e) => handleChange("gutterPrice", e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="downspout-count">Number of Downspouts</Label>
+                <Input
+                  id="downspout-count"
+                  placeholder="0"
+                  value={formData.downspoutCount}
+                  onChange={(e) => handleChange("downspoutCount", e.target.value)}
+                  className="max-w-xs"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="downspout-price">Downspout Price</Label>
+                <div className="relative max-w-xs">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    id="downspout-price"
+                    placeholder="0.00"
+                    value={formData.downspoutPrice}
+                    onChange={(e) => handleChange("downspoutPrice", e.target.value)}
+                    className="pl-8"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -229,17 +331,23 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Pricing</h3>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="show-pricing">Show to customer</Label>
-            <Switch
-              id="show-pricing"
-              checked={formData.showPricing}
-              onCheckedChange={(checked) => handleChange("showPricing", checked)}
-            />
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="price-per-square">Price per Square</Label>
+            <div className="relative max-w-xs">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="price-per-square"
+                placeholder="0.00"
+                value={formData.pricePerSquare}
+                onChange={(e) => handleChange("pricePerSquare", e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="total-price">Roofing Price</Label>
             <div className="relative max-w-xs">
@@ -253,66 +361,42 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
               />
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="square-count">Square Count</Label>
-            <Input
-              id="square-count"
-              placeholder="0"
-              value={formData.squareCount}
-              onChange={(e) => handleChange("squareCount", e.target.value)}
-              className="max-w-xs"
-            />
-          </div>
-
-          {formData.addGutters && (
-            <div className="space-y-2">
-              <Label htmlFor="gutter-price">Gutters & Downspouts Price</Label>
-              <div className="relative max-w-xs">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                <Input
-                  id="gutter-price"
-                  placeholder="0.00"
-                  value={formData.gutterPrice}
-                  onChange={(e) => handleChange("gutterPrice", e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-          )}
         </div>
 
-        {formData.totalPrice && formData.squareCount && parseFloat(formData.squareCount) > 0 && (
+        {formData.addGutters && (
           <div className="space-y-2 p-3 bg-gray-50 rounded-md">
-            <p className="text-sm">
-              Price per Square: ${calculatePricePerSquare(formData.totalPrice, formData.squareCount)}
-            </p>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-price-per-square"
-                checked={formData.showPricePerSquare}
-                onCheckedChange={(checked) => handleChange("showPricePerSquare", checked)}
-                className="size-4"
-              />
-              <Label htmlFor="show-price-per-square" className="text-xs">
-                Show price per square on proposal
-              </Label>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Total with Add-ons: ${calculateTotalWithAddons(formData.totalPrice, formData.gutterPrice, formData.downspoutPrice)}</p>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-price-breakdown"
+                  checked={formData.showPriceBreakdown}
+                  onCheckedChange={(checked) => handleChange("showPriceBreakdown", checked)}
+                />
+                <Label htmlFor="show-price-breakdown" className="text-sm">
+                  Show price breakdown (roofing vs. gutters/downspouts)
+                </Label>
+              </div>
             </div>
           </div>
         )}
-
-        {formData.addGutters && formData.totalPrice && formData.gutterPrice && (
+        
+        {formData.totalPrice && formData.squareCount && parseFloat(formData.squareCount) > 0 && (
           <div className="space-y-2 p-3 bg-gray-50 rounded-md">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-price-breakdown"
-                checked={formData.showPriceBreakdown}
-                onCheckedChange={(checked) => handleChange("showPriceBreakdown", checked)}
-                className="size-4"
-              />
-              <Label htmlFor="show-price-breakdown" className="text-xs">
-                Show price breakdown (roofing vs. gutters)
-              </Label>
+            <div className="flex items-center justify-between">
+              <p className="text-sm">
+                Price per Square: ${calculatePricePerSquare(formData.totalPrice, formData.squareCount)}
+              </p>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-price-per-square"
+                  checked={formData.showPricePerSquare}
+                  onCheckedChange={(checked) => handleChange("showPricePerSquare", checked)}
+                />
+                <Label htmlFor="show-price-per-square" className="text-sm">
+                  Show price per square on proposal
+                </Label>
+              </div>
             </div>
           </div>
         )}

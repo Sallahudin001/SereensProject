@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { InfoIcon, AlertCircle, Calculator, Sparkles, TrendingUp, ShieldCheck, Clock, CheckCircle, XCircle } from "lucide-react"
+import { InfoIcon, AlertCircle, Calculator, Sparkles, TrendingUp, ShieldCheck, Clock, CheckCircle, XCircle, Plus } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -50,6 +50,13 @@ interface FinancingPlan {
   is_active: boolean
 }
 
+interface CustomAdder {
+  id?: number
+  product_category: string
+  description: string
+  cost: number
+}
+
 interface PricingData {
   subtotal: number
   discount: number
@@ -63,6 +70,9 @@ interface PricingData {
   merchantFee?: number
   financingNotes?: string
   paymentFactor?: number
+  pricingOverride: boolean
+  pricingBreakdown: Record<string, any>
+  customAdders: CustomAdder[]
 }
 
 interface PricingBreakdownFormProps {
@@ -96,11 +106,19 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   // Track if discount has been manually edited
   const [discountManuallyEdited, setDiscountManuallyEdited] = useState(false)
   
+  // Custom adder state
+  const [newCustomAdder, setNewCustomAdder] = useState<CustomAdder>({
+    product_category: '',
+    description: '',
+    cost: 0
+  })
+  const [showAddAdderForm, setShowAddAdderForm] = useState<string | null>(null)
+  
   // Debug tracking
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({})
 
   // Calculate initial values only once
-  const initialSubtotal = useRef(calculateSubtotal(services))
+  const initialSubtotal = useRef(calculateSubtotal(services, data?.customAdders))
   const initialDiscount = useRef(calculateDiscount(services))
 
   // Initialize state with proper initial values
@@ -123,7 +141,10 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       financingPlanName: data.financingPlanName,
       merchantFee: data.merchantFee,
       financingNotes: data.financingNotes,
-      paymentFactor: data.paymentFactor
+      paymentFactor: data.paymentFactor,
+      pricingOverride: data.pricingOverride !== undefined ? data.pricingOverride : false,
+      pricingBreakdown: data.pricingBreakdown || {},
+      customAdders: data.customAdders || []
     }
   })
 
@@ -131,6 +152,9 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   useEffect(() => {
     // Only run after initial load
     if (hasUpdatedRef.current) return;
+
+    // Skip calculation if using override
+    if (formData.pricingOverride) return;
 
     const total = formData.subtotal - formData.discount;
     
@@ -157,7 +181,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     
     // Don't call updateData here - it will be handled by the dedicated effect below
     hasUpdatedRef.current = false; // Set to false so the dedicated effect will run
-  }, [formData.subtotal, formData.discount, formData.financingPlanId, financingPlans]);
+  }, [formData.subtotal, formData.discount, formData.financingPlanId, financingPlans, formData.pricingOverride]);
 
   // Fetch financing plans and user permissions from API
   useEffect(() => {
@@ -276,26 +300,81 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       .sort((a, b) => a.provider.localeCompare(b.provider) || a.payment_factor - b.payment_factor);
   };
 
-  // Calculate subtotal based on services
-  function calculateSubtotal(serviceList: string[]): number {
+  // Calculate subtotal based on services and custom adders
+  function calculateSubtotal(serviceList: string[], customAdders?: CustomAdder[]): number {
     let subtotal = 0
-    if (serviceList.includes("roofing")) subtotal += 12500
-    if (serviceList.includes("hvac")) subtotal += 8500
-    if (serviceList.includes("windows-doors")) subtotal += 6800
-    if (serviceList.includes("garage-doors")) subtotal += 2200
-    if (serviceList.includes("paint")) subtotal += 4500
+    
+    // Get product prices from the products object if available
+    if (products) {
+      // Use the product-specific pricing instead of hard-coded values
+      if (serviceList.includes("roofing") && products.roofing) {
+        const roofPrice = parseFloat(products.roofing.totalPrice) || 0
+        const gutterPrice = parseFloat(products.roofing.gutterPrice) || 0
+        const downspoutPrice = parseFloat(products.roofing.downspoutPrice) || 0
+        subtotal += roofPrice + gutterPrice + downspoutPrice
+      }
+      
+      if (serviceList.includes("hvac") && products.hvac) {
+        const systemCost = parseFloat(products.hvac.systemCost) || 0
+        const ductworkCost = parseFloat(products.hvac.ductworkCost) || 0
+        subtotal += systemCost + ductworkCost
+      }
+      
+      if (serviceList.includes("windows-doors") && products["windows-doors"]) {
+        const windowsPrice = parseFloat(products["windows-doors"].windowPrice) || 0
+        const doorPrices = products["windows-doors"].doorPrices || {}
+        const doorTotal = Object.values(doorPrices).reduce((sum: number, price: any) => 
+          sum + (parseFloat(String(price)) || 0), 0)
+        subtotal += windowsPrice + doorTotal
+      }
+      
+      if (serviceList.includes("garage-doors") && products["garage-doors"]) {
+        subtotal += parseFloat(products["garage-doors"].totalPrice) || 0
+      }
+      
+      if (serviceList.includes("paint") && products.paint) {
+        // Paint doesn't have explicit pricing fields yet, so we'll leave a placeholder
+        // Future enhancement: Add pricing fields to paint product form
+        subtotal += 0 // Will be replaced with actual paint pricing when implemented
+      }
+    }
+    
+    // Add custom adders if any exist
+    if (customAdders?.length) {
+      subtotal += customAdders.reduce((sum, adder) => sum + adder.cost, 0)
+    }
+    
     return subtotal
   }
 
   // Calculate discount based on services
   function calculateDiscount(serviceList: string[]): number {
     let discount = 0
+    
+    // Don't calculate discount if no products are available
+    if (!products) return discount
+    
+    // Calculate bundle discounts based on selected services and their actual prices
     if (serviceList.includes("roofing") && serviceList.includes("windows-doors")) {
-      discount += 0.05 * (12500 + 6800)
+      const roofPrice = products.roofing ? (parseFloat(products.roofing.totalPrice) || 0) : 0
+      const windowsDoorsPrice = products["windows-doors"] ? 
+        (parseFloat(products["windows-doors"].windowPrice) || 0) + 
+        Object.values(products["windows-doors"].doorPrices || {}).reduce((sum: number, price: any) => 
+          sum + (parseFloat(String(price)) || 0), 0) : 0
+      
+      // Apply 5% discount to the combined roofing and windows-doors price
+      discount += 0.05 * (roofPrice + windowsDoorsPrice)
     }
+    
     if (serviceList.includes("hvac") && serviceList.length > 1) {
-      discount += 0.03 * 8500
+      const hvacPrice = products.hvac ? 
+        (parseFloat(products.hvac.systemCost) || 0) + 
+        (parseFloat(products.hvac.ductworkCost) || 0) : 0
+      
+      // Apply 3% discount to HVAC when bundled with other services
+      discount += 0.03 * hvacPrice
     }
+    
     return discount
   }
 
@@ -578,6 +657,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
         }
       }
       
+      // Ensure actualProposalId is defined before proceeding
+      if (!actualProposalId) {
+        throw new Error('Failed to obtain a valid proposal ID');
+      }
+      
       const discountPercent = formData.subtotal > 0 ? (pendingDiscount / formData.subtotal) * 100 : 0
       
       const requestData = {
@@ -628,7 +712,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       }))
       
       // Update local proposal ID from the saved draft if we didn't have one
-      if (!proposalId) {
+      if (!proposalId && actualProposalId) {
         // This will be used for the UI to show the proposal is pending approval
         window.localStorage.setItem('pendingApprovalProposalId', actualProposalId.toString())
       }
@@ -638,7 +722,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
         requestedValue: pendingDiscount,
         approverName: result.approverName,
         status: 'pending',
-        proposalId: actualProposalId || proposalId
+        proposalId: actualProposalId
       })
       
       toast({
@@ -695,7 +779,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   // Update subtotal and discount when services change
   useEffect(() => {
     // Skip this effect on initial render
-    const newSubtotal = calculateSubtotal(services)
+    const newSubtotal = calculateSubtotal(services, formData?.customAdders)
     const newBundleDiscount = calculateDiscount(services)
 
     // Only update if values have actually changed significantly
@@ -746,6 +830,113 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     }
   }, [formData, updateData, data])
 
+  // Handle adding a custom adder
+  const handleAddCustomAdder = (category: string) => {
+    if (!newCustomAdder.description || newCustomAdder.cost <= 0) {
+      toast({
+        title: "Invalid Custom Adder",
+        description: "Please provide a description and valid cost amount.",
+        variant: "destructive"
+      })
+      return
+    }
+    
+    const adder: CustomAdder = {
+      product_category: category,
+      description: newCustomAdder.description,
+      cost: newCustomAdder.cost
+    }
+    
+    setFormData(prev => {
+      const updatedCustomAdders = [...(prev.customAdders || []), adder]
+      
+      // Recalculate subtotal with the new adder
+      const newSubtotal = calculateSubtotal(services, updatedCustomAdders)
+      const newTotal = newSubtotal - prev.discount
+      
+      // Calculate new monthly payment
+      let newMonthlyPayment = prev.monthlyPayment
+      if (prev.financingPlanId) {
+        const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId)
+        if (selectedPlan) {
+          newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, selectedPlan.payment_factor)
+        } else {
+          newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate)
+        }
+      } else {
+        newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate)
+      }
+      
+      return {
+        ...prev,
+        customAdders: updatedCustomAdders,
+        subtotal: newSubtotal,
+        total: newTotal,
+        monthlyPayment: newMonthlyPayment
+      }
+    })
+    
+    // Reset form
+    setNewCustomAdder({
+      product_category: '',
+      description: '',
+      cost: 0
+    })
+    setShowAddAdderForm(null)
+    
+    // Mark that we need to update the parent
+    hasUpdatedRef.current = false
+  }
+  
+  // Handle removing a custom adder
+  const handleRemoveCustomAdder = (index: number) => {
+    setFormData(prev => {
+      const adderToRemove = prev.customAdders[index]
+      const updatedCustomAdders = prev.customAdders.filter((_, i) => i !== index)
+      
+      // Recalculate subtotal without the removed adder
+      const newSubtotal = calculateSubtotal(services, updatedCustomAdders)
+      const newTotal = newSubtotal - prev.discount
+      
+      // Calculate new monthly payment
+      let newMonthlyPayment = prev.monthlyPayment
+      if (prev.financingPlanId) {
+        const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId)
+        if (selectedPlan) {
+          newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, selectedPlan.payment_factor)
+        } else {
+          newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate)
+        }
+      } else {
+        newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate)
+      }
+      
+      return {
+        ...prev,
+        customAdders: updatedCustomAdders,
+        subtotal: newSubtotal,
+        total: newTotal,
+        monthlyPayment: newMonthlyPayment
+      }
+    })
+    
+    // Mark that we need to update the parent
+    hasUpdatedRef.current = false
+  }
+  
+  // Toggle pricing override mode
+  const handleToggleOverride = (enabled: boolean) => {
+    setFormData(prev => {
+      return {
+        ...prev,
+        pricingOverride: enabled
+      }
+    })
+    
+    // Mark that we need to update the parent
+    hasUpdatedRef.current = false
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between mb-2">
@@ -762,8 +953,24 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
       <Card className="overflow-hidden border border-gray-200 shadow-sm">
         <CardContent className="p-6 space-y-4">
+          {/* Pricing Override Toggle */}
+          <div className="flex items-center justify-between bg-amber-50 p-3 rounded-md">
+            <div className="flex items-center space-x-3">
+              <Calculator className="h-5 w-5 text-amber-600" />
+              <div>
+                <h4 className="font-medium">Pricing Override</h4>
+                <p className="text-sm text-amber-700">Manually set the total price instead of using the breakdown</p>
+              </div>
+            </div>
+            <Switch
+              checked={formData.pricingOverride}
+              onCheckedChange={handleToggleOverride}
+              className="data-[state=checked]:bg-amber-600"
+            />
+          </div>
+
           {/* Smart Bundle Alert */}
-          {services.length > 1 && (
+          {services.length > 1 && !formData.pricingOverride && (
             <Alert className="bg-green-50 border-green-200">
               <InfoIcon className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-600">
@@ -772,82 +979,198 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
             </Alert>
           )}
 
-          <div className="space-y-5 pt-2">
-            <div className="flex justify-between items-center py-2 border-b border-dashed border-gray-200">
-              <span className="text-gray-600 font-medium">Subtotal</span>
-              <div className="relative w-36">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                <Input
-                  value={formData.subtotal.toFixed(2)}
-                  onChange={(e) => {
-                    const value = Number.parseFloat(e.target.value) || 0
-                    handleChange("subtotal", value)
-                  }}
-                  className="pl-8 text-right font-medium"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center py-2 border-b border-dashed border-gray-200">
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600 font-medium">Base Discount</span>
-                {userPermissions ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <InfoIcon className="h-4 w-4 text-gray-400" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Your discount limit: {userPermissions.maxDiscountPercent}%</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <div className="flex items-center gap-1">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400"></div>
-                    <span className="text-xs text-gray-400">Loading permissions...</span>
-                  </div>
-                )}
-                {discountManuallyEdited && services.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const bundleDiscount = calculateDiscount(services)
-                      setDiscountManuallyEdited(false)
-                      handleChange("discount", bundleDiscount)
+          {formData.pricingOverride ? (
+            // Override mode - simple total input
+            <div className="space-y-5 pt-2">
+              <div className="flex justify-between items-center py-3 bg-amber-50 rounded-md px-3">
+                <span className="text-gray-900 font-semibold">Override Total</span>
+                <div className="relative w-36">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    value={formData.total.toFixed(2)}
+                    onChange={(e) => {
+                      const value = Number.parseFloat(e.target.value) || 0
+                      handleChange("total", value)
                     }}
-                    className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800"
-                  >
-                    Reset to Bundle
-                  </Button>
-                )}
-              </div>
-              <div className="relative w-36">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                <Input
-                  value={formData.discount.toFixed(2)}
-                  onChange={(e) => {
-                    const value = Number.parseFloat(e.target.value) || 0
-                    console.log('Discount input changed:', value)
-                    handleDiscountChange(value)
-                  }}
-                  className="pl-8 text-right font-medium"
-                  placeholder="0.00"
-                  title="Enter discount amount"
-                />
+                    className="pl-8 text-right font-medium"
+                  />
+                </div>
               </div>
             </div>
+          ) : (
+            // Normal breakdown mode
+            <div className="space-y-5 pt-2">
+              <div className="flex justify-between items-center py-2 border-b border-dashed border-gray-200">
+                <span className="text-gray-600 font-medium">Subtotal</span>
+                <div className="relative w-36">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    value={formData.subtotal.toFixed(2)}
+                    onChange={(e) => {
+                      const value = Number.parseFloat(e.target.value) || 0
+                      handleChange("subtotal", value)
+                    }}
+                    className="pl-8 text-right font-medium"
+                  />
+                </div>
+              </div>
 
-            <div className="flex justify-between items-center py-3 bg-gradient-to-r from-gray-50 to-green-50 rounded-md px-3">
-              <span className="text-gray-900 font-semibold">Final Total</span>
-              <div className="text-right">
-                <span className="text-xl font-bold">${formData.total.toFixed(2)}</span>
+              <div className="flex justify-between items-center py-2 border-b border-dashed border-gray-200">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600 font-medium">Base Discount</span>
+                  {userPermissions ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <InfoIcon className="h-4 w-4 text-gray-400" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Your discount limit: {userPermissions.maxDiscountPercent}%</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-400"></div>
+                      <span className="text-xs text-gray-400">Loading permissions...</span>
+                    </div>
+                  )}
+                  {discountManuallyEdited && services.length > 1 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const bundleDiscount = calculateDiscount(services)
+                        setDiscountManuallyEdited(false)
+                        handleChange("discount", bundleDiscount)
+                      }}
+                      className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800"
+                    >
+                      Reset to Bundle
+                    </Button>
+                  )}
+                </div>
+                <div className="relative w-36">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    value={formData.discount.toFixed(2)}
+                    onChange={(e) => {
+                      const value = Number.parseFloat(e.target.value) || 0
+                      console.log('Discount input changed:', value)
+                      handleDiscountChange(value)
+                    }}
+                    className="pl-8 text-right font-medium"
+                    placeholder="0.00"
+                    title="Enter discount amount"
+                  />
+                </div>
+              </div>
+
+              {/* Custom Adders Section */}
+              {formData.customAdders && formData.customAdders.length > 0 && (
+                <div className="py-2 border-b border-dashed border-gray-200">
+                  <h4 className="font-medium mb-2">Custom Adders</h4>
+                  <div className="space-y-2">
+                    {formData.customAdders.map((adder, index) => (
+                      <div key={index} className="flex justify-between items-center py-1 pl-4 pr-2 bg-gray-50 rounded">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{adder.description}</p>
+                          <p className="text-xs text-gray-500">{adder.product_category}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">${adder.cost.toFixed(2)}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                            onClick={() => handleRemoveCustomAdder(index)}
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center py-3 bg-gradient-to-r from-gray-50 to-green-50 rounded-md px-3">
+                <span className="text-gray-900 font-semibold">Final Total</span>
+                <div className="text-right">
+                  <span className="text-xl font-bold">${formData.total.toFixed(2)}</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Custom Adder Buttons */}
+      {!formData.pricingOverride && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Custom Line Items</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+            {services.map(service => (
+              <div key={service} className="relative">
+                <Button
+                  variant="outline"
+                  className="w-full text-left flex items-center justify-between"
+                  onClick={() => setShowAddAdderForm(service)}
+                >
+                  <span>Add {service.replace('-', ' ')} item</span>
+                  <Plus className="h-4 w-4" />
+                </Button>
+                
+                {showAddAdderForm === service && (
+                  <Card className="absolute top-full left-0 z-10 w-72 mt-1 shadow-lg">
+                    <CardContent className="p-3 space-y-3">
+                      <h4 className="font-medium">Add Custom {service.replace('-', ' ')} Item</h4>
+                      <div className="space-y-2">
+                        <Label htmlFor="adder-description">Description</Label>
+                        <Input
+                          id="adder-description"
+                          placeholder="e.g., Extra trim work"
+                          value={newCustomAdder.description}
+                          onChange={(e) => setNewCustomAdder({...newCustomAdder, description: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="adder-cost">Cost</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                          <Input
+                            id="adder-cost"
+                            placeholder="0.00"
+                            type="number"
+                            value={newCustomAdder.cost || ''}
+                            onChange={(e) => setNewCustomAdder({...newCustomAdder, cost: parseFloat(e.target.value) || 0})}
+                            className="pl-8"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-between pt-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setShowAddAdderForm(null)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleAddCustomAdder(service)}
+                        >
+                          Add Item
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="pt-4">
         <h3 className="text-lg font-medium mb-4">Financing Options</h3>

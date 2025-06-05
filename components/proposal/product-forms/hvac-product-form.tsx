@@ -7,12 +7,18 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 
 interface HVACData {
   systemType: string
   tonnage: string
   seerRating: string
   addons: string[]
+  systemCost: string
+  ductworkCost: string
+  showPricing: boolean
+  showPriceBreakdown: boolean
   scopeNotes: string
 }
 
@@ -27,6 +33,10 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
     tonnage: data.tonnage || "3",
     seerRating: data.seerRating || "14",
     addons: data.addons || [],
+    systemCost: data.systemCost || "",
+    ductworkCost: data.ductworkCost || "",
+    showPricing: data.showPricing !== undefined ? data.showPricing : true,
+    showPriceBreakdown: data.showPriceBreakdown !== undefined ? data.showPriceBreakdown : true,
     scopeNotes: data.scopeNotes || "",
   })
 
@@ -45,14 +55,24 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
     { value: "power-line", label: "New Power Line", description: "Electrical upgrades for system" },
     { value: "copper-lines", label: "New Copper/Duct Lines", description: "New refrigerant and duct lines" },
     { value: "return-ducts", label: "Return Air Ducts", description: "Additional return air ducts" },
+    { value: "ductwork", label: "New Ductwork", description: "Complete replacement of ductwork" },
   ]
+
+  // Calculate total cost
+  const calculateTotal = () => {
+    const systemCost = parseFloat(formData.systemCost) || 0
+    const ductworkCost = parseFloat(formData.ductworkCost) || 0
+    return (systemCost + ductworkCost).toFixed(2)
+  }
 
   const handleChange = (field: keyof HVACData, value: any) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value }
 
       // Auto-generate scope notes when key fields change
-      newData.scopeNotes = generateScopeNotes(newData)
+      if (field !== "systemCost" && field !== "ductworkCost" && field !== "showPricing" && field !== "showPriceBreakdown") {
+        newData.scopeNotes = generateScopeNotes(newData)
+      }
 
       return newData
     })
@@ -105,6 +125,10 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
 
       if (data.addons.includes("return-ducts")) {
         notes += "\n- Additional return air ducts for improved airflow"
+      }
+      
+      if (data.addons.includes("ductwork")) {
+        notes += "\n- Complete replacement of existing ductwork with new, properly sized ducts"
       }
     }
 
@@ -221,6 +245,62 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium">Pricing</h3>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="system-cost">System Cost</Label>
+            <div className="relative max-w-xs">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="system-cost"
+                placeholder="0.00"
+                value={formData.systemCost}
+                onChange={(e) => handleChange("systemCost", e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+
+          {formData.addons.includes("ductwork") && (
+            <div className="space-y-2">
+              <Label htmlFor="ductwork-cost">Ductwork Cost</Label>
+              <div className="relative max-w-xs">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                <Input
+                  id="ductwork-cost"
+                  placeholder="0.00"
+                  value={formData.ductworkCost}
+                  onChange={(e) => handleChange("ductworkCost", e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {formData.addons.includes("ductwork") && formData.systemCost && formData.ductworkCost && (
+          <div className="space-y-2 p-3 bg-gray-50 rounded-md">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium">Total HVAC Cost: ${calculateTotal()}</p>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-price-breakdown"
+                  checked={formData.showPriceBreakdown}
+                  onCheckedChange={(checked) => handleChange("showPriceBreakdown", checked)}
+                />
+                <Label htmlFor="show-price-breakdown" className="text-sm">
+                  Show price breakdown (system vs. ductwork)
+                </Label>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">

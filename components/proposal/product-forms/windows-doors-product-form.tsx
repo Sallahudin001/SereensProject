@@ -21,6 +21,7 @@ interface WindowsDoorsData {
   doorPrices: Record<string, string>
   showPricing: boolean
   showDoorPriceBreakdown: boolean
+  showCombinedTotal: boolean
   scopeNotes: string
 }
 
@@ -41,6 +42,7 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
     doorPrices: data.doorPrices || {},
     showPricing: data.showPricing !== undefined ? data.showPricing : true,
     showDoorPriceBreakdown: data.showDoorPriceBreakdown !== undefined ? data.showDoorPriceBreakdown : true,
+    showCombinedTotal: data.showCombinedTotal !== undefined ? data.showCombinedTotal : true,
     scopeNotes: data.scopeNotes || generateScopeNotes("vinyl-retrofit-dual", "white", [], false),
   })
 
@@ -140,6 +142,16 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
     return Object.values(formData.doorPrices).reduce((total, price) => {
       return total + (parseFloat(price) || 0);
     }, 0).toFixed(2);
+  }
+  
+  // Calculate total price (windows + doors)
+  const calculateTotalPrice = () => {
+    const windowPrice = parseFloat(formData.windowPrice) || 0;
+    const doorPrice = Object.values(formData.doorPrices).reduce((total, price) => {
+      return total + (parseFloat(price) || 0);
+    }, 0);
+    
+    return (windowPrice + doorPrice).toFixed(2);
   }
 
   return (
@@ -283,14 +295,6 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-medium">Pricing</h3>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="show-pricing">Show to customer</Label>
-            <Switch
-              id="show-pricing"
-              checked={formData.showPricing}
-              onCheckedChange={(checked) => handleChange("showPricing", checked)}
-            />
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -306,6 +310,11 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
                 className="pl-8"
               />
             </div>
+            {formData.windowCount && parseInt(formData.windowCount) > 0 && formData.windowPrice && (
+              <p className="text-xs text-gray-500">
+                ${(parseFloat(formData.windowPrice) / parseInt(formData.windowCount)).toFixed(2)} per window
+              </p>
+            )}
           </div>
         </div>
 
@@ -338,20 +347,38 @@ export default function WindowsDoorsProductForm({ data, updateData }: WindowsDoo
               <div className="mt-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium">Total Door Price: ${calculateTotalDoorPrice()}</p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="show-door-price-breakdown"
-                    checked={formData.showDoorPriceBreakdown}
-                    onCheckedChange={(checked) => handleChange("showDoorPriceBreakdown", checked)}
-                    className="size-4"
-                  />
-                  <Label htmlFor="show-door-price-breakdown" className="text-xs">
-                    Show individual door prices (or combine into one total)
-                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="show-door-price-breakdown"
+                      checked={formData.showDoorPriceBreakdown}
+                      onCheckedChange={(checked) => handleChange("showDoorPriceBreakdown", checked)}
+                    />
+                    <Label htmlFor="show-door-price-breakdown" className="text-sm">
+                      Show individual door prices (or combine into one total)
+                    </Label>
+                  </div>
                 </div>
               </div>
             )}
+          </div>
+        )}
+        
+        {/* Combined total section */}
+        {formData.windowPrice && formData.doorTypes.length > 0 && Object.keys(formData.doorPrices).length > 0 && (
+          <div className="mt-6 p-3 bg-gray-50 rounded-md">
+            <div className="flex items-center justify-between">
+              <p className="font-medium">Windows & Doors Total: ${calculateTotalPrice()}</p>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="show-combined-total"
+                  checked={formData.showCombinedTotal}
+                  onCheckedChange={(checked) => handleChange("showCombinedTotal", checked)}
+                />
+                <Label htmlFor="show-combined-total" className="text-sm">
+                  Show combined total (windows + doors)
+                </Label>
+              </div>
+            </div>
           </div>
         )}
       </div>
