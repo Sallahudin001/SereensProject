@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { InfoIcon, AlertCircle, Calculator, Sparkles, TrendingUp, ShieldCheck, Clock, CheckCircle, XCircle, Plus } from "lucide-react"
+import { InfoIcon, AlertCircle, Calculator, Sparkles, TrendingUp, ShieldCheck, Clock, CheckCircle, XCircle, Plus, Percent, DollarSign, UserMinus } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -25,7 +25,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import FinancingSelector from "./financing-selector"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "@/hooks/use-toast"
@@ -33,9 +46,20 @@ import { createProposal } from "@/app/actions/proposal-actions"
 import { 
   calculateMonthlyPaymentWithFactor, 
   calculateMonthlyPayment,
-  calculateTotalWithAdjustments
+  calculateTotalWithAdjustments,
+  formatCurrency
 } from "@/lib/financial-utils"
 
+// Define discount types interface
+interface DiscountType {
+  id: string
+  name: string
+  defaultAmount: number
+  category: string
+  isEnabled: boolean
+  amount: number
+  percentageValue: number
+}
 
 interface FinancingPlan {
   id: number
@@ -73,6 +97,8 @@ interface PricingData {
   pricingOverride: boolean
   pricingBreakdown: Record<string, any>
   customAdders: CustomAdder[]
+  discountTypes: DiscountType[]
+  discountLog: { timestamp: number, userId: number, discountType: string, previousValue: number, newValue: number }[]
 }
 
 interface PricingBreakdownFormProps {
@@ -85,6 +111,17 @@ interface PricingBreakdownFormProps {
   customerData?: any
   fullFormData?: any
 }
+
+// Define default discount types with their values
+const DEFAULT_DISCOUNT_TYPES: DiscountType[] = [
+  { id: 'military', name: 'Military Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
+  { id: 'senior', name: 'Senior Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
+  { id: 'disability', name: 'Disability Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
+  { id: 'education', name: 'Education/Teacher Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
+  { id: 'repeat', name: 'Repeat Customer Discount', defaultAmount: 750, category: 'Loyalty', isEnabled: false, amount: 0, percentageValue: 0 },
+  { id: 'bundle-two', name: 'Two-Product Bundle Discount', defaultAmount: 1000, category: 'Volume', isEnabled: false, amount: 0, percentageValue: 0 },
+  { id: 'bundle-three', name: 'Three-or-More Product Bundle Discount', defaultAmount: 1750, category: 'Volume', isEnabled: false, amount: 0, percentageValue: 0 },
+]
 
 function PricingBreakdownForm({ services, products, data, updateData, proposalId, userId, customerData, fullFormData }: PricingBreakdownFormProps) {
   // Use a ref to track if we've already updated the parent
@@ -117,6 +154,10 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   // Debug tracking
   const [debugInfo, setDebugInfo] = useState<Record<string, any>>({})
 
+  // Discount management UI state
+  const [activeDiscountTab, setActiveDiscountTab] = useState<string>("dollar")
+  const [selectedDiscountForEdit, setSelectedDiscountForEdit] = useState<string | null>(null)
+
   // Calculate initial values only once
   const initialSubtotal = useRef(calculateSubtotal(services, data?.customAdders))
   const initialDiscount = useRef(calculateDiscount(services))
@@ -128,6 +169,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     const total = subtotal - discount
     const term = data.financingTerm || 60
     const rate = data.interestRate || 5.99
+    const discountTypes = data.discountTypes || DEFAULT_DISCOUNT_TYPES.map(type => ({...type}))
 
     return {
       subtotal,
@@ -144,7 +186,9 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       paymentFactor: data.paymentFactor,
       pricingOverride: data.pricingOverride !== undefined ? data.pricingOverride : false,
       pricingBreakdown: data.pricingBreakdown || {},
-      customAdders: data.customAdders || []
+      customAdders: data.customAdders || [],
+      discountTypes: discountTypes,
+      discountLog: data.discountLog || []
     }
   })
 
@@ -378,6 +422,134 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     return discount
   }
 
+  // Calculate the total discount amount from all enabled discount types
+  function calculateTotalDiscountsFromTypes(): number {
+    return formData.discountTypes
+      .filter(discount => discount.isEnabled)
+      .reduce((total, discount) => total + discount.amount, 0);
+  }
+
+  // Handle toggling a discount type on or off
+  const handleToggleDiscountType = (discountId: string, isEnabled: boolean) => {
+    // Update the discount types array
+    const updatedDiscountTypes = formData.discountTypes.map(discount => {
+      if (discount.id === discountId) {
+        // If enabling, set the amount to default; if disabling, set to 0
+        const newAmount = isEnabled ? discount.defaultAmount : 0;
+        
+        // Log this discount change
+        const discountLog = [...formData.discountLog, {
+          timestamp: Date.now(),
+          userId: userId || 0,
+          discountType: discount.id,
+          previousValue: discount.amount,
+          newValue: newAmount
+        }];
+
+        return { 
+          ...discount, 
+          isEnabled, 
+          amount: newAmount,
+          percentageValue: formData.subtotal > 0 ? (newAmount / formData.subtotal) * 100 : 0
+        };
+      }
+      return discount;
+    });
+
+    // Calculate the new total discount
+    const totalDiscount = updatedDiscountTypes
+      .filter(d => d.isEnabled)
+      .reduce((sum, d) => sum + d.amount, 0);
+
+    // Update the form data with new discount types and total
+    setFormData(prev => ({
+      ...prev,
+      discountTypes: updatedDiscountTypes,
+      discount: totalDiscount
+    }));
+
+    // Update the parent with the new data
+    hasUpdatedRef.current = false;
+  };
+
+  // Handle updating a discount amount (dollar value)
+  const handleUpdateDiscountAmount = (discountId: string, amount: number) => {
+    const discountType = formData.discountTypes.find(d => d.id === discountId);
+    if (!discountType) return;
+
+    // Check if the amount exceeds user permission thresholds
+    const discountPercent = formData.subtotal > 0 ? (amount / formData.subtotal) * 100 : 0;
+    
+    if (userPermissions && discountPercent > userPermissions.maxDiscountPercent) {
+      // Store the pending discount for approval
+      setPendingDiscount(amount);
+      setShowApprovalDialog(true);
+      
+      toast({
+        title: "Approval Required",
+        description: `Discount of ${discountPercent.toFixed(1)}% exceeds your limit of ${userPermissions.maxDiscountPercent}%. Manager approval is required.`,
+        variant: "destructive"
+      });
+      
+      return;
+    }
+
+    // Update the discount type with new amount
+    const updatedDiscountTypes = formData.discountTypes.map(discount => {
+      if (discount.id === discountId) {
+        // Log this discount change
+        const discountLog = [...formData.discountLog, {
+          timestamp: Date.now(),
+          userId: userId || 0,
+          discountType: discount.id,
+          previousValue: discount.amount,
+          newValue: amount
+        }];
+
+        return { 
+          ...discount, 
+          amount,
+          percentageValue: formData.subtotal > 0 ? (amount / formData.subtotal) * 100 : 0
+        };
+      }
+      return discount;
+    });
+
+    // Calculate the new total discount
+    const totalDiscount = updatedDiscountTypes
+      .filter(d => d.isEnabled)
+      .reduce((sum, d) => sum + d.amount, 0);
+
+    // Update the form data with new discount types and total
+    setFormData(prev => ({
+      ...prev,
+      discountTypes: updatedDiscountTypes,
+      discount: totalDiscount,
+      discountLog: [
+        ...prev.discountLog,
+        {
+          timestamp: Date.now(),
+          userId: userId || 0,
+          discountType: discountId,
+          previousValue: prev.discountTypes.find(d => d.id === discountId)?.amount || 0,
+          newValue: amount
+        }
+      ]
+    }));
+
+    // Update the parent with the new data
+    hasUpdatedRef.current = false;
+  };
+
+  // Handle updating a discount percentage
+  const handleUpdateDiscountPercentage = (discountId: string, percentage: number) => {
+    // Convert percentage to dollar amount
+    const amount = (percentage / 100) * formData.subtotal;
+    
+    // Use the dollar amount handler
+    handleUpdateDiscountAmount(discountId, amount);
+  };
+
   // Calculate monthly payment using financing plan's payment factor
   function calculateMonthlyPaymentWithFactorLocal(total: number, paymentFactor: number): number {
     return calculateMonthlyPaymentWithFactor(total, paymentFactor);
@@ -392,6 +564,9 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   const handleDiscountChange = useCallback(async (value: number) => {
     // Mark that discount has been manually edited
     setDiscountManuallyEdited(true)
+    
+    // If this is a manual override of the total discount amount
+    // This now functions as a "manual discount" separate from the individual discount types
     
     // Always allow discount changes, but add approval logic if permissions are loaded
     if (!userPermissions) {
@@ -424,9 +599,25 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       return
     }
     
-    // Apply discount normally if within threshold
-    handleChange("discount", value)
-  }, [formData.subtotal, userPermissions])
+    // Apply discount normally if within threshold and update discount log
+    setFormData(prev => ({
+      ...prev,
+      discount: value,
+      discountLog: [
+        ...prev.discountLog,
+        {
+          timestamp: Date.now(),
+          userId: userId || 0,
+          discountType: "manual",
+          previousValue: prev.discount,
+          newValue: value
+        }
+      ]
+    }))
+    
+    // Mark that we need to update the parent
+    hasUpdatedRef.current = false
+  }, [formData.subtotal, userPermissions, userId])
 
   // Handle user input changes
   const handleChange = useCallback((field: keyof PricingData, value: any) => {
@@ -510,6 +701,15 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                 // Update the form data with the approved discount
                 handleChange("discount", newDiscount)
                 
+                // If the proposal has discount types, update them too
+                if (proposalData.pricing.discountTypes) {
+                  setFormData(prev => ({
+                    ...prev,
+                    discountTypes: proposalData.pricing.discountTypes,
+                    discount: newDiscount
+                  }))
+                }
+                
                 // Show a toast notification
                 toast({
                   title: "Discount Approval Processed",
@@ -572,7 +772,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     const intervalId = setInterval(checkApprovalStatus, 10000)
     
     return () => clearInterval(intervalId)
-  }, [proposalId, handleChange, formData.discount])
+  }, [proposalId, handleChange, formData.discount, formData.discountTypes])
 
   // Submit approval request for discount
   const submitApprovalRequest = useCallback(async () => {
@@ -672,7 +872,15 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
         requestedValue: pendingDiscount,
         notes: approvalNotes,
         discountPercent: discountPercent.toFixed(1),
-        userMaxPercent: userPermissions?.maxDiscountPercent || 0
+        userMaxPercent: userPermissions?.maxDiscountPercent || 0,
+        // Include discount types information
+        discountTypes: formData.discountTypes.filter(d => d.isEnabled).map(d => ({
+          id: d.id,
+          name: d.name,
+          amount: d.amount,
+          percentageValue: formData.subtotal > 0 ? (d.amount / formData.subtotal) * 100 : 0
+        })),
+        discountLog: formData.discountLog
       }
       
       console.log('Sending approval request:', requestData)
@@ -820,15 +1028,33 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     }
   }, [services, formData.subtotal, financingPlans, discountManuallyEdited])
 
-  // Update parent data when formData changes
+  // Send updated data to parent component when it changes
   useEffect(() => {
-    if (hasUpdatedRef.current) return
-
-    if (JSON.stringify(formData) !== JSON.stringify(data)) {
-      updateData(formData)
-      hasUpdatedRef.current = true
-    }
-  }, [formData, updateData, data])
+    if (hasUpdatedRef.current) return;
+    
+    updateData({
+      subtotal: formData.subtotal,
+      discount: formData.discount,
+      total: formData.total,
+      monthlyPayment: formData.monthlyPayment,
+      showLineItems: formData.showLineItems,
+      financingTerm: formData.financingTerm,
+      interestRate: formData.interestRate,
+      financingPlanId: formData.financingPlanId,
+      financingPlanName: formData.financingPlanName,
+      merchantFee: formData.merchantFee,
+      financingNotes: formData.financingNotes,
+      paymentFactor: formData.paymentFactor,
+      pricingOverride: formData.pricingOverride,
+      pricingBreakdown: formData.pricingBreakdown,
+      customAdders: formData.customAdders,
+      // Include discount types in the update data
+      discountTypes: formData.discountTypes,
+      discountLog: formData.discountLog
+    });
+    
+    hasUpdatedRef.current = true;
+  }, [formData, updateData]);
 
   // Handle adding a custom adder
   const handleAddCustomAdder = (category: string) => {
@@ -1015,9 +1241,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                 </div>
               </div>
 
+              <div className="flex flex-col space-y-3">
+                {/* Total discount display row */}
               <div className="flex justify-between items-center py-2 border-b border-dashed border-gray-200">
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-600 font-medium">Base Discount</span>
+                    <span className="text-gray-600 font-medium">Total Discount</span>
                   {userPermissions ? (
                     <TooltipProvider>
                       <Tooltip>
@@ -1063,6 +1291,175 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                     placeholder="0.00"
                     title="Enter discount amount"
                   />
+                  </div>
+                </div>
+
+                {/* Discount Management System */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="font-medium text-gray-800 mb-3 flex items-center gap-1">
+                    <Sparkles className="h-4 w-4 text-blue-600" />
+                    Discount Management
+                  </h3>
+                  
+                  {/* Discount types accordion */}
+                  <Accordion type="single" collapsible className="w-full">
+                    {/* Group discounts by category */}
+                    {['Customer Type', 'Loyalty', 'Volume'].map(category => (
+                      <AccordionItem value={category} key={category}>
+                        <AccordionTrigger className="py-2 text-sm">
+                          {category} Discounts
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2">
+                            {/* Display all discount types for this category */}
+                            {formData.discountTypes
+                              .filter(discount => discount.category === category)
+                              .map(discount => (
+                                <div key={discount.id} className="flex items-center justify-between rounded-md border p-2 bg-white">
+                                  <div className="flex items-center gap-2">
+                                    <Switch 
+                                      checked={discount.isEnabled}
+                                      onCheckedChange={(checked) => handleToggleDiscountType(discount.id, checked)}
+                                    />
+                                    <span className={discount.isEnabled ? "font-medium" : "text-gray-500"}>
+                                      {discount.name}
+                                    </span>
+                                  </div>
+                                  
+                                  {discount.isEnabled && (
+                                    <div>
+                                      <Dialog>
+                                        <DialogTrigger asChild>
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            className="flex items-center gap-1"
+                                          >
+                                            ${discount.amount.toFixed(2)}
+                                            <Percent className="h-3 w-3 text-gray-500" />
+                                          </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                          <DialogHeader>
+                                            <DialogTitle>Edit {discount.name}</DialogTitle>
+                                          </DialogHeader>
+                                          
+                                          <div className="py-4">
+                                            <Tabs defaultValue="dollar" value={activeDiscountTab} onValueChange={setActiveDiscountTab}>
+                                              <TabsList className="grid w-full grid-cols-2">
+                                                <TabsTrigger value="dollar">
+                                                  <DollarSign className="h-4 w-4 mr-1" />
+                                                  Dollar Amount
+                                                </TabsTrigger>
+                                                <TabsTrigger value="percentage">
+                                                  <Percent className="h-4 w-4 mr-1" />
+                                                  Percentage
+                                                </TabsTrigger>
+                                              </TabsList>
+                                              
+                                              <TabsContent value="dollar" className="space-y-4 py-4">
+                                                <div className="space-y-2">
+                                                  <Label htmlFor="discount-amount">Discount Amount ($)</Label>
+                                                  <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                                    <Input
+                                                      id="discount-amount"
+                                                      type="number"
+                                                      value={discount.amount}
+                                                      onChange={(e) => handleUpdateDiscountAmount(discount.id, Number(e.target.value) || 0)}
+                                                      className="pl-8"
+                                                    />
+                                                  </div>
+                                                </div>
+                                                
+                                                <div className="text-sm text-gray-500">
+                                                  Equivalent to {formData.subtotal > 0 ? ((discount.amount / formData.subtotal) * 100).toFixed(2) : '0.00'}% 
+                                                  of total project cost.
+                                                </div>
+                                                
+                                                <div className="flex justify-between">
+                                                  <Button 
+                                                    variant="outline" 
+                                                    onClick={() => handleUpdateDiscountAmount(discount.id, discount.defaultAmount)}
+                                                  >
+                                                    Reset to Default
+                                                  </Button>
+                                                  <Button 
+                                                    onClick={() => document.querySelector<HTMLButtonElement>('[data-state="open"] button[data-state="closed"]')?.click()}
+                                                  >
+                                                    Apply
+                                                  </Button>
+                                                </div>
+                                              </TabsContent>
+                                              
+                                              <TabsContent value="percentage" className="space-y-4 py-4">
+                                                <div className="space-y-2">
+                                                  <Label htmlFor="discount-percentage">Discount Percentage (%)</Label>
+                                                  <div className="relative">
+                                                    <Input
+                                                      id="discount-percentage"
+                                                      type="number"
+                                                      value={formData.subtotal > 0 ? ((discount.amount / formData.subtotal) * 100).toFixed(2) : '0.00'}
+                                                      onChange={(e) => handleUpdateDiscountPercentage(discount.id, Number(e.target.value) || 0)}
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
+                                                  </div>
+                                                </div>
+                                                
+                                                <div className="text-sm text-gray-500">
+                                                  Equivalent to ${discount.amount.toFixed(2)} off the total project cost.
+                                                </div>
+                                                
+                                                <div className="flex justify-between">
+                                                  <Button 
+                                                    variant="outline" 
+                                                    onClick={() => {
+                                                      const defaultPercent = formData.subtotal > 0 ? 
+                                                        (discount.defaultAmount / formData.subtotal) * 100 : 0;
+                                                      handleUpdateDiscountPercentage(discount.id, defaultPercent);
+                                                    }}
+                                                  >
+                                                    Reset to Default
+                                                  </Button>
+                                                  <Button 
+                                                    onClick={() => document.querySelector<HTMLButtonElement>('[data-state="open"] button[data-state="closed"]')?.click()}
+                                                  >
+                                                    Apply
+                                                  </Button>
+                                                </div>
+                                              </TabsContent>
+                                            </Tabs>
+                                          </div>
+                                        </DialogContent>
+                                      </Dialog>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+
+                  {/* Discount summary */}
+                  {formData.discountTypes.some(d => d.isEnabled) && (
+                    <div className="mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
+                      <h4 className="text-sm font-medium text-blue-800 mb-2">Active Discounts</h4>
+                      <ul className="space-y-1">
+                        {formData.discountTypes.filter(d => d.isEnabled).map(discount => (
+                          <li key={discount.id} className="text-xs flex justify-between">
+                            <span>{discount.name}:</span>
+                            <span className="font-medium">${discount.amount.toFixed(2)}</span>
+                          </li>
+                        ))}
+                        <li className="text-sm font-medium border-t border-blue-200 pt-1 mt-1 flex justify-between">
+                          <span>Total Discounts:</span>
+                          <span>${calculateTotalDiscountsFromTypes().toFixed(2)}</span>
+                        </li>
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1307,6 +1704,27 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                 className="mt-2"
               />
             </div>
+            
+            {/* Active discount summary if any discounts are enabled */}
+            {formData.discountTypes.some(d => d.isEnabled) && (
+              <div className="mt-2 bg-gray-50 p-3 rounded-md">
+                <h4 className="text-sm font-medium mb-2">Active Discounts</h4>
+                <ul className="space-y-1 text-sm">
+                  {formData.discountTypes
+                    .filter(d => d.isEnabled)
+                    .map(discount => (
+                      <li key={discount.id} className="flex justify-between">
+                        <span>{discount.name}:</span>
+                        <span className="font-medium">${discount.amount.toFixed(2)}</span>
+                      </li>
+                    ))}
+                  <li className="text-sm font-medium border-t border-gray-200 pt-1 mt-1 flex justify-between">
+                    <span>Total Discounts:</span>
+                    <span>${calculateTotalDiscountsFromTypes().toFixed(2)}</span>
+                  </li>
+                </ul>
+              </div>
+            )}
             
             <div className="bg-blue-50 p-3 rounded-md text-xs text-blue-800 space-y-1">
               <p><strong>Current User:</strong> {userPermissions?.name || 'Unknown'}</p>
