@@ -153,8 +153,52 @@ export async function getProposalById(id: string) {
     `,
       [id],
     )
+    
+    // Get applied discounts and offers
+    const discountsResult = await executeQuery(
+      `
+      SELECT
+        po.offer_type,
+        po.discount_amount,
+        CASE 
+          WHEN po.offer_type = 'special_offer' THEN so.name
+          WHEN po.offer_type = 'bundle_rule' THEN br.name
+          ELSE 'Custom Discount'
+        END as name,
+        CASE
+          WHEN po.offer_type = 'special_offer' THEN so.description
+          WHEN po.offer_type = 'bundle_rule' THEN br.description
+          ELSE NULL
+        END as description,
+        CASE
+          WHEN po.offer_type = 'special_offer' THEN so.category
+          WHEN po.offer_type = 'bundle_rule' THEN 'Bundle'
+          ELSE NULL
+        END as category
+      FROM
+        proposal_offers po
+      LEFT JOIN
+        special_offers so ON po.offer_type = 'special_offer' AND po.offer_id = so.id
+      LEFT JOIN
+        bundle_rules br ON po.offer_type = 'bundle_rule' AND po.offer_id = br.id
+      WHERE
+        po.proposal_id = $1
+        AND po.status = 'active'
+    `,
+      [id],
+    )
+    
+    // Fetch custom adders for this proposal
+    const customAddersResult = await executeQuery(
+      `SELECT * FROM custom_pricing_adders 
+       WHERE proposal_id = $1 
+       ORDER BY product_category, id`,
+      [id],
+    )
+    
+    // Note: Customer discount and custom adders data will be fetched from the proposal data structure instead of separate tables
 
-    // Format the response
+    // Format the response with enhanced product details
     return {
       id: proposal.id,
       proposalNumber: proposal.proposal_number,
@@ -184,8 +228,34 @@ export async function getProposalById(id: string) {
         financingPlanId: proposal.financing_plan_id,
         financingPlanName: proposal.financing_plan_name,
         merchantFee: proposal.merchant_fee,
-        financingNotes: proposal.financing_notes
+        financingNotes: proposal.financing_notes,
+        paymentFactor: proposal.payment_factor
       },
+      // Include applied discounts
+      appliedDiscounts: discountsResult.map(discount => ({
+        type: discount.offer_type,
+        name: discount.name,
+        description: discount.description,
+        amount: Number.parseFloat(discount.discount_amount) || 0,
+        category: discount.category
+      })),
+      // Add custom adders to the response
+      customAdders: customAddersResult.map(adder => ({
+        id: adder.id,
+        description: adder.description,
+        product_category: adder.product_category,
+        cost: Number.parseFloat(adder.cost) || 0
+      })),
+      // Extract customer discounts from pricing_breakdown if available
+      customerDiscounts: proposal.pricing_breakdown && typeof proposal.pricing_breakdown === 'object' ? 
+        (proposal.pricing_breakdown.discountTypes || [])
+          .filter((discount: any) => discount && discount.isEnabled)
+          .map((discount: any) => ({
+            type: discount.id,
+            name: discount.name,
+            amount: Number.parseFloat(discount.amount) || 0,
+            category: discount.category || 'Customer'
+          })) : [],
       status: proposal.status,
       createdAt: proposal.created_at,
       updatedAt: proposal.updated_at,
@@ -273,8 +343,10 @@ export async function createProposal(data: any) {
               merchant_fee = $10,
               financing_notes = $11,
               status = COALESCE($12, status),
+              pricing_breakdown = $13,
+              pricing_override = $14,
               updated_at = CURRENT_TIMESTAMP
-          WHERE id = $13
+          WHERE id = $15
           `,
           [
             customerId,
@@ -289,6 +361,12 @@ export async function createProposal(data: any) {
             data.pricing.merchantFee ? parseFloat(data.pricing.merchantFee) : null,
             data.pricing.financingNotes || null,
             data.status || null,
+            JSON.stringify({
+              discountTypes: data.pricing.discountTypes || [],
+              pricingBreakdown: data.pricing.pricingBreakdown || {},
+              discountLog: data.pricing.discountLog || []
+            }),
+            data.pricing.pricingOverride || false,
             data.id
           ]
         )
@@ -425,6 +503,32 @@ export async function createProposal(data: any) {
           // Don't fail the entire update if offer assignment fails
         }
         
+        // Handle custom adders - delete existing and re-add
+        try {
+          // Delete existing custom adders
+          await executeQuery(
+            `DELETE FROM custom_pricing_adders WHERE proposal_id = $1`,
+            [data.id]
+          )
+          
+          // Re-add custom adders if any
+          if (data.pricing && data.pricing.customAdders && data.pricing.customAdders.length > 0) {
+            for (const adder of data.pricing.customAdders) {
+              await executeQuery(
+                `
+                INSERT INTO custom_pricing_adders (
+                  proposal_id, product_category, description, cost
+                ) VALUES ($1, $2, $3, $4)
+                `,
+                [data.id, adder.product_category, adder.description, adder.cost]
+              )
+            }
+          }
+        } catch (adderError) {
+          console.error("Error updating custom adders:", adderError)
+          // Don't fail the entire update if adder assignment fails
+        }
+        
         // Commit the transaction
         await executeQuery("COMMIT")
         
@@ -492,9 +596,10 @@ export async function createProposal(data: any) {
       INSERT INTO proposals (
         proposal_number, customer_id, status, subtotal, discount, total, 
         monthly_payment, financing_term, interest_rate, created_by, user_id,
-        financing_plan_id, financing_plan_name, merchant_fee, financing_notes
+        financing_plan_id, financing_plan_name, merchant_fee, financing_notes,
+        pricing_breakdown, pricing_override
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
       RETURNING id
     `,
       [
@@ -512,7 +617,13 @@ export async function createProposal(data: any) {
         data.pricing.financingPlanId || null,
         data.pricing.financingPlanName || null,
         data.pricing.merchantFee ? parseFloat(data.pricing.merchantFee) : null,
-        data.pricing.financingNotes || null
+        data.pricing.financingNotes || null,
+        JSON.stringify({
+          discountTypes: data.pricing.discountTypes || [],
+          pricingBreakdown: data.pricing.pricingBreakdown || {},
+          discountLog: data.pricing.discountLog || []
+        }),
+        data.pricing.pricingOverride || false
       ],
     )
 
@@ -559,7 +670,21 @@ export async function createProposal(data: any) {
       }
     }
 
-    // 5. Auto-assign bundle discounts and rep-selected offers
+    // 5. Add custom adders if any
+    if (data.pricing && data.pricing.customAdders && data.pricing.customAdders.length > 0) {
+      for (const adder of data.pricing.customAdders) {
+        await executeQuery(
+          `
+          INSERT INTO custom_pricing_adders (
+            proposal_id, product_category, description, cost
+          ) VALUES ($1, $2, $3, $4)
+          `,
+          [proposalId, adder.product_category, adder.description, adder.cost]
+        )
+      }
+    }
+    
+    // 6. Auto-assign bundle discounts and rep-selected offers
     try {
       // Apply rep-selected special offers if any
       if (data.selectedOffers && data.selectedOffers.length > 0) {
@@ -641,7 +766,7 @@ export async function createProposal(data: any) {
       // Don't fail the entire proposal creation if offer assignment fails
     }
 
-    // 6. Log the activity
+    // 7. Log the activity
     await logProposalCreation(
       userId,
       proposalId,

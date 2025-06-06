@@ -281,6 +281,9 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
   const [isRejecting, setIsRejecting] = useState(false)
   const [isRejected, setIsRejected] = useState(false)
 
+  // Add state for custom adders
+  const [customAdders, setCustomAdders] = useState<any[]>([]);
+
   // Function to update proposal data, e.g., after adding/removing an addon
   // This function now performs client-side optimistic updates based on initialProposal and current selectedAddons.
   const refreshProposalData = useCallback(() => {
@@ -316,10 +319,10 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     
     // Use the standardized calculation for the total
     newTotal = calculateTotalWithAdjustments(
-      initialProposal.pricing.subtotal, 
+      initialProposal.pricing.total, // Use total as base instead of subtotal to preserve existing adjustments
       addonsTotalPrice, 
       0, // No savings to apply here
-      initialProposal.pricing.discount
+      0  // Don't apply discount again as it's already included in the base total
     );
     
     // Calculate the new monthly payment using the proper financing method
@@ -396,6 +399,45 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
       setCurrentMonthlyPayment(proposal.pricing.monthlyPayment);
     }
   }, [proposal?.pricing]);
+
+  // Fetch custom adders when component loads
+  useEffect(() => {
+    async function fetchCustomAdders() {
+      if (initialProposal?.id) {
+        try {
+          const response = await fetch(`/api/custom-adders?proposalId=${initialProposal.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setCustomAdders(data);
+            
+            // Update pricing data with fetched custom adders
+            if (data && data.length > 0) {
+              // Calculate custom adders total
+              const customAddersTotal = data.reduce((sum: number, adder: any) => sum + parseFloat(adder.cost || '0'), 0);
+              
+              // Update current total to include custom adders
+              setCurrentTotal((prevTotal: number) => prevTotal + customAddersTotal);
+              
+              // Update monthly payment if needed
+              if (proposal?.pricing?.paymentFactor) {
+                const factor = proposal.pricing.paymentFactor;
+                const newMonthlyPayment = (currentTotal + customAddersTotal) * (factor / 100);
+                setCurrentMonthlyPayment(newMonthlyPayment);
+              }
+              
+              console.log(`Loaded ${data.length} custom adders, total cost: ${customAddersTotal}`);
+            }
+          } else {
+            console.error("Failed to fetch custom adders:", await response.text());
+          }
+        } catch (error) {
+          console.error("Error fetching custom adders:", error);
+        }
+      }
+    }
+
+    fetchCustomAdders();
+  }, [initialProposal?.id]);
 
   const handleAddonToggle = async (serviceKey: string, addonId: string, checked: boolean) => {
     // Optimistically update selectedAddons state
@@ -718,7 +760,8 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     const newTotal = calculateTotalWithAdjustments(
       proposal?.pricing?.total || 0,
       additionalCost,
-      savings
+      savings,
+      0 // No need to apply discount again as it's already included in proposal.pricing.total
     );
     
     // Calculate the updated monthly payment using the proper financing calculation
@@ -928,6 +971,219 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                               <h4 className="text-xl font-semibold text-emerald-700 mb-3">
                                 {service.charAt(0).toUpperCase() + service.slice(1).replace("-", " & ")}
                               </h4>
+                              
+                              {/* Display product details based on service type */}
+                              <div className="mb-4 bg-gray-50 p-4 rounded-md border border-gray-200">
+                                {service === 'windows-doors' && (
+                                  <div className="space-y-2">
+                                    <p><span className="font-medium">Window Type:</span> {productData.windowType?.replace(/-/g, " ")?.replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'N/A'}</p>
+                                    <p><span className="font-medium">Window Color:</span> {productData.windowColor?.charAt(0).toUpperCase() + productData.windowColor?.slice(1) || 'N/A'}</p>
+                                    <p><span className="font-medium">Number of Windows:</span> {productData.windowCount || '0'}</p>
+                                    <p><span className="font-medium">Window Price:</span> {formatCurrency(parseFloat(productData.windowPrice) || 0)}</p>
+                                    
+                                    {productData.doorTypes?.length > 0 && (
+                                      <div>
+                                        <p className="font-medium">Door Types Included:</p>
+                                        <ul className="list-disc pl-5 mt-1">
+                                          {productData.doorTypes.map((door: string, i: number) => (
+                                            <li key={i}>
+                                              {door.charAt(0).toUpperCase() + door.slice(1)} Door
+                                              {productData.doorPrices && productData.doorPrices[door] && 
+                                                ` - ${formatCurrency(parseFloat(productData.doorPrices[door]) || 0)}`}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                        <p><span className="font-medium">Number of Doors:</span> {productData.doorCount || '0'}</p>
+                                        {Object.keys(productData.doorPrices || {}).length > 0 && 
+                                          <p><span className="font-medium">Total Door Price:</span> {formatCurrency(
+                                            (Object.values(productData.doorPrices || {}) as string[]).reduce(
+                                              (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                            )
+                                          )}</p>
+                                        }
+                                      </div>
+                                    )}
+                                    {productData.customColors && 
+                                      <p><span className="font-medium text-amber-600">Premium Color Upgrade Applied</span></p>
+                                    }
+                                    <div className="border-t border-gray-200 pt-2 mt-2">
+                                      <p className="font-medium text-emerald-700 text-lg">
+                                        Total Windows & Doors Price: {formatCurrency(
+                                          (parseFloat(productData.windowPrice) || 0) + 
+                                          (Object.values(productData.doorPrices || {}) as string[]).reduce(
+                                            (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                          )
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {service === 'hvac' && (
+                                  <div className="space-y-2">
+                                    <p><span className="font-medium">System Type:</span> {productData.systemType?.replace(/-/g, " ")?.replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'N/A'}</p>
+                                    <p><span className="font-medium">SEER Rating:</span> {productData.seerRating || 'N/A'}</p>
+                                    {productData.tonnage && <p><span className="font-medium">System Size:</span> {productData.tonnage} Tons</p>}
+                                    
+                                    {/* HVAC Costs Section */}
+                                    <div className="border-t border-gray-200 pt-2 mt-3">
+                                      <p><span className="font-medium">System Cost:</span> {formatCurrency(parseFloat(productData.systemCost) || 0)}</p>
+                                      
+                                      {productData.ductworkCost && 
+                                        <p><span className="font-medium">Duct Cost:</span> {formatCurrency(parseFloat(productData.ductworkCost) || 0)}</p>}
+                                        
+                                      {productData.laborCost && 
+                                        <p><span className="font-medium">Labor Cost:</span> {formatCurrency(parseFloat(productData.laborCost) || 0)}</p>}
+                                        
+                                      {productData.addons?.length > 0 && (
+                                        <div>
+                                          <p className="font-medium">System Add-ons:</p>
+                                          <ul className="list-disc pl-5 mt-1">
+                                            {productData.addons.map((addon: string, i: number) => (
+                                              <li key={i}>
+                                                {addon.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                                {productData.addonPrices && productData.addonPrices[addon] && 
+                                                  ` - ${formatCurrency(parseFloat(productData.addonPrices[addon]) || 0)}`}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                          {Object.keys(productData.addonPrices || {}).length > 0 && 
+                                            <p><span className="font-medium">Total Add-on Cost:</span> {formatCurrency(
+                                              (Object.values(productData.addonPrices || {}) as string[]).reduce(
+                                                (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                              )
+                                            )}</p>
+                                          }
+                                        </div>
+                                      )}
+                                      
+                                      <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
+                                        Total HVAC Cost: {formatCurrency(parseFloat(productData.totalPrice) || 
+                                          (parseFloat(productData.systemCost || '0') + 
+                                          parseFloat(productData.ductworkCost || '0') + 
+                                          parseFloat(productData.laborCost || '0') + 
+                                          (Object.values(productData.addonPrices || {}) as string[]).reduce(
+                                            (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                          ))
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {service === 'roofing' && (
+                                  <div className="space-y-2">
+                                    <p><span className="font-medium">Roofing Material:</span> {productData.material ? 
+                                      productData.material.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) : 
+                                      'Shingles'}</p>
+                                    {productData.squareCount && 
+                                      <p><span className="font-medium">Square Count:</span> {productData.squareCount}</p>}
+                                    
+                                    {/* Gutter Information Section */}
+                                    {productData.addGutters && (
+                                      <div className="border-t border-gray-200 pt-2 mt-3">
+                                        <p><span className="font-medium">Includes Gutters:</span> Yes</p>
+                                        {productData.gutterLength && 
+                                          <p><span className="font-medium">Gutter Length:</span> {productData.gutterLength} ft</p>}
+                                        {productData.gutterPrice && 
+                                          <p><span className="font-medium">Gutter Price:</span> {formatCurrency(parseFloat(productData.gutterPrice) || 0)}</p>}
+                                        {productData.downspoutCount && 
+                                          <p><span className="font-medium">Number of Downspouts:</span> {productData.downspoutCount}</p>}
+                                        {productData.downspoutPrice && 
+                                          <p><span className="font-medium">Downspout Price:</span> {formatCurrency(parseFloat(productData.downspoutPrice) || 0)}</p>}
+                                      </div>
+                                    )}
+                                    
+                                    {productData.addPlywood && 
+                                      <p><span className="font-medium">Includes Plywood:</span> Yes {productData.plywoodPercentage && `(${productData.plywoodPercentage}% replacement)`}</p>}
+                                    
+                                    <div className="border-t border-gray-200 pt-2 mt-3">
+                                      <p><span className="font-medium">Price Per Square:</span> {productData.pricePerSquare && formatCurrency(parseFloat(productData.pricePerSquare) || 0)}</p>
+                                      <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
+                                        Total Roofing Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
+                                      </p>
+                                    </div>
+                                    
+                                    {productData.options?.length > 0 && (
+                                      <div className="border-t border-gray-200 pt-2 mt-3">
+                                        <p className="font-medium">Additional Options:</p>
+                                        <ul className="list-disc pl-5 mt-1">
+                                          {productData.options.map((option: string, i: number) => (
+                                            <li key={i}>
+                                              {option.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                              {productData.optionPrices && productData.optionPrices[option] && 
+                                                ` - ${formatCurrency(parseFloat(productData.optionPrices[option]) || 0)}`}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                        {Object.keys(productData.optionPrices || {}).length > 0 && 
+                                          <p><span className="font-medium">Total Options Price:</span> {formatCurrency(
+                                            (Object.values(productData.optionPrices || {}) as string[]).reduce(
+                                              (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                            )
+                                          )}</p>
+                                        }
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {service === 'garage-doors' && (
+                                  <div className="space-y-2">
+                                    <p><span className="font-medium">Door Model:</span> {productData.model ? 
+                                      productData.model.toUpperCase() : 
+                                      'T50L'}</p>
+                                    <p><span className="font-medium">Dimensions:</span> {productData.width || '16'}' W × {productData.height || '7'}' H</p>
+                                    <p><span className="font-medium">Quantity:</span> {productData.quantity || '1'} door(s)</p>
+                                    <div className="border-t border-gray-200 pt-2 mt-2">
+                                      <p className="font-medium text-emerald-700 text-lg">
+                                        Total Garage Door Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
+                                      </p>
+                                    </div>
+                                    {productData.addons?.length > 0 && (
+                                      <div>
+                                        <p className="font-medium">Add-ons:</p>
+                                        <ul className="list-disc pl-5 mt-1">
+                                          {productData.addons.map((addon: string, i: number) => (
+                                            <li key={i}>
+                                              {addon.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                              {productData.addonPrices && productData.addonPrices[addon] && 
+                                                ` - ${formatCurrency(parseFloat(productData.addonPrices[addon]) || 0)}`}
+                                            </li>
+                                          ))}
+                                        </ul>
+                                        {Object.keys(productData.addonPrices || {}).length > 0 && 
+                                          <p><span className="font-medium">Add-ons Price:</span> {formatCurrency(
+                                            (Object.values(productData.addonPrices || {}) as string[]).reduce(
+                                              (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                            )
+                                          )}</p>
+                                        }
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {service === 'paint' && (
+                                  <div className="space-y-2">
+                                    <p><span className="font-medium">Service Type:</span> {productData.serviceType ? 
+                                      productData.serviceType.charAt(0).toUpperCase() + productData.serviceType.slice(1) : 
+                                      'Exterior'}</p>
+                                    <p><span className="font-medium">Square Footage:</span> {productData.squareFootage || '0'} sq ft</p>
+                                    <p><span className="font-medium">Color Tone:</span> {productData.colorTone || '1'}-Tone</p>
+                                    <p><span className="font-medium">Paint Included:</span> {productData.includePaint ? 'Yes' : 'No'}</p>
+                                    {productData.includePrimer && <p><span className="font-medium">Includes:</span> Primer</p>}
+                                    {productData.includePrep && <p><span className="font-medium">Includes:</span> Surface Preparation</p>}
+                                    <div className="border-t border-gray-200 pt-2 mt-2">
+                                      <p className="font-medium text-emerald-700 text-lg">
+                                        Total Paint Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <h5 className="text-md font-medium text-gray-700 mb-2">Scope of Work:</h5>
                               <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-md border font-sans">
                                 {productData.scopeNotes}
                               </pre>
@@ -1002,7 +1258,105 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             <span className="font-medium">{formatCurrency(proposal?.pricing?.subtotal || 0)}</span>
                           </div>
 
-                          {/* Optional Line Item Pricing Display */}
+                          {/* Always show service breakdown for transparency */}
+                          <div className="pt-2">
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Service Breakdown:</h4>
+                            {proposal?.services?.map((service: string, index: number) => {
+                              const productData = proposal.products[service];
+                              if (!productData) return null;
+                              
+                              // Get service-specific pricing
+                              let servicePrice = 0;
+                              
+                              // Roofing price calculation
+                              if (service === "roofing") {
+                                if (productData.totalPrice) {
+                                  servicePrice = parseFloat(productData.totalPrice);
+                                  
+                                  // Add gutters and downspouts if present
+                                  if (productData.gutterPrice) {
+                                    servicePrice += parseFloat(productData.gutterPrice);
+                                  }
+                                  if (productData.downspoutPrice) {
+                                    servicePrice += parseFloat(productData.downspoutPrice);
+                                  }
+                                }
+                              }
+                              
+                              // HVAC price calculation
+                              else if (service === "hvac") {
+                                if (productData.systemCost) {
+                                  servicePrice += parseFloat(productData.systemCost);
+                                }
+                                if (productData.ductworkCost) {
+                                  servicePrice += parseFloat(productData.ductworkCost);
+                                }
+                                if (productData.laborCost) {
+                                  servicePrice += parseFloat(productData.laborCost);
+                                }
+                                // Add addon prices if present
+                                if (productData.addonPrices) {
+                                  Object.values(productData.addonPrices).forEach((price: any) => {
+                                    servicePrice += parseFloat(price || 0);
+                                  });
+                                }
+                              }
+                              
+                              // Windows & Doors price calculation
+                              else if (service === "windows-doors") {
+                                if (productData.windowPrice) {
+                                  servicePrice += parseFloat(productData.windowPrice);
+                                }
+                                
+                                // Add door prices if present
+                                if (productData.doorPrices) {
+                                  Object.values(productData.doorPrices).forEach((price: any) => {
+                                    servicePrice += parseFloat(price || 0);
+                                  });
+                                }
+                              }
+                              
+                              // Garage doors price calculation
+                              else if (service === "garage-doors") {
+                                if (productData.totalPrice) {
+                                  servicePrice = parseFloat(productData.totalPrice);
+                                  
+                                  // Add addon prices if present
+                                  if (productData.addonPrices) {
+                                    Object.values(productData.addonPrices).forEach((price: any) => {
+                                      servicePrice += parseFloat(price || 0);
+                                    });
+                                  }
+                                }
+                              }
+                              
+                              // Paint price calculation
+                              else if (service === "paint" && productData.totalPrice) {
+                                servicePrice = parseFloat(productData.totalPrice);
+                              }
+                              
+                              // If no specific price was found, fallback to totalPrice or evenly distributed subtotal
+                              if (servicePrice <= 0) {
+                                servicePrice = productData.totalPrice ? 
+                                  parseFloat(productData.totalPrice) : 
+                                  (proposal?.pricing?.subtotal * (1 / proposal?.services?.length));
+                              }
+                              
+                              return (
+                                <div key={index} className="flex justify-between py-1 pl-4 text-sm border-b border-dashed border-gray-100">
+                                  <span className="text-gray-500">
+                                    {service.charAt(0).toUpperCase() + service.slice(1).replace("-", " & ")}
+                                    {productData.windowCount && service === 'windows-doors' ? ` (${productData.windowCount} windows)` : ''}
+                                    {productData.doorCount && service === 'garage-doors' ? ` (${productData.doorCount} doors)` : ''}
+                                    {productData.roofSize && service === 'roofing' ? ` (${productData.roofSize} sq ft)` : ''}
+                                  </span>
+                                  <span className="font-medium text-gray-600">{formatCurrency(servicePrice)}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Optional detailed line item pricing */}
                           {showLineItemPricing && proposal?.pricing?.lineItems?.map((item: any, index: number) => (
                             <div key={index} className="flex justify-between py-1 pl-4 text-sm border-b border-dashed border-gray-100">
                               <span className="text-gray-500">{item.name}</span>
@@ -1010,6 +1364,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             </div>
                           ))}
 
+                          {/* Selected addons/upgrades */}
                           {Object.values(selectedAddons).flat().some(addon => addon.selected) && (
                              <div className="pt-2">
                                <h4 className="text-sm font-medium text-gray-500 mb-1">Selected Upgrades:</h4>
@@ -1022,10 +1377,41 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                              </div>
                           )}
 
-                          <div className="flex justify-between py-2 border-b border-dashed">
-                            <span className="text-gray-600">Discounts</span>
-                            <span className="font-medium text-red-600">-{formatCurrency(proposal?.pricing?.discount || 0)}</span>
-                          </div>
+                          {/* Customer Type Discounts */}
+                          {proposal?.customerDiscounts?.length > 0 && (
+                            <div className="pt-2">
+                              <h4 className="text-sm font-medium text-gray-500 mb-1">Customer Discounts:</h4>
+                              {proposal.customerDiscounts.map((discount: any, index: number) => (
+                                <div key={index} className="flex justify-between py-1 pl-4 text-sm border-b border-dashed border-gray-100">
+                                  <span className="text-gray-500">
+                                    {discount.type.charAt(0).toUpperCase() + discount.type.slice(1).replace(/_/g, ' ')} Discount
+                                    {discount.category && <span className="text-xs ml-2">({discount.category})</span>}
+                                  </span>
+                                  <span className="font-medium text-emerald-600">-{formatCurrency(discount.amount)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Custom Adders */}
+                          {customAdders?.length > 0 && (
+                            <div className="pt-2">
+                              <h4 className="text-sm font-medium text-gray-500 mb-1">Custom Additions:</h4>
+                              {customAdders.map((adder: any, index: number) => (
+                                <div key={index} className="flex justify-between py-1 pl-4 text-sm border-b border-dashed border-gray-100">
+                                  <span className="text-gray-500">
+                                    {adder.description}
+                                    <span className="text-xs ml-2">({adder.product_category.replace(/-/g, ' ')})</span>
+                                  </span>
+                                  <span className="font-medium text-gray-600">+{formatCurrency(adder.cost)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Removed Applied Discounts section as requested */}
+
+                          {/* Price Summary section has been removed as requested */}
                           
                           {/* Total Before Tax (if applicable) - Add logic if taxes are needed */}
 
@@ -1035,16 +1421,15 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             <span>Total Project Investment</span>
                             <span>{formatCurrency(currentTotal || 0)}</span>
                           </div>
+                          
+                          {/* Show only monthly payment without detailed financing info */}
                           {(proposal?.pricing?.monthlyPayment > 0 || currentMonthlyPayment > 0) && (
+                            <>
                             <div className="flex justify-between items-center text-lg font-semibold text-sky-600 pt-2">
                                 <span>Estimated Monthly Payment</span>
                                 <span>{formatCurrency(currentMonthlyPayment || 0)}/mo*</span> 
                             </div>
-                          )}
-                           {proposal?.pricing?.financingPlanName && (
-                                <p className="text-xs text-gray-500 text-right">
-                                    *Based on {proposal.pricing.financingPlanName}. Terms and conditions apply.
-                                </p>
+                            </>
                             )}
                         </CardContent>
                       </Card>
@@ -1055,7 +1440,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                 variants={fadeIn}
                                 className="mt-6 space-y-4"
                             >
-                                {/* Bundle Discounts - Always show if they exist */}
+                                {/* Bundle Discounts - Always show if they exist, but deduplicate */}
                                 {bundleRules && bundleRules.length > 0 && (
                                     <div className="border border-green-300 rounded-lg overflow-hidden">
                                         <div className="bg-green-100 border-b border-green-300 p-4">
@@ -1066,8 +1451,13 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                             <p className="text-green-700 mt-1 text-sm">You're already saving money by combining multiple services.</p>
                                         </div>
                                         <div className="bg-green-50/60">
-                                            {bundleRules.map((bundle: any, index: number) => (
-                                                <div key={index} className="p-4 border-b border-green-200 last:border-b-0">
+                                            {/* Use Set to deduplicate bundle names */}
+                                            {Array.from(new Set(bundleRules.map(bundle => bundle.name))).map((uniqueBundleName: string) => {
+                                                const bundle = bundleRules.find(b => b.name === uniqueBundleName);
+                                                if (!bundle) return null;
+                                                
+                                                return (
+                                                    <div key={uniqueBundleName} className="p-4 border-b border-green-200 last:border-b-0">
                                                     <div className="flex items-center justify-between">
                                                         <div>
                                                             <h5 className="text-green-900 font-semibold text-lg">{bundle.name}</h5>
@@ -1083,7 +1473,8 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                                         </div>
                                                     </div>
                                                 </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
