@@ -17,6 +17,7 @@ interface PaintData {
   includePrimer: boolean
   includePrep: boolean
   scopeNotes: string
+  totalPrice: string
 }
 
 interface PaintProductFormProps {
@@ -33,6 +34,7 @@ export default function PaintProductForm({ data, updateData }: PaintProductFormP
     includePrimer: data.includePrimer || true,
     includePrep: data.includePrep || true,
     scopeNotes: data.scopeNotes || generateScopeNotes("exterior", "1", true, true, true),
+    totalPrice: data.totalPrice || "",
   })
 
   const serviceTypes = [
@@ -246,6 +248,27 @@ export default function PaintProductForm({ data, updateData }: PaintProductFormP
           rows={10}
           className="font-mono text-sm"
         />
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Pricing</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="total-price">Total Price</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="total-price"
+                type="text"
+                className="pl-8"
+                placeholder="0.00"
+                value={formData.totalPrice}
+                onChange={(e) => handleChange("totalPrice", e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-gray-500">Enter the total price for this painting service</p>
+          </div>
+        </div>
       </div>
     </div>
   )

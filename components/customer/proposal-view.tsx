@@ -416,12 +416,21 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
               const customAddersTotal = data.reduce((sum: number, adder: any) => sum + parseFloat(adder.cost || '0'), 0);
               
               // Update current total to include custom adders
-              setCurrentTotal((prevTotal: number) => prevTotal + customAddersTotal);
+              const updatedTotal = (proposal?.pricing?.total || 0) + customAddersTotal;
+              setCurrentTotal(updatedTotal);
               
               // Update monthly payment if needed
               if (proposal?.pricing?.paymentFactor) {
                 const factor = proposal.pricing.paymentFactor;
-                const newMonthlyPayment = (currentTotal + customAddersTotal) * (factor / 100);
+                const newMonthlyPayment = updatedTotal * (factor / 100);
+                setCurrentMonthlyPayment(newMonthlyPayment);
+              } else if (proposal?.pricing?.financingTerm && proposal?.pricing?.interestRate) {
+                // Use standard amortization formula
+                const newMonthlyPayment = calculateMonthlyPayment(
+                  updatedTotal, 
+                  proposal.pricing.financingTerm, 
+                  proposal.pricing.interestRate
+                );
                 setCurrentMonthlyPayment(newMonthlyPayment);
               }
               
@@ -437,7 +446,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     }
 
     fetchCustomAdders();
-  }, [initialProposal?.id]);
+  }, [initialProposal?.id, proposal?.pricing]);
 
   const handleAddonToggle = async (serviceKey: string, addonId: string, checked: boolean) => {
     // Optimistically update selectedAddons state
@@ -729,12 +738,19 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
   
   // Calculate total with offers, addons, and other adjustments
   const calculateTotalWithOffers = () => {
-    let total = proposal?.pricing?.total || 0;
+    let baseTotal = proposal?.pricing?.total || 0;
     let additionalCost = 0;
     let savings = 0;
+    let customAddersTotal = 0;
 
     // Calculate addon costs (already included in proposal.pricing.total)
     // This is just for reference in the breakdown
+
+    // Calculate custom adders total if they exist
+    if (customAdders?.length > 0) {
+      customAddersTotal = customAdders.reduce((sum: number, adder: any) => 
+        sum + parseFloat(adder.cost || '0'), 0);
+    }
 
     // Calculate lifestyle upsell costs
     selectedUpsells.forEach(upsellId => {
@@ -751,15 +767,15 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
         if (offer.discount_amount) {
           savings += offer.discount_amount;
         } else if (offer.discount_percentage) {
-          savings += total * (offer.discount_percentage / 100);
+          savings += baseTotal * (offer.discount_percentage / 100);
         }
       }
     });
     
     // Calculate the new total based on adjustments
     const newTotal = calculateTotalWithAdjustments(
-      proposal?.pricing?.total || 0,
-      additionalCost,
+      baseTotal,
+      additionalCost + customAddersTotal,
       savings,
       0 // No need to apply discount again as it's already included in proposal.pricing.total
     );
@@ -805,7 +821,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
       newTotal,
       additionalCost,
       savings,
-      originalTotal: total,
+      originalTotal: baseTotal,
       newMonthlyPayment
     };
   };
@@ -815,7 +831,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     const calculationResults = calculateTotalWithOffers();
     setCurrentTotal(calculationResults.newTotal);
     setCurrentMonthlyPayment(calculationResults.newMonthlyPayment);
-  }, [selectedOffers, selectedUpsells, proposal?.pricing?.total, proposal?.pricing?.monthlyPayment]);
+  }, [selectedOffers, selectedUpsells, proposal?.pricing?.total, proposal?.pricing?.monthlyPayment, customAdders]);
 
   // Simplified stub for lifestyle upsells (not fully implemented)
   const toggleLifestyleUpsell = (upsellId: number) => {
@@ -1135,11 +1151,6 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                       'T50L'}</p>
                                     <p><span className="font-medium">Dimensions:</span> {productData.width || '16'}' W × {productData.height || '7'}' H</p>
                                     <p><span className="font-medium">Quantity:</span> {productData.quantity || '1'} door(s)</p>
-                                    <div className="border-t border-gray-200 pt-2 mt-2">
-                                      <p className="font-medium text-emerald-700 text-lg">
-                                        Total Garage Door Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
-                                      </p>
-                                    </div>
                                     {productData.addons?.length > 0 && (
                                       <div>
                                         <p className="font-medium">Add-ons:</p>
@@ -1161,6 +1172,16 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                         }
                                       </div>
                                     )}
+                                    <div className="border-t border-gray-200 pt-2 mt-2">
+                                      <p className="font-medium text-emerald-700 text-lg">
+                                        Total Garage Door Price: {formatCurrency(
+                                          (parseFloat(productData.totalPrice) || 0) + 
+                                          (Object.values(productData.addonPrices || {}) as string[]).reduce(
+                                            (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                          )
+                                        )}
+                                      </p>
+                                    </div>
                                   </div>
                                 )}
                                 
@@ -1172,10 +1193,12 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                     <p><span className="font-medium">Square Footage:</span> {productData.squareFootage || '0'} sq ft</p>
                                     <p><span className="font-medium">Color Tone:</span> {productData.colorTone || '1'}-Tone</p>
                                     <p><span className="font-medium">Paint Included:</span> {productData.includePaint ? 'Yes' : 'No'}</p>
-                                    {productData.includePrimer && <p><span className="font-medium">Includes:</span> Primer</p>}
-                                    {productData.includePrep && <p><span className="font-medium">Includes:</span> Surface Preparation</p>}
-                                    <div className="border-t border-gray-200 pt-2 mt-2">
-                                      <p className="font-medium text-emerald-700 text-lg">
+                                    
+                                    <div className="border-t border-gray-200 pt-2 mt-3">
+                                      {productData.includePrimer && <p><span className="font-medium">Includes:</span> Primer</p>}
+                                      {productData.includePrep && <p><span className="font-medium">Includes:</span> Surface Preparation</p>}
+                                    
+                                      <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
                                         Total Paint Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
                                       </p>
                                     </div>
@@ -1187,41 +1210,6 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                               <pre className="whitespace-pre-wrap text-sm text-gray-700 bg-gray-50 p-4 rounded-md border font-sans">
                                 {productData.scopeNotes}
                               </pre>
-                              {/* Display Addons for this service */}
-                              {selectedAddons[service] && selectedAddons[service].length > 0 && (
-                                <div className="mt-6 pt-4 border-t border-gray-200">
-                                  <h5 className="text-md font-semibold text-gray-700 mb-3 flex items-center">
-                                    <Sparkles className="w-5 h-5 mr-2 text-amber-500" /> Available Upgrades for {service.charAt(0).toUpperCase() + service.slice(1).replace("-", " & ")}:
-                                  </h5>
-                                  <div className="space-y-3">
-                                    {selectedAddons[service].map((addon: Addon) => (
-                                      <motion.div 
-                                        key={addon.id} 
-                                        variants={fadeIn}
-                                        className={`flex items-center justify-between p-4 rounded-md border transition-all duration-300 ${addon.selected ? 'bg-emerald-50 border-emerald-300' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}
-                                      >
-                                        <div>
-                                          <Label htmlFor={`addon-${service}-${addon.id}`} className="font-medium text-gray-800 flex items-center cursor-pointer">
-                                            <Checkbox 
-                                                id={`addon-${service}-${addon.id}`}
-                                                checked={addon.selected}
-                                                onCheckedChange={(checked) => handleAddonToggle(service, addon.id, !!checked)}
-                                                className="mr-3 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
-                                                disabled={readOnly || isRejected || proposal?.status === 'signed'}
-                                            />
-                                            {addon.name}
-                                          </Label>
-                                          <p className="text-xs text-gray-600 ml-7">{addon.description}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-sm font-semibold text-emerald-600">{formatCurrency(addon.price)}</p>
-                                            <p className="text-xs text-gray-500"> (approx. {formatCurrency(addon.monthly_impact)}/mo)</p>
-                                        </div>
-                                      </motion.div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
                             </motion.div>
                           )
                         })}
@@ -1271,14 +1259,14 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                               // Roofing price calculation
                               if (service === "roofing") {
                                 if (productData.totalPrice) {
-                                  servicePrice = parseFloat(productData.totalPrice);
+                                  servicePrice = parseFloat(productData.totalPrice) || 0;
                                   
                                   // Add gutters and downspouts if present
                                   if (productData.gutterPrice) {
-                                    servicePrice += parseFloat(productData.gutterPrice);
+                                    servicePrice += parseFloat(productData.gutterPrice) || 0;
                                   }
                                   if (productData.downspoutPrice) {
-                                    servicePrice += parseFloat(productData.downspoutPrice);
+                                    servicePrice += parseFloat(productData.downspoutPrice) || 0;
                                   }
                                 }
                               }
@@ -1286,13 +1274,13 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                               // HVAC price calculation
                               else if (service === "hvac") {
                                 if (productData.systemCost) {
-                                  servicePrice += parseFloat(productData.systemCost);
+                                  servicePrice += parseFloat(productData.systemCost) || 0;
                                 }
                                 if (productData.ductworkCost) {
-                                  servicePrice += parseFloat(productData.ductworkCost);
+                                  servicePrice += parseFloat(productData.ductworkCost) || 0;
                                 }
                                 if (productData.laborCost) {
-                                  servicePrice += parseFloat(productData.laborCost);
+                                  servicePrice += parseFloat(productData.laborCost) || 0;
                                 }
                                 // Add addon prices if present
                                 if (productData.addonPrices) {
@@ -1300,12 +1288,17 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                     servicePrice += parseFloat(price || 0);
                                   });
                                 }
+                                
+                                // If service has its own totalPrice, use that as it's more accurate
+                                if (productData.totalPrice) {
+                                  servicePrice = parseFloat(productData.totalPrice) || 0;
+                                }
                               }
                               
                               // Windows & Doors price calculation
                               else if (service === "windows-doors") {
                                 if (productData.windowPrice) {
-                                  servicePrice += parseFloat(productData.windowPrice);
+                                  servicePrice += parseFloat(productData.windowPrice) || 0;
                                 }
                                 
                                 // Add door prices if present
@@ -1314,12 +1307,17 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                     servicePrice += parseFloat(price || 0);
                                   });
                                 }
+                                
+                                // If service has its own totalPrice, use that as it's more accurate
+                                if (productData.totalPrice) {
+                                  servicePrice = parseFloat(productData.totalPrice) || 0;
+                                }
                               }
                               
                               // Garage doors price calculation
                               else if (service === "garage-doors") {
                                 if (productData.totalPrice) {
-                                  servicePrice = parseFloat(productData.totalPrice);
+                                  servicePrice = parseFloat(productData.totalPrice) || 0;
                                   
                                   // Add addon prices if present
                                   if (productData.addonPrices) {
@@ -1331,15 +1329,19 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                               }
                               
                               // Paint price calculation
-                              else if (service === "paint" && productData.totalPrice) {
-                                servicePrice = parseFloat(productData.totalPrice);
+                              else if (service === "paint") {
+                                // Only use the totalPrice from productData, and ensure it's a number
+                                servicePrice = parseFloat(productData.totalPrice || '0') || 0;
+                                
+                                // Log the paint price for debugging
+                                console.log(`Paint price from product data: ${productData.totalPrice}, converted: ${servicePrice}`);
                               }
                               
                               // If no specific price was found, fallback to totalPrice or evenly distributed subtotal
                               if (servicePrice <= 0) {
                                 servicePrice = productData.totalPrice ? 
-                                  parseFloat(productData.totalPrice) : 
-                                  (proposal?.pricing?.subtotal * (1 / proposal?.services?.length));
+                                  parseFloat(productData.totalPrice) || 0 : 
+                                  (proposal?.pricing?.subtotal || 0) * (1 / (proposal?.services?.length || 1));
                               }
                               
                               return (
@@ -1429,6 +1431,11 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                 <span>Estimated Monthly Payment</span>
                                 <span>{formatCurrency(currentMonthlyPayment || 0)}/mo*</span> 
                             </div>
+                            {proposal?.pricing?.financingPlanName && (
+                              <p className="text-xs text-gray-500 text-right">
+                                  *Based on {proposal.pricing.financingPlanName}. Terms and conditions apply.
+                              </p>
+                            )}
                             </>
                             )}
                         </CardContent>

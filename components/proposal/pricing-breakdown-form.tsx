@@ -377,9 +377,8 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       }
       
       if (serviceList.includes("paint") && products.paint) {
-        // Paint doesn't have explicit pricing fields yet, so we'll leave a placeholder
-        // Future enhancement: Add pricing fields to paint product form
-        subtotal += 0 // Will be replaced with actual paint pricing when implemented
+        // Use the product's totalPrice if available
+        subtotal += parseFloat(products.paint.totalPrice) || 0;
       }
     }
     
