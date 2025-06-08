@@ -120,12 +120,6 @@ export default function LandingPage() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Link href="/dashboard">
-                    <DropdownMenuItem>
-                      <Home className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
-                    </DropdownMenuItem>
-                  </Link>
                   <SignOutButton>
                     <DropdownMenuItem>
                       <ArrowRight className="mr-2 h-4 w-4" />
