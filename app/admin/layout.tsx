@@ -64,6 +64,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const menuItems = [
     { href: "/admin", label: "Dashboard", icon: Home },
+    { href: "/admin/proposals", label: "All Proposals", icon: FileText },
+    { href: "/admin/customers", label: "All Customers", icon: User },
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/financing", label: "Financing", icon: DollarSign },
     { href: "/admin/pricing", label: "Pricing", icon: BarChart3 },
