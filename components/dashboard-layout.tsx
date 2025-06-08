@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { type ReactNode, useState, useEffect } from "react"
-import { BarChart3, FileText, Home, LogOut, Settings, Users, Shield, ChevronLeft, ChevronRight, Menu, X } from "lucide-react"
+import { BarChart3, FileText, Home, LogOut, Settings, Users, Shield, ChevronLeft, ChevronRight, Menu, X, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -53,6 +53,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { icon: Home, label: "Dashboard", href: "/dashboard" },
     { icon: FileText, label: "Proposals", href: "/proposals" },
     { icon: Users, label: "Customers", href: "/customers" },
+    { icon: Calendar, label: "Calendar", href: "/calendar" },
     { icon: BarChart3, label: "Reports", href: "/reports" },
   ];
 

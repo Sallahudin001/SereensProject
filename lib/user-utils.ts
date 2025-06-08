@@ -53,8 +53,13 @@ export async function getUserNamesFromClerk(clerkIds: string[]): Promise<Record<
         const fullName = [firstName, lastName].filter(Boolean).join(' ')
         
         return { clerkId, name: fullName || 'Unknown User' }
-      } catch (error) {
-        console.error(`Error fetching user name for clerk_id ${clerkId}:`, error)
+      } catch (error: any) {
+        // Only log non-404 errors (404 means user was deleted from Clerk)
+        if (error?.status !== 404) {
+          console.error(`Error fetching user name for clerk_id ${clerkId}:`, error)
+        } else {
+          console.warn(`User not found in Clerk: ${clerkId} (likely deleted)`)
+        }
         return { clerkId, name: 'Unknown User' }
       }
     })
@@ -104,8 +109,13 @@ export async function getUserDetailsFromClerk(clerkIds: string[]): Promise<Recor
             email
           }
         }
-      } catch (error) {
-        console.error(`Error fetching user details for clerk_id ${clerkId}:`, error)
+      } catch (error: any) {
+        // Only log non-404 errors (404 means user was deleted from Clerk)
+        if (error?.status !== 404) {
+          console.error(`Error fetching user details for clerk_id ${clerkId}:`, error)
+        } else {
+          console.warn(`User not found in Clerk: ${clerkId} (likely deleted)`)
+        }
         return { 
           clerkId, 
           details: { 

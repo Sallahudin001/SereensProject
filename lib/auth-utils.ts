@@ -19,7 +19,7 @@ export const ADMIN_USER_IDS: string[] = [
 ];
 
 // Helper function to get the current user ID
-async function getCurrentUserId() {
+export async function getCurrentUserId() {
   try {
     const { userId } = await auth();
     return userId;
