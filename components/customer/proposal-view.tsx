@@ -33,6 +33,7 @@ import {
   calculateTotalWithAdjustments,
   formatCurrency as formatCurrencyUtil
 } from "@/lib/financial-utils"
+import ProposalActions from "@/components/proposal/ProposalActions"
 
 // Animation variants
 const fadeIn = {
@@ -890,6 +891,26 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                  {proposal?.status === 'signed' && (
                   <p className="text-xs font-semibold text-emerald-200 bg-emerald-700 px-2 py-1 rounded mt-1 inline-block">Status: Signed</p>
                 )}
+              </div>
+            </div>
+            
+            {/* PDF Actions Section */}
+            <div className="mt-6 pt-4 border-t border-green-400/30">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-1">Document Actions</h4>
+                  <p className="text-green-100 text-sm">Download, preview, or share your proposal</p>
+                </div>
+                <div className="flex-shrink-0">
+                  <ProposalActions
+                    proposalId={proposal?.id}
+                    proposalNumber={proposal?.proposalNumber}
+                    status={proposal?.status}
+                    showSignatureButton={!readOnly && !isRejected && proposal?.status !== 'signed'}
+                    isCustomerView={true}
+                    selectedAddons={selectedAddons}
+                  />
+                </div>
               </div>
             </div>
           </CardHeader>
