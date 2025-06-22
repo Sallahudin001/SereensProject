@@ -203,37 +203,94 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
     // Generate HTML for the email
     const html = `
       <!DOCTYPE html>
-      <html>
+      <html lang="en">
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Proposal from EverGreen Home Proposals</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Your Proposal from Evergreen Home Upgrades</title>
         <style>
+          /* Reset and base styles */
+          * { margin: 0; padding: 0; box-sizing: border-box; }
           body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #333333;
+            background-color: #f9fafb;
             margin: 0;
             padding: 0;
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
           }
-          .container {
-            max-width: 600px;
+          
+          /* Container styles */
+          .email-wrapper {
+            width: 100%;
+            background-color: #f9fafb;
+            padding: 32px 0;
+            min-height: 100vh;
+          }
+          .email-container {
+            max-width: 672px;
+            width: 100%;
             margin: 0 auto;
-            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
           }
-          .header {
-            background-color: #f8f9fa;
-            padding: 20px;
+          
+          /* Header styles */
+          .email-header {
+            background-color: #059669;
+            padding: 40px 32px;
             text-align: center;
-            border-bottom: 3px solid #059669;
+            color: white;
+          }
+          .logo-container {
+            margin-bottom: 24px;
           }
           .logo {
-            color: #059669;
-            font-size: 24px;
-            font-weight: bold;
+            height: 80px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
           }
-          .content {
-            padding: 20px 0;
+          .header-title {
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 8px;
+          }
+          .header-subtitle {
+            font-size: 18px;
+            color: #a7f3d0;
+          }
+          
+          /* Content styles */
+          .email-content {
+            padding: 40px 32px;
+          }
+          .greeting {
+            font-size: 20px;
+            color: #1f2937;
+            margin-bottom: 24px;
+          }
+          .intro-text {
+            font-size: 18px;
+            color: #374151;
+            margin-bottom: 24px;
+            line-height: 1.75;
+          }
+          .intro-text-secondary {
+            color: #374151;
+            margin-bottom: 32px;
+            line-height: 1.75;
+          }
+          .proposal-number {
+            color: #059669;
+            font-weight: 600;
           }
           .customer-info {
             margin-bottom: 20px;
@@ -248,10 +305,13 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
             color: #059669;
           }
           .scope-section {
-            background-color: #f8f9fa;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 5px;
+            background-color: #f8fafc;
+            border-left: 4px solid #059669;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            padding: 24px;
+            margin: 32px 0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
           }
           .service-name {
             font-weight: bold;
@@ -259,60 +319,158 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
           }
           .pricing {
             margin: 20px 0;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
+            padding: 20px;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
           }
           .pricing-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            padding: 5px 0;
           }
           .total-row {
             font-weight: bold;
-            border-top: 1px solid #ddd;
-            padding-top: 5px;
-            margin-top: 5px;
+            border-top: 2px solid #10b981;
+            padding-top: 10px;
+            margin-top: 10px;
+            font-size: 16px;
           }
           .monthly-payment {
             color: #059669;
+            font-weight: bold;
+          }
+          
+          /* CTA Button */
+          .cta-section {
+            text-align: center;
+            margin: 40px 0;
           }
           .cta-button {
             display: inline-block;
-            background-color: #059669;
+            background-color: #ef4444;
             color: white;
-            padding: 12px 25px;
+            padding: 16px 40px;
             text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
           }
-          .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
+          .cta-button:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+          }
+          
+          /* Next steps section */
+          .next-steps {
+            background-color: #ecfdf5;
+            border: 1px solid #d1fae5;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 32px 0;
+          }
+          .next-steps h3 {
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 16px;
+            font-size: 18px;
+          }
+          .step-item {
+            display: flex;
+            align-items: center;
+            color: #374151;
+            margin-bottom: 8px;
+          }
+          .step-item:last-child {
+            margin-bottom: 0;
+          }
+          .step-checkmark {
+            color: #059669;
+            margin-right: 12px;
+            font-weight: bold;
+          }
+          
+          /* Footer */
+          .email-footer {
+            background-color: #f3f4f6;
+            padding: 32px;
             text-align: center;
-            font-size: 14px;
-            color: #666;
+            border-top: 1px solid #e5e7eb;
           }
           .contact-info {
-            margin-top: 15px;
+            color: #374151;
+            margin-bottom: 16px;
+            line-height: 1.5;
+          }
+          .contact-info div {
+            margin-bottom: 4px;
+          }
+          .contact-icon {
+            color: #059669;
+            font-weight: 600;
+          }
+          .copyright {
+            color: #6b7280;
+            font-size: 14px;
+            padding-top: 16px;
+            border-top: 1px solid #d1d5db;
+          }
+          
+          /* Responsive design */
+          @media only screen and (max-width: 600px) {
+            .email-wrapper { padding: 16px 0; }
+            .email-container { margin: 0 16px; border-radius: 8px; }
+            .email-header { padding: 32px 24px; }
+            .email-content { padding: 32px 24px; }
+            .header-title { font-size: 24px; }
+            .logo { height: 64px; }
+            .scope-section { padding: 20px; }
+            .cta-button { padding: 14px 32px; font-size: 16px; }
+            .next-steps { padding: 20px; }
+          }
+          
+          @media only screen and (max-width: 480px) {
+            .email-container { margin: 0 8px; }
+            .email-header { padding: 24px 16px; }
+            .email-content { padding: 24px 16px; }
+            .email-footer { padding: 24px 16px; }
           }
         </style>
       </head>
       <body>
-        <div class="container">
-          <div class="header">
-            <div>Professional Home Improvement Proposal</div>
-          </div>
-          
-          <div class="content">
-            <div class="customer-info">
-              <p><strong>Homeowner:</strong> ${proposalData.customer.name}</p>
-              <p><strong>Address:</strong> ${proposalData.customer.address || "N/A"}</p>
-              <p><strong>Proposal Date:</strong> ${await formatDate(proposalData.createdAt)}</p>
-              <p><strong>Project Manager:</strong> Jaime Sanchez (Phone number: 408-555-1234)</p>
+        <div class="email-wrapper">
+          <div class="email-container">
+            <div class="email-header">
+              <div class="logo-container">
+                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" class="logo" />
+              </div>
+              <h1 class="header-title">Your Proposal is Ready</h1>
+              <p class="header-subtitle">Professional Home Improvement Proposal</p>
             </div>
+            
+            <div class="email-content">
+              <div class="greeting">Hello ${proposalData.customer.name},</div>
+              
+              <div class="intro-text">
+                Your proposal <strong class="proposal-number">#${proposalData.proposalNumber}</strong> from Evergreen Home Upgrades is ready for your review.
+              </div>
+              
+              <div class="intro-text-secondary">
+                We've carefully prepared a comprehensive proposal tailored to your home improvement needs.
+              </div>
+              
+              <div class="customer-info">
+                <p><strong>Homeowner:</strong> ${proposalData.customer.name}</p>
+                <p><strong>Address:</strong> ${proposalData.customer.address || "N/A"}</p>
+                <p><strong>Proposal Date:</strong> ${await formatDate(proposalData.createdAt)}</p>
+                <p><strong>Project Manager:</strong> Jaime Sanchez (Phone number: 408-555-1234)</p>
+              </div>
             
             <div class="section">
               ${proposalData.services
@@ -365,23 +523,48 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
               }
             </div>
             
-            <div style="text-align: center;">
-              <a href="${proposalUrl}" class="cta-button">View, Sign & Pay Online</a>
+            <div class="cta-section">
+              <a href="${proposalUrl}" class="cta-button">View Your Proposal</a>
             </div>
             
-            <div style="margin-top: 30px;">
-              <p>Thank you for considering Evergreen Home Upgrades for your home improvement needs. To proceed with this proposal, please click the button above to review the complete details, sign electronically, and make your deposit payment.</p>
-              <p>This proposal is valid for 30 days from the date of issue. If you have any questions, please don't hesitate to contact your project manager.</p>
+            <div class="next-steps">
+              <h3>What's Next:</h3>
+              <div class="step-item">
+                <span class="step-checkmark">✓</span>
+                Review your detailed proposal online
+              </div>
+              <div class="step-item">
+                <span class="step-checkmark">✓</span>
+                Ask any questions you may have
+              </div>
+              <div class="step-item">
+                <span class="step-checkmark">✓</span>
+                Sign electronically when ready
+              </div>
+              <div class="step-item">
+                <span class="step-checkmark">✓</span>
+                Make your deposit to secure your project
+              </div>
             </div>
+            
+            <p style="color: #374151; line-height: 1.75; margin-bottom: 16px;">
+              If you have any questions, please don't hesitate to contact us.
+            </p>
+            
+            <p style="color: #374151; line-height: 1.75;">
+              Thank you for choosing Evergreen Home Upgrades for your home improvement needs.
+            </p>
           </div>
           
-          <div class="footer">
+          <div class="email-footer">
             <div class="contact-info">
-              <p>📧 info@evergreenenergyupgrades.com</p>
-              <p>�� (408) 555-1234</p>
-              <p>www.evergreenenergyupgrades.com</p>
+              <div><strong class="contact-icon">📧</strong> info@evergreenenergyupgrades.com</div>
+              <div><strong class="contact-icon">📞</strong> Cell: (408) 826-7377 | Office: (408) 333-9831</div>
+              <div><strong class="contact-icon">🌐</strong> www.evergreenenergyupgrades.com</div>
             </div>
-            <p>© 2023 Evergreen Home Upgrades. All rights reserved.</p>
+            <div class="copyright">
+              © ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.
+            </div>
           </div>
         </div>
       </body>
