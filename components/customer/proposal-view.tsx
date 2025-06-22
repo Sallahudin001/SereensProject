@@ -582,7 +582,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
           name: proposal?.customer?.name,
           proposalId: proposal?.id,
           proposalNumber: proposal?.proposalNumber,
-          message: `Your proposal has been signed and your deposit has been processed successfully. Thank you for choosing Evergreen Energy Upgrades. Our team will contact you shortly to schedule your project.`,
+          message: `Your proposal has been signed and your deposit has been processed successfully. Thank you for choosing Evergreen Home Upgrades. Our team will contact you shortly to schedule your project.`,
         }),
       })
 
@@ -875,7 +875,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-4">
                 <div className="bg-slate-100 p-2 rounded-lg shadow-sm">
-                  <Image src="/newlogo.png" alt="Evergreen Energy Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
+                  <Image src="/newlogo.png" alt="Evergreen Home Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
                 </div>
                 <div>
                     <CardTitle className="text-3xl sm:text-4xl font-bold">Home Improvement Proposal</CardTitle>
@@ -1644,7 +1644,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             >
                                 <div className="bg-gray-100 p-6 rounded-lg border border-gray-200">
                                     <p className="text-sm text-gray-700 leading-relaxed">
-                                    By typing my name above and clicking "Sign & Continue to Payment", I acknowledge that I have read, understood, and agree to all terms, conditions, and scope of work outlined in this proposal document. I authorize Evergreen Energy Upgrades to proceed with the project as described herein.
+                                    By typing my name above and clicking "Sign & Continue to Payment", I acknowledge that I have read, understood, and agree to all terms, conditions, and scope of work outlined in this proposal document. I authorize Evergreen Home Upgrades to proceed with the project as described herein.
                                     </p>
                                 </div>
                             </motion.div>
@@ -1829,11 +1829,11 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                         <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
                     </div>
                     <div className="sm:col-span-2 text-sm">
-                        <p className="font-semibold text-lg text-white mb-1">Evergreen Energy Upgrades</p>
+                        <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
                         <p>C: (408) 826-7377 | O: (408)333-9831</p>
                         <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
                         <p>www.evergreenenergy.io</p>
-                        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Energy Upgrades. All Rights Reserved.</p>
+                        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
                     </div>
                 </div>
             </CardFooter>

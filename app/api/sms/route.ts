@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       const proposalUrl = `${baseUrl}/proposals/view/${proposalId}`;
 
       // Create SMS text message
-      const defaultMessage = `Hello ${name}, your proposal #${proposalNumber} from Evergreen Energy Upgrades is ready. View and sign here: ${proposalUrl}`;
+      const defaultMessage = `Hello ${name}, your proposal #${proposalNumber} from Evergreen Home Upgrades is ready. View and sign here: ${proposalUrl}`;
       const smsText = message || defaultMessage;
 
       console.log(`Preparing to send SMS from ${VONAGE_SENDER}`);

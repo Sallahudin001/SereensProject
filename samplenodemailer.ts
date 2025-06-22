@@ -39,33 +39,33 @@ export async function POST(request: NextRequest) {
 
     // Email options
     const mailOptions = {
-      from: `"Evergreen Energy Upgrades" <${process.env.EMAIL_USER}>`,
+          from: `"Evergreen Home Upgrades" <${process.env.EMAIL_USER}>`,
       to: email,
       cc: process.env.EMAIL_RECIPIENT,
-      subject: `Your Proposal #${proposalNumber} from Evergreen Energy Upgrades`,
+    subject: `Your Proposal #${proposalNumber} from Evergreen Home Upgrades`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; padding: 20px; background-color: #f8f9fa; margin-bottom: 20px;">
-            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/evergreen.png" alt="Evergreen Energy Upgrades Logo" style="height: 80px; width: auto; margin-bottom: 10px;">
+            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/evergreen.png" alt="Evergreen Home Upgrades Logo" style="height: 80px; width: auto; margin-bottom: 10px;">
             <h2 style="margin: 0; color: #333;">Your Proposal is Ready</h2>
           </div>
           
           <p>Hello ${name},</p>
           
-          <p>Your proposal #${proposalNumber} from Evergreen Energy Upgrades is ready for your review.</p>
+          <p>Your proposal #${proposalNumber} from Evergreen Home Upgrades is ready for your review.</p>
           
           <p>${message || 'Please click the button below to view, sign, and make your deposit payment to secure your project.'}</p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${proposalUrl}" style="background-color: #e11d48; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Your Proposal</a>
+            <a href="${proposalUrl}" style="background-color: #059669; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Your Proposal</a>
           </div>
           
           <p>If you have any questions, please don't hesitate to contact us${phone ? ` at ${phone}` : ''}.</p>
           
-          <p>Thank you for choosing Evergreen Energy Upgrades for your home improvement needs.</p>
+          <p>Thank you for choosing Evergreen Home Upgrades for your home improvement needs.</p>
           
           <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 14px; color: #666;">
-            <p>© ${new Date().getFullYear()} Evergreen Energy Upgrades. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.</p>
           </div>
         </div>
       `

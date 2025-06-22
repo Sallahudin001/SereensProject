@@ -207,7 +207,7 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
       <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Your Proposal from EverGreen Energy Proposals</title>
+        <title>Your Proposal from EverGreen Home Proposals</title>
         <style>
           body {
             font-family: Arial, sans-serif;
@@ -225,10 +225,10 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
             background-color: #f8f9fa;
             padding: 20px;
             text-align: center;
-            border-bottom: 3px solid #e11d48;
+            border-bottom: 3px solid #059669;
           }
           .logo {
-            color: #e11d48;
+            color: #059669;
             font-size: 24px;
             font-weight: bold;
           }
@@ -245,7 +245,7 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 10px;
-            color: #e11d48;
+            color: #059669;
           }
           .scope-section {
             background-color: #f8f9fa;
@@ -275,11 +275,11 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
             margin-top: 5px;
           }
           .monthly-payment {
-            color: #e11d48;
+            color: #059669;
           }
           .cta-button {
             display: inline-block;
-            background-color: #e11d48;
+            background-color: #059669;
             color: white;
             padding: 12px 25px;
             text-decoration: none;
@@ -370,7 +370,7 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
             </div>
             
             <div style="margin-top: 30px;">
-              <p>Thank you for considering Evergreen Energy Upgrades for your home improvement needs. To proceed with this proposal, please click the button above to review the complete details, sign electronically, and make your deposit payment.</p>
+              <p>Thank you for considering Evergreen Home Upgrades for your home improvement needs. To proceed with this proposal, please click the button above to review the complete details, sign electronically, and make your deposit payment.</p>
               <p>This proposal is valid for 30 days from the date of issue. If you have any questions, please don't hesitate to contact your project manager.</p>
             </div>
           </div>
@@ -378,10 +378,10 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
           <div class="footer">
             <div class="contact-info">
               <p>📧 info@evergreenenergyupgrades.com</p>
-              <p>📞 (408) 555-1234</p>
+              <p>�� (408) 555-1234</p>
               <p>www.evergreenenergyupgrades.com</p>
             </div>
-            <p>© 2023 Evergreen Energy Upgrades. All rights reserved.</p>
+            <p>© 2023 Evergreen Home Upgrades. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -428,7 +428,7 @@ export async function sendProposalEmail(proposalId: string, baseUrl: string) {
     // Send the email
     const result = await sendEmail({
       to: proposal.customer_email,
-      subject: `Your Proposal #${proposal.proposal_number} from EverGreen Energy Proposals`,
+      subject: `Your Proposal #${proposal.proposal_number} from EverGreen Home Proposals`,
       html,
     })
 

@@ -62,11 +62,11 @@ const DashboardFooter = () => (
         <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
       </div>
       <div className="sm:col-span-2 text-sm">
-        <p className="font-semibold text-lg text-white mb-1">Evergreen Energy Upgrades</p>
+        <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
         <p>C: (408) 826-7377 | O: (408)333-9831</p>
         <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
         <p>www.evergreenenergy.io</p>
-        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Energy Upgrades. All Rights Reserved.</p>
+        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
       </div>
     </div>
   </div>
@@ -230,15 +230,10 @@ export default function DashboardPage() {
           variants={fadeIn}
                   className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-slate-100 p-2 rounded-lg shadow-sm">
-                      <Image src="/newlogo.png" alt="Evergreen Energy Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
-                    </div>
           <div>
                       <CardTitle className="text-3xl sm:text-4xl font-bold">Business Dashboard</CardTitle>
                       <CardDescription className="text-green-100 text-sm sm:text-base">Comprehensive overview of your business performance</CardDescription>
                     </div>
-          </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full sm:w-auto">
               <Link href="/proposals/new" className="w-full sm:w-auto">

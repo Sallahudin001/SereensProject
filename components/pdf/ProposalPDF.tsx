@@ -641,7 +641,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             <Image style={styles.logo} src="public\newlogo.png" />
           </View>
           <Text style={styles.contractTitle}>HOME IMPROVEMENT CONTRACT</Text>
-          <Text style={styles.contractSubtitle}>Evergreen Energy Upgrades Services Agreement</Text>
+                          <Text style={styles.contractSubtitle}>Evergreen Home Upgrades Services Agreement</Text>
           <View style={styles.proposalMeta}>
             <Text>Contract No: {proposal?.proposalNumber || "N/A"}</Text>
             <Text>Date: {formatDate(proposal?.createdAt)}</Text>
@@ -655,8 +655,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={styles.partyInfo}>
             <View style={styles.partyColumn}>
               <Text style={styles.partyTitle}>CONTRACTOR:</Text>
-              <Text style={styles.partyDetail}>Evergreen Energy Upgrades</Text>
-              <Text style={styles.partyDetail}>License #: CA-12345678</Text>
+                              <Text style={styles.partyDetail}>Evergreen Home Upgrades</Text>
+                <Text style={styles.partyDetail}>License #: 1116631</Text>
               <Text style={styles.partyDetail}>Phone: (408) 828-7377</Text>
               <Text style={styles.partyDetail}>Email: info@evergreenergy.io</Text>
             </View>
@@ -1028,7 +1028,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             <View style={styles.signatureBlock}>
               <View style={styles.signatureLine}></View>
               <Text style={styles.signatureLabel}>Contractor Signature</Text>
-              <Text style={styles.signatureLabel}>Evergreen Energy Upgrades</Text>
+                              <Text style={styles.signatureLabel}>Evergreen Home Upgrades</Text>
             </View>
           </View>
 
@@ -1048,7 +1048,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Energy Upgrades | License #CA-12345678 | (408) 828-7377 | info@evergreenergy.io |
+            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io |
             www.evergreenenergy.io
           </Text>
         </View>
@@ -1201,7 +1201,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer for terms page */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Energy Upgrades | License #CA-12345678 | (408) 828-7377 | info@evergreenergy.io |
+            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io |
             www.evergreenenergy.io
           </Text>
           <Text>This contract consists of 2 pages and constitutes the entire agreement between the parties.</Text>

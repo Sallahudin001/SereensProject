@@ -43,7 +43,7 @@ export default function SettingsPage() {
   
   // General settings
   const [generalSettings, setGeneralSettings] = useState({
-    companyName: "Evergreen Energy Upgrades",
+    companyName: "Evergreen Home Upgrades",
     companyEmail: "info@evergreenenergy.io",
     companyPhone: "(408) 333-9831",
     logoUrl: "/evergreen.png",
@@ -92,7 +92,7 @@ export default function SettingsPage() {
     })
   }
   
-  const handleInputChange = (section, field, value) => {
+  const handleInputChange = (section: string, field: string, value: any) => {
     switch (section) {
       case "general":
         setGeneralSettings({ ...generalSettings, [field]: value })
@@ -112,7 +112,7 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <motion.div
-        ref={headerSection.ref}
+        ref={headerSection.ref as any}
         initial="hidden"
         animate={headerSection.isInView ? "visible" : "hidden"}
         variants={fadeIn}
@@ -141,7 +141,7 @@ export default function SettingsPage() {
       </motion.div>
 
       <motion.div
-        ref={contentSection.ref}
+        ref={contentSection.ref as any}
         initial="hidden"
         animate={contentSection.isInView ? "visible" : "hidden"}
         variants={fadeIn}

@@ -57,7 +57,7 @@ export function AdminSidebar() {
           <div className="relative h-8 w-40">
             <Image
               src="/images/evergreen-logo.png"
-              alt="Evergreen Energy Upgrades"
+              alt="Evergreen Home Upgrades"
               fill
               className="object-contain"
               priority

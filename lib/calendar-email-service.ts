@@ -121,7 +121,7 @@ export async function sendReminderNotificationToRep(data: ReminderEmailData) {
     // For reminders, use system email as sender (or could be from manager/system)
     const result = await sendDynamicEmail({
       fromEmail: process.env.EMAIL_USER || data.repEmail,
-      fromName: "Evergreen Energy System",
+      fromName: "Evergreen Home System",
       toEmail: data.repEmail,
       subject: `Reminder: ${data.reminderTitle}`,
       html: html
@@ -286,7 +286,7 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Appointment Scheduled - Evergreen Energy Upgrades</title>
+              <title>Appointment Scheduled - Evergreen Home Upgrades</title>
       <style>
         body {
           font-family: Arial, sans-serif;
@@ -304,10 +304,10 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
           background-color: #f8f9fa;
           padding: 20px;
           text-align: center;
-          border-bottom: 3px solid #e11d48;
+          border-bottom: 3px solid #059669;
         }
         .logo {
-          color: #e11d48;
+          color: #059669;
           font-size: 24px;
           font-weight: bold;
         }
@@ -329,7 +329,7 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
         }
         .detail-label {
           font-weight: bold;
-          color: #e11d48;
+          color: #059669;
         }
         .footer {
           margin-top: 30px;
@@ -340,18 +340,18 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
           color: #666;
         }
         .rep-contact {
-          background-color: #e7f3ff;
+          background-color: #dcfce7;
           padding: 15px;
           border-radius: 8px;
           margin: 20px 0;
-          border-left: 4px solid #0066cc;
+          border-left: 4px solid #059669;
         }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo">Evergreen Energy Upgrades</div>
+          <div class="logo">Evergreen Home Upgrades</div>
           <h2 style="margin: 10px 0; color: #333;">Appointment Scheduled</h2>
         </div>
         
@@ -392,7 +392,7 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
           </div>
 
           <div class="rep-contact">
-            <h3 style="margin: 0 0 10px 0; color: #0066cc;">Your Representative</h3>
+            <h3 style="margin: 0 0 10px 0; color: #059669;">Your Representative</h3>
             <p style="margin: 5px 0;"><strong>${data.repName}</strong></p>
             <p style="margin: 5px 0;">Email: <a href="mailto:${data.repEmail}">${data.repEmail}</a></p>
             <p style="margin: 5px 0; font-size: 14px; color: #666;">
@@ -406,11 +406,11 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
           
           <p>Best regards,<br>
           ${data.repName}<br>
-          Evergreen Energy Upgrades</p>
+          Evergreen Home Upgrades</p>
         </div>
         
         <div class="footer">
-          <p>© ${new Date().getFullYear()} Evergreen Energy Upgrades. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.</p>
           <p>This email was sent by ${data.repName}. You can reply directly to reach them.</p>
         </div>
       </div>
@@ -434,13 +434,13 @@ function generateReminderEmailHtml(data: ReminderEmailData): string {
 
   const priorityColor = data.priority === 'urgent' ? '#dc2626' : 
                        data.priority === 'high' ? '#ea580c' : 
-                       data.priority === 'medium' ? '#d97706' : '#65a30d'
+                       data.priority === 'medium' ? '#d97706' : '#059669'
 
   const now = new Date()
   const due = new Date(data.dueDate)
   const isOverdue = due < now
   const urgencyText = isOverdue ? 'OVERDUE' : 'DUE SOON'
-  const urgencyColor = isOverdue ? '#dc2626' : '#ea580c'
+  const urgencyColor = isOverdue ? '#dc2626' : '#059669'
 
   return `
     <!DOCTYPE html>
@@ -509,11 +509,11 @@ function generateReminderEmailHtml(data: ReminderEmailData): string {
           text-transform: uppercase;
         }
         .customer-contact {
-          background-color: #e7f3ff;
+          background-color: #dcfce7;
           padding: 15px;
           border-radius: 8px;
           margin: 20px 0;
-          border-left: 4px solid #0066cc;
+          border-left: 4px solid #059669;
         }
         .footer {
           margin-top: 30px;
@@ -562,7 +562,7 @@ function generateReminderEmailHtml(data: ReminderEmailData): string {
 
           ${data.customerName && data.customerEmail ? `
           <div class="customer-contact">
-            <h3 style="margin: 0 0 10px 0; color: #0066cc;">Related Customer</h3>
+            <h3 style="margin: 0 0 10px 0; color: #059669;">Related Customer</h3>
             <p style="margin: 5px 0;"><strong>${data.customerName}</strong></p>
             <p style="margin: 5px 0;">Email: <a href="mailto:${data.customerEmail}">${data.customerEmail}</a></p>
           </div>
@@ -572,18 +572,18 @@ function generateReminderEmailHtml(data: ReminderEmailData): string {
           
           <div style="text-align: center; margin: 20px 0;">
             <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/calendar" 
-               style="display: inline-block; background-color: #e11d48; color: white; padding: 12px 25px; 
+               style="display: inline-block; background-color: #059669; color: white; padding: 12px 25px; 
                       text-decoration: none; border-radius: 5px; font-weight: bold;">
               Open Calendar Dashboard
             </a>
           </div>
           
           <p>Best regards,<br>
-          Evergreen Energy Upgrades System</p>
+          Evergreen Home Upgrades System</p>
         </div>
         
         <div class="footer">
-          <p>© ${new Date().getFullYear()} Evergreen Energy Upgrades. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.</p>
           <p>This is an automated reminder notification.</p>
         </div>
       </div>
@@ -624,10 +624,10 @@ function generateCustomEmailHtml(data: {
           background-color: #f8f9fa;
           padding: 20px;
           text-align: center;
-          border-bottom: 3px solid #e11d48;
+          border-bottom: 3px solid #059669;
         }
         .logo {
-          color: #e11d48;
+          color: #059669;
           font-size: 24px;
           font-weight: bold;
         }
@@ -639,7 +639,7 @@ function generateCustomEmailHtml(data: {
           padding: 20px;
           border-radius: 8px;
           margin: 20px 0;
-          border-left: 4px solid #0066cc;
+          border-left: 4px solid #059669;
         }
         .footer {
           margin-top: 30px;
@@ -654,7 +654,7 @@ function generateCustomEmailHtml(data: {
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo">Evergreen Energy Upgrades</div>
+          <div class="logo">Evergreen Home Upgrades</div>
           <h2 style="margin: 10px 0; color: #333;">Message from ${data.repName}</h2>
         </div>
         
@@ -669,11 +669,11 @@ function generateCustomEmailHtml(data: {
           
           <p>Best regards,<br>
           ${data.repName}<br>
-          Evergreen Energy Upgrades</p>
+          Evergreen Home Upgrades</p>
         </div>
         
         <div class="footer">
-          <p>© ${new Date().getFullYear()} Evergreen Energy Upgrades. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.</p>
           <p>This email was sent by ${data.repName}. You can reply directly to reach them.</p>
         </div>
       </div>

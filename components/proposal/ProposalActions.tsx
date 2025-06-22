@@ -161,7 +161,7 @@ export default function ProposalActions({
         <Button
           onClick={() => handlePDFDownload()}
           disabled={loading === 'pdf'}
-          variant="outline"
+          className="bg-green-600 hover:bg-emerald-700 text-white"
           size="sm"
         >
           {loading === 'pdf' ? (
@@ -175,7 +175,7 @@ export default function ProposalActions({
         <Button
           onClick={() => handlePDFPreview()}
           disabled={loading === 'preview'}
-          variant="outline"
+          className="bg-green-600 hover:bg-emerald-700 text-white"
           size="sm"
         >
           {loading === 'preview' ? (
@@ -207,7 +207,7 @@ export default function ProposalActions({
       <Button
         onClick={() => handlePDFDownload()}
         disabled={loading === 'pdf'}
-        variant="outline"
+        className="bg-emerald-600 hover:bg-emerald-700 text-white"
         size="sm"
       >
         {loading === 'pdf' ? (

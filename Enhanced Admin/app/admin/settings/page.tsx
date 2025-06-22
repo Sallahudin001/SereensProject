@@ -50,7 +50,7 @@ export default function SettingsPage() {
 
   // General settings
   const [generalSettings, setGeneralSettings] = useState({
-    companyName: "Evergreen Energy Upgrades",
+    companyName: "Evergreen Home Upgrades",
     email: "info@evergreenenergyupgrades.com",
     phone: "(555) 123-4567",
     address: "123 Green Street, Anytown, CA 12345",
@@ -759,7 +759,10 @@ export default function SettingsPage() {
                               <Label htmlFor="backup-file">Select Backup File</Label>
                               <div
                                 className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-md p-6 cursor-pointer hover:bg-muted/50 transition-colors"
-                                onClick={() => document.getElementById("backup-file").click()}
+                                onClick={() => {
+                                  const fileInput = document.getElementById("backup-file");
+                                  if (fileInput) fileInput.click();
+                                }}
                               >
                                 <FileText className="h-8 w-8 text-muted-foreground/50 mb-2" />
                                 <p className="text-sm font-medium mb-1">Click to upload or drag and drop</p>

@@ -267,7 +267,7 @@ export default function LandingPage() {
       </header>
 
       <main className="flex-1 pt-24">
-        <section ref={heroRef} className="py-16 md:py-24 lg:py-32 relative overflow-hidden">
+        <section ref={heroRef as any} className="py-16 md:py-24 lg:py-32 relative overflow-hidden">
           {/* Background elements */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute -top-[30%] -left-[10%] w-[50%] h-[70%] bg-green-200/20 dark:bg-green-900/10 rounded-full blur-3xl" />
@@ -279,7 +279,7 @@ export default function LandingPage() {
             style={{ y: heroY, opacity: heroOpacity }}
           >
             <motion.div
-              ref={heroSection.ref}
+              ref={heroSection.ref as any}
               initial="hidden"
               animate={heroSection.isInView ? "visible" : "hidden"}
               variants={fadeIn}
@@ -439,7 +439,7 @@ export default function LandingPage() {
           
           <div className="container mx-auto px-4 sm:px-6 md:px-8 relative z-10">
             <motion.div
-              ref={featuresSection.ref}
+              ref={featuresSection.ref as any}
               initial="hidden"
               animate={featuresSection.isInView ? "visible" : "hidden"}
               variants={fadeIn}
@@ -466,7 +466,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              ref={featuresList.ref}
+              ref={featuresList.ref as any}
               initial="hidden"
               animate={featuresList.isInView ? "visible" : "hidden"}
               variants={staggerContainer}
@@ -548,7 +548,7 @@ export default function LandingPage() {
           <div className="container mx-auto px-4 sm:px-6 md:px-8 relative z-10">
             <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
               <motion.div
-                ref={streamlineSection.ref}
+                ref={streamlineSection.ref as any}
                 initial="hidden"
                 animate={streamlineSection.isInView ? "visible" : "hidden"}
                 variants={fadeIn}
@@ -575,7 +575,7 @@ export default function LandingPage() {
                 </p>
                 
                 <motion.ul
-                  ref={listItems.ref}
+                  ref={listItems.ref as any}
                   initial="hidden"
                   animate={listItems.isInView ? "visible" : "hidden"}
                   variants={staggerContainer}
@@ -690,7 +690,7 @@ export default function LandingPage() {
           
           <div className="container mx-auto px-4 sm:px-6 md:px-8 relative z-10">
             <motion.div
-              ref={testimonialsSection.ref}
+              ref={testimonialsSection.ref as any}
               initial="hidden"
               animate={testimonialsSection.isInView ? "visible" : "hidden"}
               variants={fadeIn}
@@ -794,7 +794,7 @@ export default function LandingPage() {
           
           <div className="container mx-auto px-4 sm:px-6 md:px-8 text-center relative z-10">
             <motion.div
-              ref={ctaSection.ref}
+              ref={ctaSection.ref as any}
               initial="hidden"
               animate={ctaSection.isInView ? "visible" : "hidden"}
               variants={scaleUp}
@@ -1027,4 +1027,7 @@ export default function LandingPage() {
             </div>
           </motion.div>
         </div>
-      \
+      </footer>
+    </div>
+  )
+}

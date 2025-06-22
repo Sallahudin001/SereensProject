@@ -44,11 +44,11 @@ const AdminFooter = () => (
         <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
       </div>
       <div className="sm:col-span-2 text-sm">
-        <p className="font-semibold text-lg text-white mb-1">Evergreen Energy Upgrades</p>
+        <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
         <p>C: (408) 826-7377 | O: (408)333-9831</p>
         <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
         <p>www.evergreenenergy.io</p>
-        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Energy Upgrades. All Rights Reserved.</p>
+        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
       </div>
     </div>
   </div>

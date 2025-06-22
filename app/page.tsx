@@ -72,13 +72,13 @@ export default function LandingPage() {
                 <div className="p-1 rounded-lg">
                   <Image 
                     src="/newlogo.png" 
-                    alt="Evergreen Energy Upgrades Logo" 
+                    alt="Evergreen Home Upgrades Logo" 
                     width={100}
                     height={40}
                     className="h-10 w-auto object-contain"
                   />
                 </div>
-                <span className="text-xl font-semibold text-white ml-3 hidden sm:inline-block">EverGreen Energy Proposals</span>
+                <span className="text-xl font-semibold text-white ml-3 hidden sm:inline-block">EverGreen Home Proposals</span>
               </div>
             </Link>
           </motion.div>
@@ -316,7 +316,7 @@ export default function LandingPage() {
               <div className="bg-white rounded-lg overflow-hidden shadow-sm p-2 w-[120px]">
                 <Image 
                   src="/newlogo.png" 
-                  alt="Evergreen Energy Upgrades Logo" 
+                  alt="Evergreen Home Upgrades Logo" 
                   width={120}
                   height={48}
                   className="h-auto w-full"
@@ -324,11 +324,11 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="text-sm text-center sm:text-right">
-              <p className="font-semibold text-lg text-white mb-1">Evergreen Energy Upgrades</p>
+              <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
               <p>C: (408) 826-7377 | O: (408)333-9831</p>
               <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
               <p>www.evergreenenergy.io</p>
-              <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Energy Upgrades. All Rights Reserved.</p>
+              <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
               <div className="flex justify-center sm:justify-end gap-4 mt-2">
                 <a href="#" className="hover:text-white transition-colors text-sm">Privacy</a>
                 <a href="#" className="hover:text-white transition-colors text-sm">Terms</a>

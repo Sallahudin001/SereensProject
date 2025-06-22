@@ -131,7 +131,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
             name: formData.customer.name,
             proposalId: proposalId.toString(),
             proposalNumber: formData.proposalNumber || `PRO-${Math.floor(10000 + Math.random() * 90000)}`,
-            message: `Your proposal #${formData.proposalNumber || 'New'} from Evergreen Energy Upgrades is ready for review. View and sign here: ${baseUrl}/proposals/view/${proposalId}`,
+            message: `Your proposal #${formData.proposalNumber || 'New'} from Evergreen Home Upgrades is ready for review. View and sign here: ${baseUrl}/proposals/view/${proposalId}`,
           }),
         });
 

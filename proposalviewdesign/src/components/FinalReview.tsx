@@ -82,7 +82,7 @@ const FinalReview: React.FC<FinalReviewProps> = ({ onContinueToSign, onRejectPro
       {/* Company Footer */}
       <div className="bg-gray-800 rounded-xl p-8 text-white">
         <div className="text-center">
-          <h3 className="text-2xl font-bold mb-2">Evergreen Energy Upgrades</h3>
+                      <h3 className="text-2xl font-bold mb-2">Evergreen Home Upgrades</h3>
           <div className="flex justify-center items-center space-x-6 mb-4">
             <div className="flex items-center space-x-2">
               <Phone className="w-4 h-4" />
@@ -107,7 +107,7 @@ const FinalReview: React.FC<FinalReviewProps> = ({ onContinueToSign, onRejectPro
             <Globe className="w-4 h-4" />
             <span className="text-sm">www.evergreengreenergy.io</span>
           </div>
-          <p className="text-xs text-gray-300">© 2025 Evergreen Energy Upgrades. All Rights Reserved.</p>
+                      <p className="text-xs text-gray-300">© 2025 Evergreen Home Upgrades. All Rights Reserved.</p>
         </div>
       </div>
     </div>

@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <div className="flex items-center">
                       <Image 
                         src={logoSrc}
-                        alt="Evergreen Energy Upgrades Logo" 
+                        alt="Evergreen Home Upgrades Logo" 
                         width={120}
                         height={48}
                         className="h-12 w-auto object-contain"
@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="bg-white/80 p-2 rounded-lg shadow-sm backdrop-blur-sm">
                   <Image 
                     src={logoSrc}
-                    alt="Evergreen Energy Upgrades Logo" 
+                    alt="Evergreen Home Upgrades Logo" 
                     width={140}
                     height={56}
                     className="h-14 w-auto object-contain"
@@ -176,7 +176,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     >
               <div className="flex flex-col">
                         <span className="text-sm font-bold text-gray-900">Evergreen</span>
-                        <span className="text-xs text-emerald-600 font-medium">Energy Upgrades</span>
+                        <span className="text-xs text-emerald-600 font-medium">Home Upgrades</span>
                       </div>
                     </motion.div>
                   )}
