@@ -391,6 +391,47 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
+  // Form field labels
+  fieldLabel: {
+    fontSize: 7,
+    color: "#333333",
+    textAlign: "justify",
+    marginTop: 2,
+    fontFamily: "Times-Roman",
+  },
+
+  // Professional form lines
+  formLine: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    minHeight: 15,
+    marginBottom: 2,
+  },
+
+  // Checkbox styles
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+
+  checkbox: {
+    width: 10,
+    height: 10,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+    marginRight: 5,
+  },
+
+  // Initial boxes
+  initialBox: {
+    width: 40,
+    height: 15,
+    borderWidth: 0.5,
+    borderColor: "#000000",
+    marginHorizontal: 5,
+  },
+
   // Footer - More condensed
   footer: {
     position: "absolute",
@@ -1072,7 +1113,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
       {/* Terms and Conditions Page */}
       <Page size="A4" style={styles.termsPage}>
         {/* Line numbers for legal documents */}
-        <View style={styles.lineNumbers}>{generateLineNumbers(80)}</View>
+      
 
         <View style={styles.termsHeader}>
           <Text style={styles.termsTitle}>TERMS AND CONDITIONS</Text>
@@ -1381,7 +1422,9 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>3-DAY NOTICE OF CANCELLATION</Text>
+          
           <Text style={styles.termsText}>DATE ____________________________</Text>
+          
           <Text style={styles.termsText}>
             You may cancel this transaction, without any penalty or obligation, within three business days from the
             above date.
@@ -1405,28 +1448,43 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           <Text style={styles.termsText}>
             To cancel this transaction, mail or deliver a signed and dated copy of this cancellation notice, or any
-            other written notice, or send a telegram to
+            other written notice, or send a telegram to:
           </Text>
-          <Text style={styles.termsText}>
+          
+          <Text style={[styles.termsText, { marginTop: 8 }]}>
             ____________________________________________ at __________________________________________________________
           </Text>
-          <Text style={styles.termsText}>(Name of Seller) (Address of Seller's Place of Business)</Text>
-          <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
-          <Text style={styles.termsText}>(Date)</Text>
-          <Text style={styles.termsText}>I hereby cancel this transaction</Text>
-          <View style={styles.signatureLine}></View>
-          <Text style={styles.termsText}>(Buyer's Signature) (Date)</Text>
+          <Text style={styles.fieldLabel}>(Name of Seller)                                                                                                          (Address of Seller's Place of Business)</Text>
+          
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
+            <Text style={[styles.fieldLabel, { marginLeft: 140 }]}>(Date)</Text>
+          </View>
+          
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.termsText}>I hereby cancel this transaction ________________________________________    ________________________</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={[styles.fieldLabel, { marginLeft: 150 }]}>(Buyer's Signature)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 200 }]}>(Date)</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.termsArticle}>
-          <Text style={styles.termsText}>
-            I, __________________________________________ hereby acknowledge that on ______________ I was provided this
-            document
-          </Text>
-          <Text style={styles.termsText}>(Owner) (Date)</Text>
-          <Text style={styles.termsText}>entitled "Three Day Right to Cancel"</Text>
-          <View style={styles.signatureLine}></View>
-          <Text style={styles.termsText}>(Owner's Signature)</Text>
+          <View>
+            <Text style={styles.termsText}>I, ____________________________________________________ hereby acknowledge that on ______________ I was provided this document</Text>
+            <View style={{ flexDirection: 'row', justifyContent: "space-around" }}>
+              <Text style={[styles.fieldLabel, { marginRight: 20 }]}>(Owner)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 80 }]}>(Date)</Text>
+            </View>
+          </View>
+          
+          <Text style={[styles.termsText, { marginTop: 5 }]}>entitled "Three Day Right to Cancel"</Text>
+          
+          <View style={{ marginTop: 15 }}>
+            <View style={styles.signatureLine}></View>
+            <Text style={[styles.fieldLabel, {marginLeft:200}]}>(Owner's Signature)</Text>
+          </View>
         </View>
 
         <View style={styles.footer}>
@@ -1464,7 +1522,9 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>5-DAY NOTICE OF CANCELLATION (For owners 65 and over)</Text>
+          
           <Text style={styles.termsText}>DATE ____________________________</Text>
+          
           <Text style={styles.termsText}>
             You may cancel this transaction, without any penalty or obligation, within five business days from the above
             date.
@@ -1488,28 +1548,43 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           <Text style={styles.termsText}>
             To cancel this transaction, mail or deliver a signed and dated copy of this cancellation notice, or any
-            other written notice, or send a telegram to
+            other written notice, or send a telegram to:
           </Text>
-          <Text style={styles.termsText}>
+          
+          <Text style={[styles.termsText, { marginTop: 8 }]}>
             ____________________________________________ at __________________________________________________________
           </Text>
-          <Text style={styles.termsText}>(Name of Seller) (Address of Seller's Place of Business)</Text>
-          <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
-          <Text style={styles.termsText}>(Date)</Text>
-          <Text style={styles.termsText}>I hereby cancel this transaction</Text>
-          <View style={styles.signatureLine}></View>
-          <Text style={styles.termsText}>(Buyer's Signature) (Date)</Text>
+          <Text style={styles.fieldLabel}>(Name of Seller)                                                                                                          (Address of Seller's Place of Business)</Text>
+          
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
+            <Text style={[styles.fieldLabel, { marginLeft: 140 }]}>(Date)</Text>
+          </View>
+          
+          <View style={{ marginTop: 10 }}>
+            <Text style={styles.termsText}>I hereby cancel this transaction ________________________________________    ________________________</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Text style={[styles.fieldLabel, { marginLeft: 150 }]}>(Buyer's Signature)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 200 }]}>(Date)</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.termsArticle}>
-          <Text style={styles.termsText}>
-            I, __________________________________________ hereby acknowledge that on ______________ I was provided this
-            document
-          </Text>
-          <Text style={styles.termsText}>(Owner) (Date)</Text>
-          <Text style={styles.termsText}>entitled "Five Day Right to Cancel"</Text>
-          <View style={styles.signatureLine}></View>
-          <Text style={styles.termsText}>(Owner's Signature)</Text>
+          <View>
+            <Text style={styles.termsText}>I, ____________________________________________________ hereby acknowledge that on ______________ I was provided this document</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+              <Text style={[styles.fieldLabel, { marginRight: 20 }]}>(Owner)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 80 }]}>(Date)</Text>
+            </View>
+          </View>
+          
+          <Text style={[styles.termsText, { marginTop: 5 }]}>entitled "Five Day Right to Cancel"</Text>
+          
+          <View style={{ marginTop: 15 }}>
+            <View style={styles.signatureLine}></View>
+            <Text style={[styles.fieldLabel, {marginLeft:200}]}>(Owner's Signature)</Text>
+          </View>
         </View>
 
         <View style={styles.footer}>
@@ -1613,43 +1688,78 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
       <Page size="A4" style={styles.termsPage}>
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>WORKERS' COMPENSATION INSURANCE</Text>
-          <Text style={styles.termsText}>Check the applicable box</Text>
+          <Text style={[styles.termsText, { marginBottom: 8 }]}>Check the applicable box:</Text>
+          
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>
             (A) This contractor has no employees and is exempt from workers' compensation requirements.
           </Text>
+          </View>
+          
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>
             (B) This contractor carries workers' compensation insurance for all employees.
           </Text>
-          <Text style={styles.termsText}>(C)___________________________ is self-insured.</Text>
-          <Text style={styles.termsText}>(Contractor's Name)</Text>
+          </View>
+          
         </View>
 
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>COMMERCIAL GENERAL LIABILITY INSURANCE (CGL)</Text>
-          <Text style={styles.termsText}>Check the applicable box</Text>
-          <Text style={styles.termsText}>
-            (A) _________________________ does not carry Commercial General Liability Insurance.
-          </Text>
-          <Text style={styles.termsText}>(Contractor's Name)</Text>
-          <Text style={styles.termsText}>
-            (B) _________________________ carries Commercial General Liability Insurance.
-          </Text>
-          <Text style={styles.termsText}>(Contractor's Name)</Text>
-          <Text style={styles.termsText}>The insurance company is _________________________.</Text>
-          <Text style={styles.termsText}>(Company Name)</Text>
-          <Text style={styles.termsText}>
-            You may call the insurance company at _________________________ to check the contractor's insurance
-            coverage.
-          </Text>
-          <Text style={styles.termsText}>(Telephone Number)</Text>
-          <Text style={styles.termsText}>
-            (D)___________________________ is a limited liability company that carries liability insurance or maintains
-            other security as required by law. You may call _________________________ at _________________________ to
-            check on the contractor's insurance coverage or security.
-          </Text>
-          <Text style={styles.termsText}>
-            (Contractor's Name) (Insurance Company/Trust Company/Bank) (Telephone Number)
-          </Text>
+          <Text style={[styles.termsText, { marginBottom: 8 }]}>Check the applicable box:</Text>
+          
+          <View>
+            <View style={styles.checkboxRow}>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(A) _________________ does not carry Commercial General Liability Insurance.</Text>
+            </View>
+            <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
+          </View>
+          
+          <View style={{ marginTop: 8 }}>
+            <View style={styles.checkboxRow}>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(B) _________________ carries Commercial General Liability Insurance.</Text>
+            </View>
+            <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
+          </View>
+          
+          <View style={{ marginTop: 8, marginLeft: 20 }}>
+            <View>
+              <Text style={styles.termsText}>The insurance company is _________________________.</Text>
+              <Text style={[styles.fieldLabel, { marginLeft: 120 }]}>(Company Name)</Text>
+            </View>
+            
+            <View style={{ marginTop: 8 }}>
+              <Text style={styles.termsText}>You may call the insurance company at ___________________ to check the contractor's insurance coverage.</Text>
+              <Text style={[styles.fieldLabel, { marginLeft: 133 }]}>(Telephone Number)</Text>
+            </View>
+          </View>
+          
+          <View style={{ marginTop: 8 }}>
+            <View style={styles.checkboxRow}>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(C) _________________ is self-insured.</Text>
+            </View>
+            <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
+          </View>
+          
+          <View style={{ marginTop: 8 }}>
+            <View style={styles.checkboxRow}>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(D) _________________ is a limited liability company that carries liability insurance or maintains other security as required by law. You may call</Text>
+            </View>
+            <View>
+              <Text style={styles.termsText}>_________________ at _________________ to check on the contractor's insurance coverage or security.</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <Text style={[styles.fieldLabel, { marginLeft: 0 }]}>(Contractor's Name)</Text>
+                <Text style={[styles.fieldLabel, { marginLeft: -50 }]}>(Insurance Company/Trust Company/Bank)</Text>
+                <Text style={[styles.fieldLabel, { marginRight: 0 }]}>(Telephone Number)</Text>
+              </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.termsArticle}>
@@ -1712,28 +1822,81 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             WE HAVE READ AND UNDERSTAND THE FOREGOING AND AGREE TO SUBMIT DISPUTES ARISING OUT OF THE MATTERS INCLUDED
             IN THE "ARBITRATION OF DISPUTES" PROVISION TO NEUTRAL ARBITRATION.
           </Text>
-          <Text style={styles.termsText}>
-            I AGREE TO ARBITRATION. __________________________ I AGREE TO ARBITRATION. __________________________
-          </Text>
-          <Text style={styles.termsText}>(Direct Contractor's Initials) (Owner's Initials)</Text>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={styles.termsText}>I AGREE TO ARBITRATION.</Text>
+              <View style={styles.initialBox}></View>
+              <Text style={styles.fieldLabel}>(Direct Contractor's Initials)</Text>
+            </View>
+            
+            <View style={{ flex: 1, alignItems: 'center' }}>
+              <Text style={styles.termsText}>I AGREE TO ARBITRATION.</Text>
+              <View style={styles.initialBox}></View>
+              <Text style={styles.fieldLabel}>(Owner's Initials)</Text>
+            </View>
+          </View>
         </View>
 
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>CUSTOMER ACKNOWLEDGMENT</Text>
-          <Text style={styles.termsText}>I hereby acknowledge receipt of the following documents or Notices:</Text>
+          <Text style={[styles.termsText, { marginBottom: 8 }]}>I hereby acknowledge receipt of the following documents or Notices:</Text>
+          
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>1. Home Improvement Contract</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>2. Notice of Arbitration</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>3. Notice Of Cancellation</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>4. Three-Day Right to Cancel</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>5. Five-Day Right to Cancel</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>6. Disclosure re: Commercial General Liability Insurance</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>7. Disclosure re: Workers' Compensation Insurance</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>8. Statutory Notices</Text>
+          </View>
+          <View style={styles.checkboxRow}>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>9. Mechanics Lien Warning</Text>
-          <Text style={styles.termsText}>
-            Owner: _____________________________________ Owner: ___________________________________
-          </Text>
-          <Text style={styles.termsText}>(Print Name of Owner) (Owner Sign Here) (Date)</Text>
+          </View>
+          
+          <View style={{ marginTop: 15 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.termsText}>_______________________</Text>
+                <Text style={styles.fieldLabel}>(Print Name of Owner)</Text>
+              </View>
+              
+              <View style={{ flex: 1 }}>
+                <View style={styles.signatureLine}></View>
+                <Text style={styles.fieldLabel}>(Owner Sign Here)</Text>
+              </View>
+              
+              <View style={{ flex: 1 }}>
+                <Text style={styles.termsText}>____________</Text>
+                <Text style={styles.fieldLabel}>(Date)</Text>
+              </View>
+            </View>
+          </View>
         </View>
 
         <View style={styles.footer}>
