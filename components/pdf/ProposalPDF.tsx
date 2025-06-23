@@ -5,12 +5,12 @@ import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/render
 const styles = StyleSheet.create({
   page: {
     fontFamily: "Times-Roman",
-    fontSize: 9, // Smaller base font size
+    fontSize: 11, // Professional base font size
     paddingTop: 30,
     paddingBottom: 40,
     paddingHorizontal: 30, // Reduced horizontal padding
     backgroundColor: "#ffffff",
-    lineHeight: 1.3, // Tighter line height
+    lineHeight: 1.4, // Professional line height
   },
 
   // Header Section - More formal and condensed
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
   },
 
   contractTitle: {
-    fontSize: 14, // Smaller title
+    fontSize: 16, // Professional title size
     fontFamily: "Times-Bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   },
 
   contractSubtitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: "Times-Italic",
     textAlign: "center",
     marginTop: 3,
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 8,
-    fontSize: 8,
+    fontSize: 10,
     color: "#000000",
     borderTopWidth: 0.5,
     borderTopColor: "#cccccc",
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
-    fontSize: 8,
+    fontSize: 10,
     borderBottomWidth: 0.5,
     borderBottomColor: "#cccccc",
     paddingBottom: 5,
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
 
   partiesSectionTitle: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: "Times-Bold",
     marginBottom: 6,
     textAlign: "center",
@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
   },
 
   partyTitle: {
-    fontSize: 9,
+    fontSize: 11,
     fontFamily: "Times-Bold",
     marginBottom: 4,
     borderBottomWidth: 0.5,
@@ -116,13 +116,13 @@ const styles = StyleSheet.create({
   },
 
   partyDetail: {
-    fontSize: 8,
+    fontSize: 10,
     marginBottom: 2, // Reduced margin
   },
 
   // Section Headers - More formal
   sectionHeader: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: "Times-Bold",
     marginTop: 12,
     marginBottom: 6,
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
 
   // Article numbering for contract sections
   articleNumber: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: "Times-Bold",
     marginBottom: 5,
     marginTop: 12,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
 
   scopeTitle: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: "Times-Bold",
     marginBottom: 5,
     textAlign: "center",
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
 
   scopeItem: {
-    fontSize: 10,
+    fontSize: 11,
     marginBottom: 5,
     flexDirection: "row",
     paddingLeft: 5,
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
   },
 
   scopeSubItem: {
-    fontSize: 10,
+    fontSize: 11,
     marginBottom: 4,
     marginLeft: 15,
     flexDirection: "row",
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
 
   scopeDetail: {
-    fontSize: 9,
+    fontSize: 10,
     marginLeft: 25,
     marginBottom: 4,
     lineHeight: 1.4,
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
 
   // Form field labels
   fieldLabel: {
-    fontSize: 7,
+    fontSize: 9,
     color: "#333333",
     textAlign: "justify",
     marginTop: 2,
@@ -485,14 +485,14 @@ const styles = StyleSheet.create({
   },
 
   termsArticleTitle: {
-    fontSize: 9,
+    fontSize: 12,
     fontFamily: "Times-Bold",
     marginBottom: 4,
     textTransform: "uppercase",
   },
 
   termsText: {
-    fontSize: 8,
+    fontSize: 10,
     lineHeight: 1.3,
     textAlign: "justify",
     marginBottom: 4,
@@ -1027,8 +1027,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         <Text style={styles.articleNumber}>ARTICLE III - PAYMENT TERMS</Text>
 
         <View style={styles.paymentTerms}>
-          <Text style={styles.paymentTermsTitle}>Payment Schedule</Text>
-          <Text style={styles.paymentSchedule}>
+          <Text style={styles.paymentTermsTitle}>Financing Terms</Text>
+          {/* <Text style={styles.paymentSchedule}>
             • Down Payment (10%): {formatCurrency(finalTotal * 0.1)} - Due upon contract signing
           </Text>
           <Text style={styles.paymentSchedule}>
@@ -1039,7 +1039,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           <Text style={styles.paymentSchedule}>
             • Final Payment (10%): {formatCurrency(finalTotal * 0.1)} - Due upon final completion and inspection
-          </Text>
+          </Text> */}
 
           {proposal?.pricing?.financingTerm && (
             <View style={{ marginTop: 5, paddingTop: 3, borderTopWidth: 0.5, borderTopColor: "#cccccc" }}>
@@ -1053,21 +1053,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           )}
         </View>
 
-        {/* Article IV - Timeline */}
-        <Text style={styles.articleNumber}>ARTICLE IV - PROJECT TIMELINE</Text>
-        <View style={styles.paymentTerms}>
-          <Text style={styles.paymentTermsTitle}>Estimated Schedule</Text>
-          <Text style={styles.paymentSchedule}>
-            • Estimated Start Date: {formatDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString())}
-          </Text>
-          <Text style={styles.paymentSchedule}>
-            • Estimated Completion: {formatDate(new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString())}
-          </Text>
-          <Text style={styles.paymentSchedule}>
-            • All dates subject to permit approval, material availability, and weather conditions.
-          </Text>
-        </View>
-
+       
         {/* Signature Section */}
         <View style={styles.signatureSection}>
           <Text style={styles.signatureTitle}>Contract Execution</Text>
@@ -1465,7 +1451,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             <Text style={styles.termsText}>I hereby cancel this transaction ________________________________________    ________________________</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={[styles.fieldLabel, { marginLeft: 150 }]}>(Buyer's Signature)</Text>
-              <Text style={[styles.fieldLabel, { marginRight: 200 }]}>(Date)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 260 }]}>(Date)</Text>
             </View>
           </View>
         </View>
@@ -1475,7 +1461,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             <Text style={styles.termsText}>I, ____________________________________________________ hereby acknowledge that on ______________ I was provided this document</Text>
             <View style={{ flexDirection: 'row', justifyContent: "space-around" }}>
               <Text style={[styles.fieldLabel, { marginRight: 20 }]}>(Owner)</Text>
-              <Text style={[styles.fieldLabel, { marginRight: 80 }]}>(Date)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 250 }]}>(Date)</Text>
             </View>
           </View>
           
@@ -1789,7 +1775,10 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             enrichment.
           </Text>
         </View>
+      </Page>
 
+      {/* Page 6 - Arbitration and Customer Acknowledgment */}
+      <Page size="A4" style={styles.page}>
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>ARBITRATION OF DISPUTES</Text>
           <Text style={styles.termsArticleTitle}>(In compliance with CA Business and Professions Code 7191)</Text>
@@ -1842,58 +1831,66 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={styles.termsArticleTitle}>CUSTOMER ACKNOWLEDGMENT</Text>
           <Text style={[styles.termsText, { marginBottom: 8 }]}>I hereby acknowledge receipt of the following documents or Notices:</Text>
           
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>1. Home Improvement Contract</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>2. Notice of Arbitration</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>3. Notice Of Cancellation</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>4. Three-Day Right to Cancel</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>5. Five-Day Right to Cancel</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>6. Disclosure re: Commercial General Liability Insurance</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>7. Disclosure re: Workers' Compensation Insurance</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>8. Statutory Notices</Text>
-          </View>
-          <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
-          <Text style={styles.termsText}>9. Mechanics Lien Warning</Text>
+          {/* Two-column checkbox layout */}
+          <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>1. Home Improvement Contract</Text>
+              </View>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>2. Notice of Arbitration</Text>
+              </View>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>3. Notice Of Cancellation</Text>
+              </View>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>4. Three-Day Right to Cancel</Text>
+              </View>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>5. Five-Day Right to Cancel</Text>
+              </View>
+            </View>
+            
+            <View style={{ flex: 1, paddingLeft: 10 }}>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>6. Disclosure re: Commercial General Liability Insurance</Text>
+              </View>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>7. Disclosure re: Workers' Compensation Insurance</Text>
+              </View>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>8. Statutory Notices</Text>
+              </View>
+              <View style={styles.checkboxRow}>
+                <View style={styles.checkbox}></View>
+                <Text style={styles.termsText}>9. Mechanics Lien Warning</Text>
+              </View>
+            </View>
           </View>
           
           <View style={{ marginTop: 15 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.termsText}>_______________________</Text>
-                <Text style={styles.fieldLabel}>(Print Name of Owner)</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+              <View style={{ width: '30%', textAlign: 'center' }}>
+                <Text style={styles.termsText}>_________________________</Text>
+                <Text style={[styles.fieldLabel, { textAlign: 'left', marginTop: 2 }]}>(Print Name of Owner)</Text>
               </View>
               
-              <View style={{ flex: 1 }}>
-                <View style={styles.signatureLine}></View>
-                <Text style={styles.fieldLabel}>(Owner Sign Here)</Text>
+              <View style={{ width: '40%', textAlign: 'center' }}>
+                <Text style={styles.termsText}>_________________________________________</Text>
+                <Text style={[styles.fieldLabel, { textAlign: 'center', marginTop: 2 }]}>(Owner Sign Here)</Text>
               </View>
               
-              <View style={{ flex: 1 }}>
-                <Text style={styles.termsText}>____________</Text>
-                <Text style={styles.fieldLabel}>(Date)</Text>
+              <View style={{ width: '20%', textAlign: 'center' }}>
+                <Text style={styles.termsText}>________________</Text>
+                <Text style={[styles.fieldLabel, { textAlign: 'center', marginTop: 2 }]}>(Date)</Text>
               </View>
             </View>
           </View>
