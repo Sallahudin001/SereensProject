@@ -144,6 +144,8 @@ const styles = StyleSheet.create({
   scopeContainer: {
     marginBottom: 15,
     marginTop: 5,
+    wrap: false, // Prevent splitting across pages
+    minPresenceAhead: 100, // Ensure minimum space before page break
   },
 
   scopeTitle: {
@@ -158,6 +160,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
     marginBottom: 8,
+  },
+
+  // Service section wrapper with better page break handling
+  serviceSection: {
+    marginBottom: 20,
+    wrap: false, // Prevent service sections from splitting
+    minPresenceAhead: 150, // Ensure enough space for service content
   },
 
   scopeItem: {
@@ -197,57 +206,6 @@ const styles = StyleSheet.create({
     marginLeft: 25,
     marginBottom: 4,
     lineHeight: 1.4,
-  },
-
-  // DocuSign field styles
-  docusignField: {
-    fontSize: 10,
-    fontFamily: "Times-Roman",
-    color: "#0066cc",
-    backgroundColor: "#f0f8ff",
-    padding: 2,
-    borderWidth: 1,
-    borderColor: "#0066cc",
-    borderStyle: "solid",
-  },
-
-  docusignSignature: {
-    fontSize: 10,
-    fontFamily: "Times-Roman",
-    color: "#0066cc",
-    backgroundColor: "#f0f8ff",
-    padding: 2,
-    borderWidth: 1,
-    borderColor: "#0066cc",
-    borderStyle: "solid",
-    minHeight: 20,
-    textAlign: "center",
-  },
-
-  docusignCheckbox: {
-    fontSize: 10,
-    fontFamily: "Times-Roman",
-    color: "#0066cc",
-    backgroundColor: "#f0f8ff",
-    padding: 2,
-    borderWidth: 1,
-    borderColor: "#0066cc",
-    borderStyle: "solid",
-    width: 12,
-    height: 12,
-    textAlign: "center",
-  },
-
-  docusignDate: {
-    fontSize: 10,
-    fontFamily: "Times-Roman",
-    color: "#0066cc",
-    backgroundColor: "#f0f8ff",
-    padding: 2,
-    borderWidth: 1,
-    borderColor: "#0066cc",
-    borderStyle: "solid",
-    textAlign: "center",
   },
 
   scopeNote: {
@@ -680,7 +638,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 1.3,
     textAlign: "justify",
-    marginBottom: 4,
+    marginBottom: 2,
   },
 
   termsList: {
@@ -858,13 +816,19 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
     return numbers
   }
 
+  // Helper function to determine if content should start on new page
+  const shouldBreakPage = (serviceIndex: number, totalServices: number) => {
+    // If it's the last service and we have multiple services, consider a page break
+    return serviceIndex > 0 && serviceIndex === totalServices - 1
+  }
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         {/* Contract Header */}
         <View style={styles.contractHeader}>
           <View style={styles.logoContainer}>
-          <Image style={styles.logo} src="public\newlogo.png" />
+            <Image style={styles.logo} src="public\newlogo.png" />
           </View>
           <Text style={styles.contractTitle}>HOME IMPROVEMENT CONTRACT</Text>
           <Text style={styles.contractSubtitle}>NOT APPLICABLE TO SWIMMING POOLS OR SPAS</Text>
@@ -918,220 +882,269 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           if (!productData) return null
 
           return (
-            <View key={index} style={styles.scopeContainer}>
-              <Text style={styles.scopeTitle}>
-                {service.charAt(0).toUpperCase() + service.slice(1).replace(/-/g, " & ")} Installation
-              </Text>
-              <View style={styles.scopeDivider} />
+            <View key={index} style={styles.serviceSection} wrap={false} break={index > 0 && index % 2 === 0}>
+              <View style={styles.scopeContainer}>
+                <Text style={styles.scopeTitle}>
+                  {service.charAt(0).toUpperCase() + service.slice(1).replace(/-/g, " & ")} Installation
+                </Text>
+                <View style={styles.scopeDivider} />
 
-              {/* Service-specific details */}
-              {service === "windows-doors" && (
-                <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Installation of {productData.windowCount || "0"}{" "}
-                      {productData.windowType?.replace(/-/g, " ") || "windows"}, {productData.windowMaterial || "Vinyl"}{" "}
-                      material, {productData.windowColor || "White"} color, {productData.energyRating || "Energy Star"}{" "}
-                      rated.
-                    </Text>
-                  </View>
-
-                  {productData.hasDoors && (
+                {/* Service-specific details */}
+                {service === "windows-doors" && (
+                  <View wrap={false}>
                     <View style={styles.scopeItem}>
                       <Text style={styles.scopeBullet}>•</Text>
                       <Text style={styles.scopeItemContent}>
-                        Installation of {productData.doorCount || "1"}{" "}
-                        {productData.doorType?.replace(/-/g, " ") || "door(s)"}.
+                        Installation of {productData.windowCount || "0"}{" "}
+                        {productData.windowType?.replace(/-/g, " ") || "windows"}, {productData.windowMaterial || "Vinyl"}{" "}
+                        material, {productData.windowColor || "White"} color, {productData.energyRating || "Energy Star"}{" "}
+                        rated.
                       </Text>
                     </View>
-                  )}
 
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                    {productData.hasDoors && (
+                      <View style={styles.scopeItem}>
+                        <Text style={styles.scopeBullet}>•</Text>
+                        <Text style={styles.scopeItemContent}>
+                          Installation of {productData.doorCount || "1"}{" "}
+                          {productData.doorType?.replace(/-/g, " ") || "door(s)"}.
+                        </Text>
                       </View>
-                    ))}
-                </View>
-              )}
+                    )}
 
-              {service === "hvac" && (
-                <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Installation of {productData.systemType?.replace(/-/g, " ") || "HVAC"} system, SEER Rating:{" "}
-                      {productData.seerRating || "N/A"}, Size: {productData.tonnage || "N/A"} tons, Brand:{" "}
-                      {productData.brand || "N/A"}, Model: {productData.model || "N/A"}
-                    </Text>
+                    {productData.scopeNotes &&
+                      productData.scopeNotes.split(";").map((note: string, i: number) => (
+                        <View key={i} style={styles.scopeSubItem}>
+                          <Text style={styles.scopeSubBullet}>-</Text>
+                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                        </View>
+                      ))}
                   </View>
+                )}
 
-                  {productData.addons?.length > 0 && (
+                {service === "hvac" && (
+                  <View wrap={false}>
                     <View style={styles.scopeItem}>
                       <Text style={styles.scopeBullet}>•</Text>
                       <Text style={styles.scopeItemContent}>
-                        Additional components: {productData.addons.join(", ")}
+                        Installation of {productData.systemType?.replace(/-/g, " ") || "HVAC"} system, SEER Rating:{" "}
+                        {productData.seerRating || "N/A"}, Size: {productData.tonnage || "N/A"} tons, Brand:{" "}
+                        {productData.brand || "N/A"}, Model: {productData.model || "N/A"}
                       </Text>
                     </View>
-                  )}
 
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                    {productData.addons?.length > 0 && (
+                      <View style={styles.scopeItem}>
+                        <Text style={styles.scopeBullet}>•</Text>
+                        <Text style={styles.scopeItemContent}>
+                          Additional components: {productData.addons.join(", ")}
+                        </Text>
                       </View>
-                    ))}
-                </View>
-              )}
+                    )}
 
-              {service === "roofing" && (
-                <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Complete roof replacement using {productData.material || "shingles"}, Coverage:{" "}
-                      {productData.squareCount || "N/A"} squares
-                    </Text>
+                    {productData.scopeNotes &&
+                      productData.scopeNotes.split(";").map((note: string, i: number) => (
+                        <View key={i} style={styles.scopeSubItem}>
+                          <Text style={styles.scopeSubBullet}>-</Text>
+                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                        </View>
+                      ))}
                   </View>
+                )}
 
-                  {productData.addGutters && (
+                {service === "roofing" && (
+                  <View wrap={false}>
                     <View style={styles.scopeItem}>
                       <Text style={styles.scopeBullet}>•</Text>
                       <Text style={styles.scopeItemContent}>
-                        Gutter installation: {productData.gutterLength || "N/A"} linear feet
+                        Complete roof replacement using {productData.material || "shingles"}, Coverage:{" "}
+                        {productData.squareCount || "N/A"} squares
                       </Text>
                     </View>
-                  )}
 
-                  {productData.addPlywood && (
+                    {productData.addGutters && (
+                      <View style={styles.scopeItem}>
+                        <Text style={styles.scopeBullet}>•</Text>
+                        <Text style={styles.scopeItemContent}>
+                          Gutter installation: {productData.gutterLength || "N/A"} linear feet
+                        </Text>
+                      </View>
+                    )}
+
+                    {productData.addPlywood && (
+                      <View style={styles.scopeItem}>
+                        <Text style={styles.scopeBullet}>•</Text>
+                        <Text style={styles.scopeItemContent}>
+                          Plywood replacement: {productData.plywoodPercentage || "100"}% of roof deck
+                        </Text>
+                      </View>
+                    )}
+
+                    <View style={styles.scopeSection} wrap={false}>
+                      <View style={styles.scopeSubItem}>
+                        <Text style={styles.scopeSubBullet}>-</Text>
+                        <Text style={styles.scopeSubItemContent}>Complete roof replacement including:</Text>
+                      </View>
+                      <View style={styles.scopeSubItem}>
+                        <Text style={styles.scopeSubBullet}>-</Text>
+                        <Text style={styles.scopeSubItemContent}>
+                          Removal of existing roofing material down to the deck
+                        </Text>
+                      </View>
+                      <View style={styles.scopeSubItem}>
+                        <Text style={styles.scopeSubBullet}>-</Text>
+                        <Text style={styles.scopeSubItemContent}>
+                          Inspection and replacement of damaged decking (if necessary)
+                        </Text>
+                      </View>
+                      <View style={styles.scopeSubItem}>
+                        <Text style={styles.scopeSubBullet}>-</Text>
+                        <Text style={styles.scopeSubItemContent}>Installation of synthetic underlayment</Text>
+                      </View>
+                      <View style={styles.scopeSubItem}>
+                        <Text style={styles.scopeSubBullet}>-</Text>
+                        <Text style={styles.scopeSubItemContent}>
+                          Installation of ice and water shield in valleys and around penetrations
+                        </Text>
+                      </View>
+                    </View>
+
+                    {productData.scopeNotes &&
+                      productData.scopeNotes.split(";").map((note: string, i: number) => (
+                        <View key={i} style={styles.scopeSubItem}>
+                          <Text style={styles.scopeSubBullet}>-</Text>
+                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                        </View>
+                      ))}
+                  </View>
+                )}
+
+                {service === "garage-doors" && (
+                  <View wrap={false}>
                     <View style={styles.scopeItem}>
                       <Text style={styles.scopeBullet}>•</Text>
                       <Text style={styles.scopeItemContent}>
-                        Plywood replacement: {productData.plywoodPercentage || "100"}% of roof deck
+                        Installation of {productData.quantity || "1"} garage door(s), Model: {productData.model || "T50L"}
+                        , Size: {productData.width || "16"}' × {productData.height || "7"}'
                       </Text>
                     </View>
-                  )}
 
-                  <View style={styles.scopeSection}>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>Complete roof replacement including:</Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>
-                        Removal of existing roofing material down to the deck
-                      </Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>
-                        Inspection and replacement of damaged decking (if necessary)
-                      </Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>Installation of synthetic underlayment</Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>
-                        Installation of ice and water shield in valleys and around penetrations
-                      </Text>
-                    </View>
-                  </View>
-
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                    {productData.addons?.length > 0 && (
+                      <View style={styles.scopeItem}>
+                        <Text style={styles.scopeBullet}>•</Text>
+                        <Text style={styles.scopeItemContent}>Add-ons: {productData.addons.join(", ")}</Text>
                       </View>
-                    ))}
-                </View>
-              )}
+                    )}
 
-              {service === "garage-doors" && (
-                <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Installation of {productData.quantity || "1"} garage door(s), Model: {productData.model || "T50L"}
-                      , Size: {productData.width || "16"}' × {productData.height || "7"}'
-                    </Text>
+                    {productData.scopeNotes &&
+                      productData.scopeNotes.split(";").map((note: string, i: number) => (
+                        <View key={i} style={styles.scopeSubItem}>
+                          <Text style={styles.scopeSubBullet}>-</Text>
+                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                        </View>
+                      ))}
                   </View>
+                )}
 
-                  {productData.addons?.length > 0 && (
+                {service === "paint" && (
+                  <View wrap={false}>
                     <View style={styles.scopeItem}>
                       <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>Add-ons: {productData.addons.join(", ")}</Text>
+                      <Text style={styles.scopeItemContent}>
+                        {productData.serviceType || "Exterior"} painting service, Coverage:{" "}
+                        {productData.squareFootage || "0"} sq ft, {productData.colorTone || "1"}-tone finish
+                      </Text>
                     </View>
-                  )}
 
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                      </View>
-                    ))}
-                </View>
-              )}
+                    <View style={styles.scopeItem}>
+                      <Text style={styles.scopeBullet}>•</Text>
+                      <Text style={styles.scopeItemContent}>
+                        Includes: {productData.includePaint ? "Paint, " : ""}
+                        {productData.includePrimer ? "Primer, " : ""}
+                        {productData.includePrep ? "Surface Preparation" : ""}
+                      </Text>
+                    </View>
 
-              {service === "paint" && (
-                <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      {productData.serviceType || "Exterior"} painting service, Coverage:{" "}
-                      {productData.squareFootage || "0"} sq ft, {productData.colorTone || "1"}-tone finish
-                    </Text>
+                    {productData.scopeNotes &&
+                      productData.scopeNotes.split(";").map((note: string, i: number) => (
+                        <View key={i} style={styles.scopeSubItem}>
+                          <Text style={styles.scopeSubBullet}>-</Text>
+                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                        </View>
+                      ))}
                   </View>
+                )}
 
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Includes: {productData.includePaint ? "Paint, " : ""}
-                      {productData.includePrimer ? "Primer, " : ""}
-                      {productData.includePrep ? "Surface Preparation" : ""}
-                    </Text>
-                  </View>
+                {service === "solar" && (
+                  <View wrap={false}>
+                    <View style={styles.scopeItem}>
+                      <Text style={styles.scopeBullet}>•</Text>
+                      <Text style={styles.scopeItemContent}>
+                        Solar panel installation, System Size: {productData.systemSize || "N/A"} kW, Panel Count:{" "}
+                        {productData.panelCount || "N/A"}, Brand: {productData.brand || "N/A"}
+                      </Text>
+                    </View>
 
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                    {productData.addons?.length > 0 && (
+                      <View style={styles.scopeItem}>
+                        <Text style={styles.scopeBullet}>•</Text>
+                        <Text style={styles.scopeItemContent}>Additional components: {productData.addons.join(", ")}</Text>
                       </View>
-                    ))}
-                </View>
-              )}
+                    )}
+
+                    {productData.scopeNotes &&
+                      productData.scopeNotes.split(";").map((note: string, i: number) => (
+                        <View key={i} style={styles.scopeSubItem}>
+                          <Text style={styles.scopeSubBullet}>-</Text>
+                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                        </View>
+                      ))}
+                  </View>
+                )}
+
+                {/* Generic fallback for any other service types */}
+                {!["windows-doors", "hvac", "roofing", "garage-doors", "paint", "solar"].includes(service) && (
+                  <View wrap={false}>
+                    <View style={styles.scopeItem}>
+                      <Text style={styles.scopeBullet}>•</Text>
+                      <Text style={styles.scopeItemContent}>
+                        {service.charAt(0).toUpperCase() + service.slice(1).replace(/-/g, " ")} service installation
+                      </Text>
+                    </View>
+                    
+                    {productData.scopeNotes &&
+                      productData.scopeNotes.split(";").map((note: string, i: number) => (
+                        <View key={i} style={styles.scopeSubItem}>
+                          <Text style={styles.scopeSubBullet}>-</Text>
+                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                        </View>
+                      ))}
+                  </View>
+                )}
+              </View>
             </View>
           )
         })}
 
         {/* Construction Lender Section */}
         <View style={styles.constructionLenderSection}>
-                  <Text style={styles.constructionLenderTitle}>
-          CONSTRUCTION LENDER: <Text style={styles.docusignField}>\\t22\\</Text>
-        </Text>
+          <Text style={styles.constructionLenderTitle}>
+            CONSTRUCTION LENDER: ________________________________________________________________
+          </Text>
           <Text style={styles.constructionLenderLabel}>
             (Name and Address of Construction Fund Holder)
           </Text>
           
           <View style={{ marginTop: 15 }}>
             <Text style={styles.constructionLenderTitle}>
-              Substantial commencement of work under this contract is described as: <Text style={styles.docusignField}>\\t23\\</Text>
+              Substantial commencement of work under this contract is described as: ________________________________________________
             </Text>
           </View>
           
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
             <View style={{ flex: 1, marginRight: 20 }}>
               <Text style={styles.constructionLenderTitle}>
-                Approximate Start Date: <Text style={styles.docusignDate}>\\d17\\</Text>
+                Approximate Start Date: _________________________________
               </Text>
               <Text style={styles.constructionLenderLabel}>
                 (Work will begin)
@@ -1140,7 +1153,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             
             <View style={{ flex: 1 }}>
               <Text style={styles.constructionLenderTitle}>
-                Approximate Completion Date: <Text style={styles.docusignDate}>\\d18\\</Text>
+                Approximate Completion Date: _________________________________
               </Text>
               <Text style={styles.constructionLenderLabel}>
                 (Work is to be completed)
@@ -1262,13 +1275,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
           <View style={styles.signatureRow}>
             <View style={styles.signatureBlock}>
-              <Text style={styles.docusignSignature}>\\s1\\</Text>
+              <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               <Text style={styles.signatureLabel}>Homeowner Signature</Text>
               <Text style={styles.signatureLabel}>{proposal?.customer?.name || "N/A"}</Text>
             </View>
 
             <View style={styles.signatureBlock}>
-              <Text style={styles.docusignSignature}>\\s2\\</Text>
+              <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               <Text style={styles.signatureLabel}>Contractor Signature</Text>
               <Text style={styles.signatureLabel}>Evergreen Home Upgrades</Text>
             </View>
@@ -1276,12 +1289,12 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
           <View style={styles.signatureRow}>
             <View style={styles.signatureBlock}>
-              <Text style={styles.docusignDate}>\\d1\\</Text>
+              <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               <Text style={styles.signatureLabel}>Date</Text>
             </View>
 
             <View style={styles.signatureBlock}>
-              <Text style={styles.docusignDate}>\\d2\\</Text>
+              <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               <Text style={styles.signatureLabel}>Date</Text>
             </View>
           </View>
@@ -1300,20 +1313,22 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
       {/* Payment Terms Page */}
       <Page size="A4" style={styles.page}>
-       
+        
 
         {/* Article III - Payment Terms */}
         <Text style={[styles.articleNumber,{textAlign:"center"}]}>ARTICLE III - PAYMENT TERMS</Text>
         <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
             Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
-          </Text>
+          </Text> 
+          <View style={styles.termsHeader}></View>
+
         <View style={styles.paymentTerms}>
           <Text style={styles.paymentTermsTitle}>Payment Terms</Text>
           
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
             <View style={{ flex: 1, marginRight: 20 }}>
               <Text style={styles.constructionLenderTitle}>
-                CONTRACT PRICE: $ <Text style={styles.docusignField}>\\t1\\</Text>
+                CONTRACT PRICE: $ ________________________________
           </Text>
               <Text style={styles.constructionLenderLabel}>
                 (Owner agrees to pay Contractor total cash price)
@@ -1322,7 +1337,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             
             <View style={{ flex: 1 }}>
               <Text style={styles.constructionLenderTitle}>
-                DOWN PAYMENT: $ <Text style={styles.docusignField}>\\t2\\</Text>
+                DOWN PAYMENT: $ ________________________________
           </Text>
               <Text style={styles.constructionLenderLabel}>
                 (If any; if not applicable, put "none")
@@ -1335,7 +1350,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           
           <Text style={styles.constructionLenderTitle}>
-            FINANCE CHARGE $ <Text style={styles.docusignField}>\\t3\\</Text>
+            FINANCE CHARGE $ _______________________________________
           </Text>
           <Text style={styles.constructionLenderLabel}>
             (Must be stated separately from the contract amount in dollars and cents; if none, put "none")
@@ -1373,13 +1388,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
                   </Text>
                 </View>
                 <View style={{ flex: 0.7, alignItems: 'flex-start' }}>
-                  <Text style={styles.docusignField}>\\t{num + 3}\\</Text>
+                  <Text style={[styles.contractSectionText, { fontSize: 10 }]}>$___________</Text>
                 </View>
                 <View style={{ flex: 3, marginRight: 15, marginLeft: 10 }}>
-                  <Text style={styles.docusignField}>\\t{num + 7}\\</Text>
+                  <Text style={[styles.contractSectionText, { fontSize: 10 }]}>___________________________________________________________</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.docusignDate}>\\d{num + 2}\\</Text>
+                  <Text style={[styles.contractSectionText, { fontSize: 10 }]}>_________________</Text>
                 </View>
               </View>
             ))}
@@ -1401,22 +1416,25 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             </View>
           )}
         </View>
-          
+
         {/* Release Section */}
+       
         <View style={styles.contractSection}>
           <Text style={styles.contractSectionTitle}>Release.</Text>
           <Text style={styles.contractSectionText}>
             Upon satisfactory payment being made for any portion of the work performed, the Contractor shall, prior to any further payment being made, furnish to each person contracting for the home improvement work a full and unconditional release from any claim or mechanic's lien for the portion of the work for which payment has been made pursuant to Sections 8400 and 8404 of the Civil Code for that portion of the work for which payment has been made.
           </Text>
         </View>
-       
+     
         {/* Allowances Section */}
         <View style={styles.contractSection}>
           <Text style={styles.contractSectionTitle}>Allowances:</Text>
           <Text style={styles.contractSectionText}>
             The following items or specific prices as indicated are included in the contract price as allowances. The contract price shall be adjusted upward or downward based on actual amounts rather than estimated amounts herein.
           </Text>
-           <Text style={styles.docusignField}>\\t11\\</Text>
+           <Text style={styles.constructionLenderTitle}>
+              ________________________________
+              </Text>
         </View>
 
         {/* List of Documents Section */}
@@ -1425,7 +1443,9 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={styles.contractSectionText}>
             Notice of Cancellation; Arbitration of Disputes; Three-Day Right to Cancel; Five-Day Right to Cancel; Mechanics Lien Warning; Information about Contractor's State License Board.
           </Text>
-          <Text style={styles.docusignField}>\\t12\\</Text>
+          <Text style={styles.constructionLenderTitle}>
+              ________________________________
+              </Text>
         </View>
 
         {/* Insurance Notice */}
@@ -1434,17 +1454,16 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             A notice concerning commercial general liability insurance and workers' compensation insurance is attached to this contract. Owner acknowledges receipt of a fully completed copy of this agreement and all documents listed above:
           </Text>
           
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 5 }}>
-            <Text style={styles.docusignField}>\\i1\\</Text>
-            <Text style={[styles.constructionLenderLabel, { marginLeft: 5 }]}>
-              (Property Owner's Initials)
-            </Text>
-          </View>
+          <Text style={[styles.constructionLenderLabel, { textAlign: "right", marginTop: 5 }]}>
+            (Property Owner's Initials)
+          </Text>
         </View>
 
         {/* Owner Age Section */}
         <View style={styles.ownerAgeSection}>
-          <Text style={styles.contractSectionText}>Owner affirms their age(s) is/are: <Text style={styles.docusignField}>\\t13\\</Text>;<Text style={styles.docusignField}>\\t14\\</Text></Text>
+          <Text style={styles.contractSectionText}>Owner affirms their age(s) is/are: <Text style={styles.constructionLenderTitle}>
+              ________________________________;_______________________________
+              </Text></Text>
           <View style={styles.constructionLenderLine}></View>
           <View style={styles.constructionLenderLine}></View>
         </View>
@@ -1456,7 +1475,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Notice Boxes */}
         <View style={styles.noticeBoxesContainer}>
           <View style={styles.noticeBox}>
-            <Text style={styles.docusignCheckbox}>\\c1\\</Text>
+            <View style={styles.checkboxContainer}></View>
             <Text style={styles.noticeBoxTitle}>NOTICE OF RIGHT TO CANCEL</Text>
             <Text style={styles.noticeBoxTitle}>3-DAY</Text>
             <Text style={styles.noticeBoxText}>
@@ -1465,7 +1484,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </View>
 
           <View style={styles.noticeBox}>
-            <Text style={styles.docusignCheckbox}>\\c2\\</Text>
+            <View style={styles.checkboxContainer}></View>
             <Text style={styles.noticeBoxTitle}>NOTICE OF RIGHT TO CANCEL</Text>
             <Text style={styles.noticeBoxTitle}>5-DAY (owners 65 and over)</Text>
             <Text style={styles.noticeBoxText}>
@@ -1474,7 +1493,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </View>
 
           <View style={styles.noticeBox}>
-            <Text style={styles.docusignCheckbox}>\\c3\\</Text>
+            <View style={styles.checkboxContainer}></View>
             <Text style={styles.noticeBoxTitle}>ARBITRATION OF DISPUTES</Text>
             <Text style={styles.noticeBoxText}>
               OWNER: Initial this box if you agree to arbitration. Review the "Arbitration of Disputes" section attached.
@@ -1496,13 +1515,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 5 }}>
               <Text style={styles.xSignature}>X</Text>
               <View style={{ flex: 2, marginRight: 20 }}>
-                <Text style={styles.docusignSignature}>\\s3\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               </View>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.docusignDate}>\\d7\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>___________________</Text>
               </View>
               <View style={{ flex: 2 }}>
-                <Text style={styles.docusignField}>\\t15\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', fontSize: 7 }}>
@@ -1530,13 +1549,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 5 }}>
               <Text style={styles.xSignature}>X</Text>
               <View style={{ flex: 2, marginRight: 20 }}>
-                <Text style={styles.docusignSignature}>\\s4\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               </View>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text style={styles.docusignDate}>\\d8\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>___________________</Text>
               </View>
               <View style={{ flex: 2 }}>
-                <Text style={styles.docusignSignature}>\\s5\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               </View>
             </View>
             <View style={{ flexDirection: 'row', fontSize: 7 }}>
@@ -1564,11 +1583,11 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
               <View style={{ flex: 1, marginRight: 20 }}>
                 <Text style={styles.contractSectionText}>Name:</Text>
-                <Text style={styles.docusignField}>\\t16\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.contractSectionText}>State Registration Number:</Text>
-                <Text style={styles.docusignField}>\\t17\\</Text>
+                <Text style={[styles.contractSectionText, { fontSize: 10 }]}>______________________________________</Text>
               </View>
             </View>
           </View>
@@ -1799,11 +1818,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
         </View>
 
-        <View style={styles.footer}>
-          <Text>
-            This contract consists of multiple pages and constitutes the entire agreement between the parties.
-          </Text>
-        </View>
+       
 
         {/* Page Number */}
         <Text style={styles.pageNumber}>Page 3 of 8</Text>
@@ -1840,7 +1855,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>3-DAY NOTICE OF CANCELLATION</Text>
           
-          <Text style={styles.termsText}>DATE <Text style={styles.docusignDate}>\\d9\\</Text></Text>
+          <Text style={styles.termsText}>DATE ____________________________</Text>
           
           <Text style={styles.termsText}>
             You may cancel this transaction, without any penalty or obligation, within three business days from the
@@ -1869,17 +1884,17 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           
           <Text style={[styles.termsText, { marginTop: 8 }]}>
-            <Text style={styles.docusignField}>\\t18\\</Text> at <Text style={styles.docusignField}>\\t19\\</Text>
+            ____________________________________________ at __________________________________________________________
           </Text>
           <Text style={styles.fieldLabel}>(Name of Seller)                                                                                                          (Address of Seller's Place of Business)</Text>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>not later than midnight of <Text style={styles.docusignDate}>\\d10\\</Text>.</Text>
+            <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
             <Text style={[styles.fieldLabel, { marginLeft: 140 }]}>(Date)</Text>
           </View>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>I hereby cancel this transaction <Text style={styles.docusignSignature}>\\s6\\</Text>    <Text style={styles.docusignDate}>\\d11\\</Text></Text>
+            <Text style={styles.termsText}>I hereby cancel this transaction ________________________________________    ________________________</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={[styles.fieldLabel, { marginLeft: 150 }]}>(Buyer's Signature)</Text>
               <Text style={[styles.fieldLabel, { marginRight: 120 }]}>(Date)</Text>
@@ -1889,7 +1904,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.termsArticle}>
           <View>
-            <Text style={styles.termsText}>I, <Text style={styles.docusignField}>\\t20\\</Text> hereby acknowledge that on <Text style={styles.docusignDate}>\\d12\\</Text> I was provided this document</Text>
+            <Text style={styles.termsText}>I, ____________________________________________________ hereby acknowledge that on ______________ I was provided this document</Text>
             <View style={{ flexDirection: 'row', justifyContent: "space-around" }}>
               <Text style={[styles.fieldLabel, { marginRight: 20 }]}>(Owner)</Text>
               <Text style={[styles.fieldLabel, { marginRight: 1 }]}>(Date)</Text>
@@ -1899,7 +1914,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={[styles.termsText, { marginTop: 5 }]}>entitled "Three Day Right to Cancel"</Text>
           
           <View style={{ marginTop: 15 }}>
-            <Text style={styles.docusignSignature}>\\s7\\</Text>
+            <View style={styles.signatureLine}></View>
             <Text style={[styles.fieldLabel, {marginLeft:200}]}>(Owner's Signature)</Text>
           </View>
         </View>
@@ -1943,7 +1958,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>5-DAY NOTICE OF CANCELLATION (For owners 65 and over)</Text>
           
-          <Text style={styles.termsText}>DATE <Text style={styles.docusignDate}>\\d13\\</Text></Text>
+          <Text style={styles.termsText}>DATE ____________________________</Text>
           
           <Text style={styles.termsText}>
             You may cancel this transaction, without any penalty or obligation, within five business days from the above
@@ -1972,17 +1987,17 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           
           <Text style={[styles.termsText, { marginTop: 8 }]}>
-            <Text style={styles.docusignField}>\\t26\\</Text> at <Text style={styles.docusignField}>\\t27\\</Text>
+            ____________________________________________ at __________________________________________________________
           </Text>
           <Text style={styles.fieldLabel}>(Name of Seller)                                                                                                          (Address of Seller's Place of Business)</Text>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>not later than midnight of <Text style={styles.docusignDate}>\\d14\\</Text>.</Text>
+            <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
             <Text style={[styles.fieldLabel, { marginLeft: 140 }]}>(Date)</Text>
           </View>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>I hereby cancel this transaction <Text style={styles.docusignSignature}>\\s9\\</Text>    <Text style={styles.docusignDate}>\\d15\\</Text></Text>
+            <Text style={styles.termsText}>I hereby cancel this transaction ________________________________________    ________________________</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={[styles.fieldLabel, { marginLeft: 150 }]}>(Buyer's Signature)</Text>
               <Text style={[styles.fieldLabel, { marginRight: 120 }]}>(Date)</Text>
@@ -1992,7 +2007,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.termsArticle}>
           <View>
-            <Text style={styles.termsText}>I, <Text style={styles.docusignField}>\\t21\\</Text> hereby acknowledge that on <Text style={styles.docusignDate}>\\d16\\</Text> I was provided this document</Text>
+            <Text style={styles.termsText}>I, ____________________________________________________ hereby acknowledge that on ______________ I was provided this document</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <Text style={[styles.fieldLabel, { marginRight: 20 }]}>(Owner)</Text>
               <Text style={[styles.fieldLabel, { marginRight: 1 }]}>(Date)</Text>
@@ -2002,7 +2017,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={[styles.termsText, { marginTop: 5 }]}>entitled "Five Day Right to Cancel"</Text>
           
           <View style={{ marginTop: 15 }}>
-            <Text style={styles.docusignSignature}>\\s8\\</Text>
+            <View style={styles.signatureLine}></View>
             <Text style={[styles.fieldLabel, {marginLeft:200}]}>(Owner's Signature)</Text>
           </View>
         </View>
@@ -2110,9 +2125,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
       {/* Insurance and Arbitration Page */}
       <Page size="A4" style={styles.termsPage}>
         <View style={styles.termsArticle}>
-         
           <Text style={[styles.termsArticleTitle,{textAlign:"center"}]}>WORKERS' COMPENSATION INSURANCE</Text>
-          
           <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
             Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
           </Text>
@@ -2120,14 +2133,14 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={[styles.termsText, { marginBottom: 8 }]}>Check the applicable box:</Text>
           
           <View style={styles.checkboxRow}>
-            <Text style={styles.docusignCheckbox}>\\c13\\</Text>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>
             (A) This contractor has no employees and is exempt from workers' compensation requirements.
           </Text>
           </View>
           
           <View style={styles.checkboxRow}>
-            <Text style={styles.docusignCheckbox}>\\c14\\</Text>
+            <View style={styles.checkbox}></View>
           <Text style={styles.termsText}>
             (B) This contractor carries workers' compensation insurance for all employees.
           </Text>
@@ -2141,47 +2154,47 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           
           <View>
             <View style={styles.checkboxRow}>
-              <Text style={styles.docusignCheckbox}>\\c15\\</Text>
-              <Text style={styles.termsText}>(A) <Text style={styles.docusignField}>\\t28\\</Text> does not carry Commercial General Liability Insurance.</Text>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(A) _________________ does not carry Commercial General Liability Insurance.</Text>
             </View>
             <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
           </View>
           
           <View style={{ marginTop: 8 }}>
             <View style={styles.checkboxRow}>
-              <Text style={styles.docusignCheckbox}>\\c16\\</Text>
-              <Text style={styles.termsText}>(B) <Text style={styles.docusignField}>\\t29\\</Text> carries Commercial General Liability Insurance.</Text>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(B) _________________ carries Commercial General Liability Insurance.</Text>
             </View>
             <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
           </View>
           
           <View style={{ marginTop: 8, marginLeft: 20 }}>
             <View>
-              <Text style={styles.termsText}>The insurance company is <Text style={styles.docusignField}>\\t30\\</Text>.</Text>
+              <Text style={styles.termsText}>The insurance company is _________________________.</Text>
               <Text style={[styles.fieldLabel, { marginLeft: 120 }]}>(Company Name)</Text>
             </View>
             
             <View style={{ marginTop: 8 }}>
-              <Text style={styles.termsText}>You may call the insurance company at <Text style={styles.docusignField}>\\t31\\</Text> to check the contractor's insurance coverage.</Text>
+              <Text style={styles.termsText}>You may call the insurance company at ___________________ to check the contractor's insurance coverage.</Text>
               <Text style={[styles.fieldLabel, { marginLeft: 133 }]}>(Telephone Number)</Text>
             </View>
           </View>
           
           <View style={{ marginTop: 8 }}>
             <View style={styles.checkboxRow}>
-              <Text style={styles.docusignCheckbox}>\\c17\\</Text>
-              <Text style={styles.termsText}>(C) <Text style={styles.docusignField}>\\t32\\</Text> is self-insured.</Text>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(C) _________________ is self-insured.</Text>
             </View>
             <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
           </View>
           
           <View style={{ marginTop: 8 }}>
             <View style={styles.checkboxRow}>
-              <Text style={styles.docusignCheckbox}>\\c18\\</Text>
-              <Text style={styles.termsText}>(D) <Text style={styles.docusignField}>\\t33\\</Text> is a limited liability company that carries liability insurance or maintains other security as required by law. You may call</Text>
+              <View style={styles.checkbox}></View>
+              <Text style={styles.termsText}>(D) _________________ is a limited liability company that carries liability insurance or maintains other security as required by law. You may call</Text>
             </View>
             <View>
-              <Text style={styles.termsText}><Text style={styles.docusignField}>\\t34\\</Text> at <Text style={styles.docusignField}>\\t35\\</Text> to check on the contractor's insurance coverage or security.</Text>
+              <Text style={styles.termsText}>_________________ at _________________ to check on the contractor's insurance coverage or security.</Text>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={[styles.fieldLabel, { marginLeft: 0 }]}>(Contractor's Name)</Text>
                 <Text style={[styles.fieldLabel, { marginLeft: -50 }]}>(Insurance Company/Trust Company/Bank)</Text>
@@ -2227,7 +2240,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
             Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
           </Text>
-           <View style={styles.termsHeader}></View>
+          <View style={styles.termsHeader}></View>
           <Text style={styles.termsArticleTitle}>(In compliance with CA Business and Professions Code 7191)</Text>
           <Text style={styles.termsText}>
             ARBITRATION OF DISPUTES: ANY CONTROVERSY OR CLAIM ARISING OUT OF OR RELATED TO THIS CONTRACT, OR THE BREACH
@@ -2262,13 +2275,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={styles.termsText}>I AGREE TO ARBITRATION.</Text>
-              <Text style={styles.docusignField}>\\i2\\</Text>
+              <View style={styles.initialBox}></View>
               <Text style={styles.fieldLabel}>(Direct Contractor's Initials)</Text>
             </View>
             
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={styles.termsText}>I AGREE TO ARBITRATION.</Text>
-              <Text style={styles.docusignField}>\\i3\\</Text>
+              <View style={styles.initialBox}></View>
               <Text style={styles.fieldLabel}>(Owner's Initials)</Text>
             </View>
           </View>
@@ -2282,42 +2295,42 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={{ flexDirection: 'row', marginBottom: 10 }}>
             <View style={{ flex: 1, paddingRight: 10 }}>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c4\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>1. Home Improvement Contract</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c5\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>2. Notice of Arbitration</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c6\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>3. Notice Of Cancellation</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c7\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>4. Three-Day Right to Cancel</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c8\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>5. Five-Day Right to Cancel</Text>
               </View>
             </View>
             
             <View style={{ flex: 1, paddingLeft: 10 }}>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c9\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>6. Disclosure re: Commercial General Liability Insurance</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c10\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>7. Disclosure re: Workers' Compensation Insurance</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c11\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>8. Statutory Notices</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <Text style={styles.docusignCheckbox}>\\c12\\</Text>
+                <View style={styles.checkbox}></View>
                 <Text style={styles.termsText}>9. Mechanics Lien Warning</Text>
               </View>
             </View>
@@ -2326,17 +2339,17 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={{ marginTop: 15 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <View style={{ width: '30%', textAlign: 'center' }}>
-                <Text style={styles.docusignField}>\\t36\\</Text>
+                <Text style={styles.termsText}>_________________________</Text>
                 <Text style={[styles.fieldLabel, { textAlign: 'left', marginTop: 2 }]}>(Print Name of Owner)</Text>
               </View>
               
               <View style={{ width: '40%', textAlign: 'center' }}>
-                <Text style={styles.docusignSignature}>\\s12\\</Text>
+                <Text style={styles.termsText}>_________________________________________</Text>
                 <Text style={[styles.fieldLabel, { textAlign: 'center', marginTop: 2 }]}>(Owner Sign Here)</Text>
               </View>
               
               <View style={{ width: '20%', textAlign: 'center' }}>
-                <Text style={styles.docusignDate}>\\d20\\</Text>
+                <Text style={styles.termsText}>________________</Text>
                 <Text style={[styles.fieldLabel, { textAlign: 'center', marginTop: 2 }]}>(Date)</Text>
               </View>
             </View>
