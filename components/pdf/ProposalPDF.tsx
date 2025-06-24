@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
 
   contractSubtitle: {
     fontSize: 12,
-    fontFamily: "Times-Italic",
+    fontFamily: "Times-Roman",
     textAlign: "center",
     marginTop: 3,
     marginBottom: 8,
@@ -197,6 +197,57 @@ const styles = StyleSheet.create({
     marginLeft: 25,
     marginBottom: 4,
     lineHeight: 1.4,
+  },
+
+  // DocuSign field styles
+  docusignField: {
+    fontSize: 10,
+    fontFamily: "Times-Roman",
+    color: "#0066cc",
+    backgroundColor: "#f0f8ff",
+    padding: 2,
+    borderWidth: 1,
+    borderColor: "#0066cc",
+    borderStyle: "solid",
+  },
+
+  docusignSignature: {
+    fontSize: 10,
+    fontFamily: "Times-Roman",
+    color: "#0066cc",
+    backgroundColor: "#f0f8ff",
+    padding: 2,
+    borderWidth: 1,
+    borderColor: "#0066cc",
+    borderStyle: "solid",
+    minHeight: 20,
+    textAlign: "center",
+  },
+
+  docusignCheckbox: {
+    fontSize: 10,
+    fontFamily: "Times-Roman",
+    color: "#0066cc",
+    backgroundColor: "#f0f8ff",
+    padding: 2,
+    borderWidth: 1,
+    borderColor: "#0066cc",
+    borderStyle: "solid",
+    width: 12,
+    height: 12,
+    textAlign: "center",
+  },
+
+  docusignDate: {
+    fontSize: 10,
+    fontFamily: "Times-Roman",
+    color: "#0066cc",
+    backgroundColor: "#f0f8ff",
+    padding: 2,
+    borderWidth: 1,
+    borderColor: "#0066cc",
+    borderStyle: "solid",
+    textAlign: "center",
   },
 
   scopeNote: {
@@ -406,6 +457,140 @@ const styles = StyleSheet.create({
     borderBottomColor: "#000000",
     minHeight: 15,
     marginBottom: 2,
+  },
+
+  // Construction Lender section
+  constructionLenderSection: {
+    marginTop: 15,
+    marginBottom: 15,
+    padding: 8,
+    backgroundColor: "#f9f9f9",
+    borderWidth: 0.5,
+    borderColor: "#000000",
+  },
+
+  constructionLenderTitle: {
+    fontSize: 11,
+    fontFamily: "Times-Bold",
+    marginBottom: 8,
+  },
+
+  constructionLenderLine: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    minHeight: 20,
+    marginBottom: 5,
+  },
+
+  constructionLenderLabel: {
+    fontSize: 8,
+    color: "#666666",
+    textAlign: "center",
+    marginTop: 2,
+  },
+
+  // Additional contract sections
+  contractSection: {
+    marginTop: 12,
+    marginBottom: 10,
+  },
+
+  contractSectionText: {
+    fontSize: 9,
+    lineHeight: 1.3,
+    textAlign: "justify",
+    marginBottom: 5,
+  },
+
+  contractSectionTitle: {
+    fontSize: 10,
+    fontFamily: "Times-Bold",
+    marginBottom: 5,
+  },
+
+  ownerAgeSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
+  noticeBoxesContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+    marginBottom: 15,
+  },
+
+  noticeBox: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#000000",
+    padding: 8,
+    marginHorizontal: 2,
+  },
+
+  noticeBoxTitle: {
+    fontSize: 8,
+    fontFamily: "Times-Bold",
+    textAlign: "center",
+    marginBottom: 5,
+    textTransform: "uppercase",
+  },
+
+  noticeBoxText: {
+    fontSize: 7,
+    lineHeight: 1.2,
+    textAlign: "justify",
+  },
+
+  checkboxContainer: {
+    width: 12,
+    height: 12,
+    borderWidth: 1,
+    borderColor: "#000000",
+    marginRight: 8,
+  },
+
+  finalSignatureSection: {
+    marginTop: 15,
+    padding: 10,
+   
+  },
+
+  finalSignatureText: {
+    fontSize: 9,
+    lineHeight: 1.3,
+    textAlign: "justify",
+    marginBottom: 10,
+  },
+
+  signatureLineContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginBottom: 10,
+  },
+
+  xSignature: {
+    fontSize: 14,
+    fontFamily: "Times-Bold",
+    marginRight: 5,
+  },
+
+  signatureLineWithLabel: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
+
+  underlineText: {
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#000000",
+    minHeight: 20,
+    marginBottom: 2,
+  },
+
+  salesmanSection: {
+    marginTop: 10,
   },
 
   // Checkbox styles
@@ -679,10 +864,20 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Contract Header */}
         <View style={styles.contractHeader}>
           <View style={styles.logoContainer}>
-            <Image style={styles.logo} src="public\newlogo.png" />
+          <Image style={styles.logo} src="public\newlogo.png" />
           </View>
           <Text style={styles.contractTitle}>HOME IMPROVEMENT CONTRACT</Text>
+          <Text style={styles.contractSubtitle}>NOT APPLICABLE TO SWIMMING POOLS OR SPAS</Text>
+          <Text style={[styles.contractSubtitle, { fontSize: 10, marginTop: 2 }]}>
+            (Complies with Section 7159 of California Business and Professions Code, and Civil Code Section 8170 as amended)
+          </Text>
           <Text style={styles.contractSubtitle}>Evergreen Home Upgrades Services Agreement</Text>
+          <Text style={[styles.contractSubtitle, { fontSize: 10, marginTop: 2 }]}>
+            AGREEMENT BETWEEN DIRECT CONTRACTOR AND PROPERTY OWNER
+          </Text>
+          <Text style={[styles.contractSubtitle, { fontSize: 9, marginTop: 2 }]}>
+            The Notice of Cancellation may be mailed to the address of the direct contractor as shown below:
+          </Text>
           <View style={styles.proposalMeta}>
             <Text>Contract No: {proposal?.proposalNumber || "N/A"}</Text>
             <Text>Date: {formatDate(proposal?.createdAt)}</Text>
@@ -918,6 +1113,42 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           )
         })}
 
+        {/* Construction Lender Section */}
+        <View style={styles.constructionLenderSection}>
+                  <Text style={styles.constructionLenderTitle}>
+          CONSTRUCTION LENDER: <Text style={styles.docusignField}>\\t22\\</Text>
+        </Text>
+          <Text style={styles.constructionLenderLabel}>
+            (Name and Address of Construction Fund Holder)
+          </Text>
+          
+          <View style={{ marginTop: 15 }}>
+            <Text style={styles.constructionLenderTitle}>
+              Substantial commencement of work under this contract is described as: <Text style={styles.docusignField}>\\t23\\</Text>
+            </Text>
+          </View>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
+            <View style={{ flex: 1, marginRight: 20 }}>
+              <Text style={styles.constructionLenderTitle}>
+                Approximate Start Date: <Text style={styles.docusignDate}>\\d17\\</Text>
+              </Text>
+              <Text style={styles.constructionLenderLabel}>
+                (Work will begin)
+              </Text>
+            </View>
+            
+            <View style={{ flex: 1 }}>
+              <Text style={styles.constructionLenderTitle}>
+                Approximate Completion Date: <Text style={styles.docusignDate}>\\d18\\</Text>
+              </Text>
+              <Text style={styles.constructionLenderLabel}>
+                (Work is to be completed)
+              </Text>
+            </View>
+          </View>
+        </View>
+
         {/* Article II - Contract Price */}
         <Text style={styles.articleNumber}>ARTICLE II - CONTRACT PRICE</Text>
         <Text style={styles.termsText}>
@@ -1023,50 +1254,21 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           )}
         </View>
 
-        {/* Article III - Payment Terms */}
-        <Text style={styles.articleNumber}>ARTICLE III - PAYMENT TERMS</Text>
 
-        <View style={styles.paymentTerms}>
-          <Text style={styles.paymentTermsTitle}>Financing Terms</Text>
-          {/* <Text style={styles.paymentSchedule}>
-            • Down Payment (10%): {formatCurrency(finalTotal * 0.1)} - Due upon contract signing
-          </Text>
-          <Text style={styles.paymentSchedule}>
-            • Material Delivery (40%): {formatCurrency(finalTotal * 0.4)} - Due upon material delivery
-          </Text>
-          <Text style={styles.paymentSchedule}>
-            • Substantial Completion (40%): {formatCurrency(finalTotal * 0.4)} - Due at substantial completion
-          </Text>
-          <Text style={styles.paymentSchedule}>
-            • Final Payment (10%): {formatCurrency(finalTotal * 0.1)} - Due upon final completion and inspection
-          </Text> */}
 
-          {proposal?.pricing?.financingTerm && (
-            <View style={{ marginTop: 5, paddingTop: 3, borderTopWidth: 0.5, borderTopColor: "#cccccc" }}>
-              <Text style={[styles.paymentSchedule, { fontFamily: "Times-Bold" }]}>
-                Financing Available: {proposal.pricing.financingTerm} months at {proposal.pricing.interestRate}% APR
-              </Text>
-              {proposal.pricing.financingPlanName && (
-                <Text style={styles.paymentSchedule}>Plan: {proposal.pricing.financingPlanName}</Text>
-              )}
-            </View>
-          )}
-        </View>
-
-       
-        {/* Signature Section */}
-        <View style={styles.signatureSection}>
+        {/* Contract Execution Section - Positioned before footer */}
+        <View style={[styles.signatureSection, { position: 'absolute', bottom: 80, left: 30, right: 30 }]}>
           <Text style={styles.signatureTitle}>Contract Execution</Text>
 
           <View style={styles.signatureRow}>
             <View style={styles.signatureBlock}>
-              <View style={styles.signatureLine}></View>
+              <Text style={styles.docusignSignature}>\\s1\\</Text>
               <Text style={styles.signatureLabel}>Homeowner Signature</Text>
               <Text style={styles.signatureLabel}>{proposal?.customer?.name || "N/A"}</Text>
             </View>
 
             <View style={styles.signatureBlock}>
-              <View style={styles.signatureLine}></View>
+              <Text style={styles.docusignSignature}>\\s2\\</Text>
               <Text style={styles.signatureLabel}>Contractor Signature</Text>
               <Text style={styles.signatureLabel}>Evergreen Home Upgrades</Text>
             </View>
@@ -1074,12 +1276,12 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
           <View style={styles.signatureRow}>
             <View style={styles.signatureBlock}>
-              <View style={styles.signatureLine}></View>
+              <Text style={styles.docusignDate}>\\d1\\</Text>
               <Text style={styles.signatureLabel}>Date</Text>
             </View>
 
             <View style={styles.signatureBlock}>
-              <View style={styles.signatureLine}></View>
+              <Text style={styles.docusignDate}>\\d2\\</Text>
               <Text style={styles.signatureLabel}>Date</Text>
             </View>
           </View>
@@ -1093,14 +1295,298 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         </View>
 
         {/* Page Number */}
-        <Text style={styles.pageNumber}>Page 1 of 6</Text>
+        <Text style={styles.pageNumber}>Page 1 of 8</Text>
+      </Page>
+
+      {/* Payment Terms Page */}
+      <Page size="A4" style={styles.page}>
+       
+
+        {/* Article III - Payment Terms */}
+        <Text style={[styles.articleNumber,{textAlign:"center"}]}>ARTICLE III - PAYMENT TERMS</Text>
+        <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
+            Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
+          </Text>
+        <View style={styles.paymentTerms}>
+          <Text style={styles.paymentTermsTitle}>Payment Terms</Text>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 }}>
+            <View style={{ flex: 1, marginRight: 20 }}>
+              <Text style={styles.constructionLenderTitle}>
+                CONTRACT PRICE: $ <Text style={styles.docusignField}>\\t1\\</Text>
+          </Text>
+              <Text style={styles.constructionLenderLabel}>
+                (Owner agrees to pay Contractor total cash price)
+          </Text>
+            </View>
+            
+            <View style={{ flex: 1 }}>
+              <Text style={styles.constructionLenderTitle}>
+                DOWN PAYMENT: $ <Text style={styles.docusignField}>\\t2\\</Text>
+          </Text>
+              <Text style={styles.constructionLenderLabel}>
+                (If any; if not applicable, put "none")
+              </Text>
+            </View>
+          </View>
+          
+          <Text style={[styles.constructionLenderTitle, { fontSize: 10, marginBottom: 8 }]}>
+            THE DOWN PAYMENT MAY NOT EXCEED $1,000 OR 10 PERCENT OF THE CONTRACT PRICE, WHICHEVER IS LESS.
+          </Text>
+          
+          <Text style={styles.constructionLenderTitle}>
+            FINANCE CHARGE $ <Text style={styles.docusignField}>\\t3\\</Text>
+          </Text>
+          <Text style={styles.constructionLenderLabel}>
+            (Must be stated separately from the contract amount in dollars and cents; if none, put "none")
+          </Text>
+          
+          <View style={{ marginTop: 15 }}>
+            <Text style={[styles.constructionLenderTitle, { fontSize: 10, marginBottom: 8 }]}>
+              SCHEDULE OF PROGRESS PAYMENTS: The schedule of progress payments must specifically describe each phase of work, including the type and amount of work or services scheduled to be supplied in each phase, along with the amount of each proposed progress payment. IT IS AGAINST THE LAW FOR A CONTRACTOR TO COLLECT PAYMENT FOR WORK NOT YET COMPLETED, OR FOR MATERIALS NOT YET DELIVERED. HOWEVER, A CONTRACTOR MAY REQUIRE A DOWN PAYMENT.
+            </Text>
+          </View>
+
+          {/* Progress Payment Schedule Table */}
+          <View style={{ marginTop: 10, marginBottom: 15 }}>
+            {/* Table Headers */}
+            <View style={{ flexDirection: 'row', marginBottom: 5 }}>
+              <View style={{ flex: 0.5 }}></View>
+              <View style={{ flex: 3, alignItems: 'center' }}>
+                <Text style={[styles.constructionLenderLabel, { fontSize: 7 }]}>
+                  (Work or Services to be Performed or Materials to be Supplied)
+                </Text>
+              </View>
+              <View style={{ flex: 1, alignItems: 'center' }}>
+                <Text style={[styles.constructionLenderLabel, { fontSize: 7 }]}>
+                  (Date)
+                </Text>
+              </View>
+            </View>
+
+            {/* Table Rows */}
+            {[1, 2, 3, 4].map((num) => (
+              <View key={num} style={{ flexDirection: 'row', alignItems: 'baseline', marginBottom: 12 }}>
+                <View style={{ flex: 0.3, alignItems: 'flex-start' }}>
+                  <Text style={[styles.constructionLenderTitle, { fontSize: 11 }]}>
+                    {num}.
+                  </Text>
+                </View>
+                <View style={{ flex: 0.7, alignItems: 'flex-start' }}>
+                  <Text style={styles.docusignField}>\\t{num + 3}\\</Text>
+                </View>
+                <View style={{ flex: 3, marginRight: 15, marginLeft: 10 }}>
+                  <Text style={styles.docusignField}>\\t{num + 7}\\</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.docusignDate}>\\d{num + 2}\\</Text>
+                </View>
+              </View>
+            ))}
+
+            <Text style={[styles.constructionLenderLabel, { fontSize: 7, marginTop: 10, textAlign: 'center' }]}>
+              (If necessary, continue the description of the work on an additional attachment page and describe the{'\n'}
+              attachment in the section below entitled, "List of Documents to be Incorporated into the Contract.")
+            </Text>
+          </View>
+
+          {proposal?.pricing?.financingTerm && (
+            <View style={{ marginTop: 15, paddingTop: 10, borderTopWidth: 0.5, borderTopColor: "#cccccc" }}>
+              <Text style={[styles.paymentSchedule, { fontFamily: "Times-Bold" }]}>
+                Financing Available: {proposal.pricing.financingTerm} months at {proposal.pricing.interestRate}% APR
+              </Text>
+              {proposal.pricing.financingPlanName && (
+                <Text style={styles.paymentSchedule}>Plan: {proposal.pricing.financingPlanName}</Text>
+              )}
+            </View>
+          )}
+        </View>
+          
+        {/* Release Section */}
+        <View style={styles.contractSection}>
+          <Text style={styles.contractSectionTitle}>Release.</Text>
+          <Text style={styles.contractSectionText}>
+            Upon satisfactory payment being made for any portion of the work performed, the Contractor shall, prior to any further payment being made, furnish to each person contracting for the home improvement work a full and unconditional release from any claim or mechanic's lien for the portion of the work for which payment has been made pursuant to Sections 8400 and 8404 of the Civil Code for that portion of the work for which payment has been made.
+          </Text>
+        </View>
+       
+        {/* Allowances Section */}
+        <View style={styles.contractSection}>
+          <Text style={styles.contractSectionTitle}>Allowances:</Text>
+          <Text style={styles.contractSectionText}>
+            The following items or specific prices as indicated are included in the contract price as allowances. The contract price shall be adjusted upward or downward based on actual amounts rather than estimated amounts herein.
+          </Text>
+           <Text style={styles.docusignField}>\\t11\\</Text>
+        </View>
+
+        {/* List of Documents Section */}
+        <View style={styles.contractSection}>
+          <Text style={styles.contractSectionTitle}>List of Documents to be Incorporated into the Contract:</Text>
+          <Text style={styles.contractSectionText}>
+            Notice of Cancellation; Arbitration of Disputes; Three-Day Right to Cancel; Five-Day Right to Cancel; Mechanics Lien Warning; Information about Contractor's State License Board.
+          </Text>
+          <Text style={styles.docusignField}>\\t12\\</Text>
+        </View>
+
+        {/* Insurance Notice */}
+        <View style={styles.contractSection}>
+          <Text style={styles.contractSectionText}>
+            A notice concerning commercial general liability insurance and workers' compensation insurance is attached to this contract. Owner acknowledges receipt of a fully completed copy of this agreement and all documents listed above:
+          </Text>
+          
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 5 }}>
+            <Text style={styles.docusignField}>\\i1\\</Text>
+            <Text style={[styles.constructionLenderLabel, { marginLeft: 5 }]}>
+              (Property Owner's Initials)
+            </Text>
+          </View>
+        </View>
+
+        {/* Owner Age Section */}
+        <View style={styles.ownerAgeSection}>
+          <Text style={styles.contractSectionText}>Owner affirms their age(s) is/are: <Text style={styles.docusignField}>\\t13\\</Text>;<Text style={styles.docusignField}>\\t14\\</Text></Text>
+          <View style={styles.constructionLenderLine}></View>
+          <View style={styles.constructionLenderLine}></View>
+        </View>
+        
+        <Text style={[styles.contractSectionText, { color: "#dc2626",  textAlign:"center" }]}>
+            Initial the appropriate box below:
+        </Text>
+        
+        {/* Notice Boxes */}
+        <View style={styles.noticeBoxesContainer}>
+          <View style={styles.noticeBox}>
+            <Text style={styles.docusignCheckbox}>\\c1\\</Text>
+            <Text style={styles.noticeBoxTitle}>NOTICE OF RIGHT TO CANCEL</Text>
+            <Text style={styles.noticeBoxTitle}>3-DAY</Text>
+            <Text style={styles.noticeBoxText}>
+              The law requires that the contractor give you a notice explaining your right to cancel. Initial the checkbox if the contractor has given you a "Notice of the Three-Day Right to Cancel."
+            </Text>
+          </View>
+
+          <View style={styles.noticeBox}>
+            <Text style={styles.docusignCheckbox}>\\c2\\</Text>
+            <Text style={styles.noticeBoxTitle}>NOTICE OF RIGHT TO CANCEL</Text>
+            <Text style={styles.noticeBoxTitle}>5-DAY (owners 65 and over)</Text>
+            <Text style={styles.noticeBoxText}>
+              The law requires that the contractor give you a notice explaining your right to cancel. Initial the checkbox if the contractor has given you a "Notice of the Five-Day Right to Cancel."
+            </Text>
+          </View>
+
+          <View style={styles.noticeBox}>
+            <Text style={styles.docusignCheckbox}>\\c3\\</Text>
+            <Text style={styles.noticeBoxTitle}>ARBITRATION OF DISPUTES</Text>
+            <Text style={styles.noticeBoxText}>
+              OWNER: Initial this box if you agree to arbitration. Review the "Arbitration of Disputes" section attached.
+            </Text>
+          </View>
+        </View>
+
+        {/* Final Signature Section */}
+        <View style={styles.finalSignatureSection}>
+          <Text style={styles.finalSignatureText}>
+            You are entitled to a completely filled in copy of this agreement, signed by both you and the contractor, before any work may be started.
+          </Text>
+          <Text style={styles.finalSignatureText}>
+            You (the owner or tenant) have the right to require the Contractor to have a performance and payment bond; however, the Contractor can charge you for the costs of procuring a bond.
+          </Text>
+
+          {/* First signature row */}
+          <View style={{ marginBottom: 15 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 5 }}>
+              <Text style={styles.xSignature}>X</Text>
+              <View style={{ flex: 2, marginRight: 20 }}>
+                <Text style={styles.docusignSignature}>\\s3\\</Text>
+              </View>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={styles.docusignDate}>\\d7\\</Text>
+              </View>
+              <View style={{ flex: 2 }}>
+                <Text style={styles.docusignField}>\\t15\\</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', fontSize: 7 }}>
+              <View style={{ flex: 0.2 }}></View>
+              <View style={{ flex: 2, marginRight: 20 }}>
+                <Text style={[styles.constructionLenderLabel, { textAlign: "left", fontSize: 7 }]}>
+                  (Owner Sign Here — Read notice on{'\n'}Arbitration, Mechanics Lien Warning)
+                </Text>
+              </View>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={[styles.constructionLenderLabel, { textAlign: "center", fontSize: 7 }]}>
+                  (Date)
+                </Text>
+              </View>
+              <View style={{ flex: 2 }}>
+                <Text style={[styles.constructionLenderLabel, { textAlign: "center", fontSize: 7 }]}>
+                  (Direct Contractor's Firm Name)
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Second signature row */}
+          <View style={{ marginBottom: 15 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginBottom: 5 }}>
+              <Text style={styles.xSignature}>X</Text>
+              <View style={{ flex: 2, marginRight: 20 }}>
+                <Text style={styles.docusignSignature}>\\s4\\</Text>
+              </View>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={styles.docusignDate}>\\d8\\</Text>
+              </View>
+              <View style={{ flex: 2 }}>
+                <Text style={styles.docusignSignature}>\\s5\\</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', fontSize: 7 }}>
+              <View style={{ flex: 0.2 }}></View>
+              <View style={{ flex: 2, marginRight: 20 }}>
+                <Text style={[styles.constructionLenderLabel, { textAlign: "left", fontSize: 7 }]}>
+                  (If more than one Owner, please Sign Here)
+                </Text>
+              </View>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text style={[styles.constructionLenderLabel, { textAlign: "center", fontSize: 7 }]}>
+                  (Date)
+                </Text>
+              </View>
+              <View style={{ flex: 2 }}>
+                <Text style={[styles.constructionLenderLabel, { textAlign: "center", fontSize: 7 }]}>
+                  (Direct Contractor or Agent Sign Here)        
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.salesmanSection}>
+            <Text style={styles.contractSectionText}>Salesman who solicited or negotiated contract:</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
+              <View style={{ flex: 1, marginRight: 20 }}>
+                <Text style={styles.contractSectionText}>Name:</Text>
+                <Text style={styles.docusignField}>\\t16\\</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.contractSectionText}>State Registration Number:</Text>
+                <Text style={styles.docusignField}>\\t17\\</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>
+            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+          </Text>
+        </View>
+
+        {/* Page Number */}
+        <Text style={styles.pageNumber}>Page 2 of 8</Text>
       </Page>
 
       {/* Terms and Conditions Page */}
       <Page size="A4" style={styles.termsPage}>
-        {/* Line numbers for legal documents */}
-      
-
         <View style={styles.termsHeader}>
           <Text style={styles.termsTitle}>TERMS AND CONDITIONS</Text>
           <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
@@ -1273,98 +1759,37 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             liability or responsibility to restore or repair the whole or any part of the premises affected by the work
             of Contractor to be performed herein or by any subsequently agreed-upon change order, including as an
             illustration and not as a limitation, any landscaping, sprinkler system, flooring and carpet, wall
-            coverings, paint, tile, or decorator items.
+            coverings, paint, tile, cabinetry, or any other improvements that may be affected by normal construction
+            activities. Owner acknowledges that the work to be performed may result in damage to existing improvements
+            and agrees to hold Contractor harmless for any such damage. Contractor agrees to conduct operations in a
+            manner that will minimize damage to existing improvements.
           </Text>
         </View>
 
         <View style={styles.termsArticle}>
-          <Text style={styles.termsArticleTitle}>13. Limited Warranty</Text>
+          <Text style={styles.termsArticleTitle}>13. Assignment</Text>
           <Text style={styles.termsText}>
-            Contractor warranties for (10) years all Work including labor. Client agrees that from ("Substantial
-            Completion"). the Work has been done and installed in a good workmanlike manner in accordance with all
-            building codes and California Authorities Having Jurisdiction specifications. Warranty on Equipment will be
-            supplied by the manufacturer. All warranty coverage to equipment and workmanship installed by the contractor
-            will be void if any alterations or repairs are performed by any other person/company not expressly
-            authorized, in writing, by the contractor. Warranty does not cover damage caused by external forces such as
-            but not limited to vandalism, theft, fire, or act of God, damage caused by weather effects exceeding
-            manufacturer tolerances, normal wear and tear. Any implied warranties: Electric bills, water damages, or any
-            other consequential damages: or damage to PV system or to its efficiency due to adjustments, moving, or
-            tampering with the PV system or any of its components by individuals not approved by the Contractor
-            constitute are considered out of warranty and not covered.
+            This Agreement and all the rights and obligations hereunder may not be assigned by Owner without the prior
+            written consent of Contractor. Contractor may assign this Agreement and the Owner hereby consents to such
+            assignment.
           </Text>
         </View>
 
         <View style={styles.termsArticle}>
-          <Text style={styles.termsArticleTitle}>14. Changes in the Work - Concealed Conditions</Text>
+          <Text style={styles.termsArticleTitle}>14. Integration</Text>
           <Text style={styles.termsText}>
-            Should the Owner, construction lender, or any public body or inspector direct any modification or addition
-            to the work covered by this contract, the contract price shall be adjusted accordingly. Modification or
-            addition to the work shall be executed only when a Contract Change Order has been signed by both the Owner
-            and the Contractor. The change in the Contract Price caused by such Contract Change Order shall be as agreed
-            to in writing, or if the parties are not in agreement as to the change in Contract Price, the Contractor's
-            actual cost of all labor, equipment, subcontracts and materials, plus a Contractor's fee of 20% or ___%
-            shall be the change in Contract Price.
-          </Text>
-          <Text style={styles.termsText}>
-            The Contract Change Order may also increase the time within which the contract is to be completed.
-            Contractor shall promptly notify the Owner of (a) subsurface or latent physical conditions at the site
-            differing materially from those indicated in the contract, or (b) unknown physical conditions differing
-            materially from those ordinarily encountered and generally recognized as inherent in work of the character
-            provided for in this contract. Any expense incurred due to such conditions shall be paid for by the Owner as
-            added work. Payment for extra work will be made as extra work progresses.
+            This Agreement represents the entire contract between the parties. The Owner acknowledges that he or she has
+            read and understood all the terms and conditions contained in this Contract, including all articles on both pages.
           </Text>
         </View>
 
         <View style={styles.termsArticle}>
-          <Text style={styles.termsArticleTitle}>15. Fees, Taxes and Assessments, Compliance With Laws</Text>
+          <Text style={styles.termsArticleTitle}>15. Entire Agreement</Text>
           <Text style={styles.termsText}>
-            Taxes, Permits, Fees, and assessments of all descriptions will be paid for by Owner. Contractor will obtain
-            all required building permits, at the sole expense of Owner. Upon demand by Contractor, Owner shall provide
-            ample funds to acquire any and all necessary permits on a timely basis. Owner will pay assessments and
-            charges required by public bodies and utilities for financing or repaying the cost of sewers, storm drains,
-            water service, schools and school facilities, other utilities, hook-up charges and the like. Contractor
-            shall comply with all federal, state, county and local laws, ordinances and regulations.
+            This contract constitutes the complete agreement between the parties and supersedes all prior negotiations,
+            representations, or agreements relating to the subject matter of this contract. This contract may be
+            modified only by written agreement of both parties.
           </Text>
-        </View>
-
-        <View style={styles.termsArticle}>
-          <Text style={styles.termsArticleTitle}>16. Labor and Material</Text>
-          <Text style={styles.termsText}>
-            Contractor shall pay all valid charges for labor and material incurred by Contractor and used in the
-            construction or repair of the Project. Contractor is excused from this obligation for bills received in any
-            period during which the Owner is in arrears in making progress payments to Contractor. No waiver or release
-            of mechanic's lien given by Contractor shall be binding until all payments due to Contractor when the
-            release was executed have been made.
-          </Text>
-        </View>
-
-        <View style={styles.termsArticle}>
-          <Text style={styles.termsArticleTitle}>17. Right to Cure</Text>
-          <Text style={styles.termsText}>
-            In the event that Owner alleges that of the work is not or has not been done correctly or timely, Owner
-            shall give Contractor a notice that Contractor shall commence to cure the condition Owner has alleged is
-            insufficient within ten days.
-          </Text>
-        </View>
-
-        <View style={styles.signatureSection}>
-          <Text style={styles.signatureTitle}>Acknowledgment of Terms</Text>
-          <Text style={styles.termsText}>
-            By signing below, Homeowner acknowledges that they have read, understood, and agree to all terms and
-            conditions contained in this Contract, including all articles on both pages.
-          </Text>
-
-          <View style={styles.signatureRow}>
-            <View style={styles.signatureBlock}>
-              <View style={styles.signatureLine}></View>
-              <Text style={styles.signatureLabel}>Homeowner Initials</Text>
-            </View>
-
-            <View style={styles.signatureBlock}>
-              <View style={styles.signatureLine}></View>
-              <Text style={styles.signatureLabel}>Contractor Initials</Text>
-            </View>
-          </View>
         </View>
 
         {/* Footer for terms page */}
@@ -1372,19 +1797,25 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <Text>
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
+        </View>
+
+        <View style={styles.footer}>
           <Text>
             This contract consists of multiple pages and constitutes the entire agreement between the parties.
           </Text>
         </View>
 
         {/* Page Number */}
-        <Text style={styles.pageNumber}>Page 2 of 6</Text>
+        <Text style={styles.pageNumber}>Page 3 of 8</Text>
       </Page>
 
       {/* Three-Day Right to Cancel Page */}
       <Page size="A4" style={styles.termsPage}>
         <View style={styles.termsHeader}>
           <Text style={styles.termsTitle}>THREE-DAY RIGHT TO CANCEL</Text>
+          <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
+            Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
+          </Text>
         </View>
 
         <Text style={styles.termsText}>
@@ -1409,7 +1840,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>3-DAY NOTICE OF CANCELLATION</Text>
           
-          <Text style={styles.termsText}>DATE ____________________________</Text>
+          <Text style={styles.termsText}>DATE <Text style={styles.docusignDate}>\\d9\\</Text></Text>
           
           <Text style={styles.termsText}>
             You may cancel this transaction, without any penalty or obligation, within three business days from the
@@ -1438,37 +1869,37 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           
           <Text style={[styles.termsText, { marginTop: 8 }]}>
-            ____________________________________________ at __________________________________________________________
+            <Text style={styles.docusignField}>\\t18\\</Text> at <Text style={styles.docusignField}>\\t19\\</Text>
           </Text>
           <Text style={styles.fieldLabel}>(Name of Seller)                                                                                                          (Address of Seller's Place of Business)</Text>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
+            <Text style={styles.termsText}>not later than midnight of <Text style={styles.docusignDate}>\\d10\\</Text>.</Text>
             <Text style={[styles.fieldLabel, { marginLeft: 140 }]}>(Date)</Text>
           </View>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>I hereby cancel this transaction ________________________________________    ________________________</Text>
+            <Text style={styles.termsText}>I hereby cancel this transaction <Text style={styles.docusignSignature}>\\s6\\</Text>    <Text style={styles.docusignDate}>\\d11\\</Text></Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={[styles.fieldLabel, { marginLeft: 150 }]}>(Buyer's Signature)</Text>
-              <Text style={[styles.fieldLabel, { marginRight: 260 }]}>(Date)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 120 }]}>(Date)</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.termsArticle}>
           <View>
-            <Text style={styles.termsText}>I, ____________________________________________________ hereby acknowledge that on ______________ I was provided this document</Text>
+            <Text style={styles.termsText}>I, <Text style={styles.docusignField}>\\t20\\</Text> hereby acknowledge that on <Text style={styles.docusignDate}>\\d12\\</Text> I was provided this document</Text>
             <View style={{ flexDirection: 'row', justifyContent: "space-around" }}>
               <Text style={[styles.fieldLabel, { marginRight: 20 }]}>(Owner)</Text>
-              <Text style={[styles.fieldLabel, { marginRight: 250 }]}>(Date)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 1 }]}>(Date)</Text>
             </View>
           </View>
           
           <Text style={[styles.termsText, { marginTop: 5 }]}>entitled "Three Day Right to Cancel"</Text>
           
           <View style={{ marginTop: 15 }}>
-            <View style={styles.signatureLine}></View>
+            <Text style={styles.docusignSignature}>\\s7\\</Text>
             <Text style={[styles.fieldLabel, {marginLeft:200}]}>(Owner's Signature)</Text>
           </View>
         </View>
@@ -1478,13 +1909,16 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 3 of 6</Text>
+        <Text style={styles.pageNumber}>Page 4 of 8</Text>
       </Page>
 
       {/* Five-Day Right to Cancel Page */}
       <Page size="A4" style={styles.termsPage}>
         <View style={styles.termsHeader}>
           <Text style={styles.termsTitle}>FIVE-DAY RIGHT TO CANCEL (For owners 65 and over)</Text>
+          <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
+            Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
+          </Text>
         </View>
 
         <Text style={styles.termsText}>
@@ -1509,7 +1943,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         <View style={styles.termsArticle}>
           <Text style={styles.termsArticleTitle}>5-DAY NOTICE OF CANCELLATION (For owners 65 and over)</Text>
           
-          <Text style={styles.termsText}>DATE ____________________________</Text>
+          <Text style={styles.termsText}>DATE <Text style={styles.docusignDate}>\\d13\\</Text></Text>
           
           <Text style={styles.termsText}>
             You may cancel this transaction, without any penalty or obligation, within five business days from the above
@@ -1538,37 +1972,37 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           
           <Text style={[styles.termsText, { marginTop: 8 }]}>
-            ____________________________________________ at __________________________________________________________
+            <Text style={styles.docusignField}>\\t26\\</Text> at <Text style={styles.docusignField}>\\t27\\</Text>
           </Text>
           <Text style={styles.fieldLabel}>(Name of Seller)                                                                                                          (Address of Seller's Place of Business)</Text>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>not later than midnight of ______________________.</Text>
+            <Text style={styles.termsText}>not later than midnight of <Text style={styles.docusignDate}>\\d14\\</Text>.</Text>
             <Text style={[styles.fieldLabel, { marginLeft: 140 }]}>(Date)</Text>
           </View>
           
           <View style={{ marginTop: 10 }}>
-            <Text style={styles.termsText}>I hereby cancel this transaction ________________________________________    ________________________</Text>
+            <Text style={styles.termsText}>I hereby cancel this transaction <Text style={styles.docusignSignature}>\\s9\\</Text>    <Text style={styles.docusignDate}>\\d15\\</Text></Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
               <Text style={[styles.fieldLabel, { marginLeft: 150 }]}>(Buyer's Signature)</Text>
-              <Text style={[styles.fieldLabel, { marginRight: 200 }]}>(Date)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 120 }]}>(Date)</Text>
             </View>
           </View>
         </View>
 
         <View style={styles.termsArticle}>
           <View>
-            <Text style={styles.termsText}>I, ____________________________________________________ hereby acknowledge that on ______________ I was provided this document</Text>
+            <Text style={styles.termsText}>I, <Text style={styles.docusignField}>\\t21\\</Text> hereby acknowledge that on <Text style={styles.docusignDate}>\\d16\\</Text> I was provided this document</Text>
             <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
               <Text style={[styles.fieldLabel, { marginRight: 20 }]}>(Owner)</Text>
-              <Text style={[styles.fieldLabel, { marginRight: 80 }]}>(Date)</Text>
+              <Text style={[styles.fieldLabel, { marginRight: 1 }]}>(Date)</Text>
             </View>
           </View>
           
           <Text style={[styles.termsText, { marginTop: 5 }]}>entitled "Five Day Right to Cancel"</Text>
           
           <View style={{ marginTop: 15 }}>
-            <View style={styles.signatureLine}></View>
+            <Text style={styles.docusignSignature}>\\s8\\</Text>
             <Text style={[styles.fieldLabel, {marginLeft:200}]}>(Owner's Signature)</Text>
           </View>
         </View>
@@ -1578,13 +2012,16 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 4 of 6</Text>
+        <Text style={styles.pageNumber}>Page 5 of 8</Text>
       </Page>
 
       {/* Mechanics Lien Warning Page */}
       <Page size="A4" style={styles.termsPage}>
         <View style={styles.termsHeader}>
           <Text style={styles.termsTitle}>MECHANICS LIEN WARNING</Text>
+          <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
+            Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
+          </Text>
         </View>
 
         <Text style={[styles.termsText, { fontFamily: "Times-Bold" }]}>
@@ -1667,24 +2104,30 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 5 of 6</Text>
+        <Text style={styles.pageNumber}>Page 6 of 8</Text>
       </Page>
 
       {/* Insurance and Arbitration Page */}
       <Page size="A4" style={styles.termsPage}>
         <View style={styles.termsArticle}>
-          <Text style={styles.termsArticleTitle}>WORKERS' COMPENSATION INSURANCE</Text>
+         
+          <Text style={[styles.termsArticleTitle,{textAlign:"center"}]}>WORKERS' COMPENSATION INSURANCE</Text>
+          
+          <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
+            Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
+          </Text>
+          <View style={styles.termsHeader}></View>
           <Text style={[styles.termsText, { marginBottom: 8 }]}>Check the applicable box:</Text>
           
           <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
+            <Text style={styles.docusignCheckbox}>\\c13\\</Text>
           <Text style={styles.termsText}>
             (A) This contractor has no employees and is exempt from workers' compensation requirements.
           </Text>
           </View>
           
           <View style={styles.checkboxRow}>
-            <View style={styles.checkbox}></View>
+            <Text style={styles.docusignCheckbox}>\\c14\\</Text>
           <Text style={styles.termsText}>
             (B) This contractor carries workers' compensation insurance for all employees.
           </Text>
@@ -1698,47 +2141,47 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           
           <View>
             <View style={styles.checkboxRow}>
-              <View style={styles.checkbox}></View>
-              <Text style={styles.termsText}>(A) _________________ does not carry Commercial General Liability Insurance.</Text>
+              <Text style={styles.docusignCheckbox}>\\c15\\</Text>
+              <Text style={styles.termsText}>(A) <Text style={styles.docusignField}>\\t28\\</Text> does not carry Commercial General Liability Insurance.</Text>
             </View>
             <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
           </View>
           
           <View style={{ marginTop: 8 }}>
             <View style={styles.checkboxRow}>
-              <View style={styles.checkbox}></View>
-              <Text style={styles.termsText}>(B) _________________ carries Commercial General Liability Insurance.</Text>
+              <Text style={styles.docusignCheckbox}>\\c16\\</Text>
+              <Text style={styles.termsText}>(B) <Text style={styles.docusignField}>\\t29\\</Text> carries Commercial General Liability Insurance.</Text>
             </View>
             <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
           </View>
           
           <View style={{ marginTop: 8, marginLeft: 20 }}>
             <View>
-              <Text style={styles.termsText}>The insurance company is _________________________.</Text>
+              <Text style={styles.termsText}>The insurance company is <Text style={styles.docusignField}>\\t30\\</Text>.</Text>
               <Text style={[styles.fieldLabel, { marginLeft: 120 }]}>(Company Name)</Text>
             </View>
             
             <View style={{ marginTop: 8 }}>
-              <Text style={styles.termsText}>You may call the insurance company at ___________________ to check the contractor's insurance coverage.</Text>
+              <Text style={styles.termsText}>You may call the insurance company at <Text style={styles.docusignField}>\\t31\\</Text> to check the contractor's insurance coverage.</Text>
               <Text style={[styles.fieldLabel, { marginLeft: 133 }]}>(Telephone Number)</Text>
             </View>
           </View>
           
           <View style={{ marginTop: 8 }}>
             <View style={styles.checkboxRow}>
-              <View style={styles.checkbox}></View>
-              <Text style={styles.termsText}>(C) _________________ is self-insured.</Text>
+              <Text style={styles.docusignCheckbox}>\\c17\\</Text>
+              <Text style={styles.termsText}>(C) <Text style={styles.docusignField}>\\t32\\</Text> is self-insured.</Text>
             </View>
             <Text style={[styles.fieldLabel, { marginLeft: 35 }]}>(Contractor's Name)</Text>
           </View>
           
           <View style={{ marginTop: 8 }}>
             <View style={styles.checkboxRow}>
-              <View style={styles.checkbox}></View>
-              <Text style={styles.termsText}>(D) _________________ is a limited liability company that carries liability insurance or maintains other security as required by law. You may call</Text>
+              <Text style={styles.docusignCheckbox}>\\c18\\</Text>
+              <Text style={styles.termsText}>(D) <Text style={styles.docusignField}>\\t33\\</Text> is a limited liability company that carries liability insurance or maintains other security as required by law. You may call</Text>
             </View>
             <View>
-              <Text style={styles.termsText}>_________________ at _________________ to check on the contractor's insurance coverage or security.</Text>
+              <Text style={styles.termsText}><Text style={styles.docusignField}>\\t34\\</Text> at <Text style={styles.docusignField}>\\t35\\</Text> to check on the contractor's insurance coverage or security.</Text>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <Text style={[styles.fieldLabel, { marginLeft: 0 }]}>(Contractor's Name)</Text>
                 <Text style={[styles.fieldLabel, { marginLeft: -50 }]}>(Insurance Company/Trust Company/Bank)</Text>
@@ -1777,10 +2220,14 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         </View>
       </Page>
 
-      {/* Page 6 - Arbitration and Customer Acknowledgment */}
+      {/* Page 8 - Arbitration and Customer Acknowledgment */}
       <Page size="A4" style={styles.page}>
         <View style={styles.termsArticle}>
-          <Text style={styles.termsArticleTitle}>ARBITRATION OF DISPUTES</Text>
+          <Text style={[styles.termsArticleTitle,{textAlign:"center"}]}>ARBITRATION OF DISPUTES</Text>
+          <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3 }}>
+            Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
+          </Text>
+           <View style={styles.termsHeader}></View>
           <Text style={styles.termsArticleTitle}>(In compliance with CA Business and Professions Code 7191)</Text>
           <Text style={styles.termsText}>
             ARBITRATION OF DISPUTES: ANY CONTROVERSY OR CLAIM ARISING OUT OF OR RELATED TO THIS CONTRACT, OR THE BREACH
@@ -1815,13 +2262,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={styles.termsText}>I AGREE TO ARBITRATION.</Text>
-              <View style={styles.initialBox}></View>
+              <Text style={styles.docusignField}>\\i2\\</Text>
               <Text style={styles.fieldLabel}>(Direct Contractor's Initials)</Text>
             </View>
             
             <View style={{ flex: 1, alignItems: 'center' }}>
               <Text style={styles.termsText}>I AGREE TO ARBITRATION.</Text>
-              <View style={styles.initialBox}></View>
+              <Text style={styles.docusignField}>\\i3\\</Text>
               <Text style={styles.fieldLabel}>(Owner's Initials)</Text>
             </View>
           </View>
@@ -1835,42 +2282,42 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={{ flexDirection: 'row', marginBottom: 10 }}>
             <View style={{ flex: 1, paddingRight: 10 }}>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c4\\</Text>
                 <Text style={styles.termsText}>1. Home Improvement Contract</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c5\\</Text>
                 <Text style={styles.termsText}>2. Notice of Arbitration</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c6\\</Text>
                 <Text style={styles.termsText}>3. Notice Of Cancellation</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c7\\</Text>
                 <Text style={styles.termsText}>4. Three-Day Right to Cancel</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c8\\</Text>
                 <Text style={styles.termsText}>5. Five-Day Right to Cancel</Text>
               </View>
             </View>
             
             <View style={{ flex: 1, paddingLeft: 10 }}>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c9\\</Text>
                 <Text style={styles.termsText}>6. Disclosure re: Commercial General Liability Insurance</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c10\\</Text>
                 <Text style={styles.termsText}>7. Disclosure re: Workers' Compensation Insurance</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c11\\</Text>
                 <Text style={styles.termsText}>8. Statutory Notices</Text>
               </View>
               <View style={styles.checkboxRow}>
-                <View style={styles.checkbox}></View>
+                <Text style={styles.docusignCheckbox}>\\c12\\</Text>
                 <Text style={styles.termsText}>9. Mechanics Lien Warning</Text>
               </View>
             </View>
@@ -1879,17 +2326,17 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={{ marginTop: 15 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <View style={{ width: '30%', textAlign: 'center' }}>
-                <Text style={styles.termsText}>_________________________</Text>
+                <Text style={styles.docusignField}>\\t36\\</Text>
                 <Text style={[styles.fieldLabel, { textAlign: 'left', marginTop: 2 }]}>(Print Name of Owner)</Text>
               </View>
               
               <View style={{ width: '40%', textAlign: 'center' }}>
-                <Text style={styles.termsText}>_________________________________________</Text>
+                <Text style={styles.docusignSignature}>\\s12\\</Text>
                 <Text style={[styles.fieldLabel, { textAlign: 'center', marginTop: 2 }]}>(Owner Sign Here)</Text>
               </View>
               
               <View style={{ width: '20%', textAlign: 'center' }}>
-                <Text style={styles.termsText}>________________</Text>
+                <Text style={styles.docusignDate}>\\d20\\</Text>
                 <Text style={[styles.fieldLabel, { textAlign: 'center', marginTop: 2 }]}>(Date)</Text>
               </View>
             </View>
@@ -1901,7 +2348,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 6 of 6</Text>
+        <Text style={styles.pageNumber}>Page 8 of 8</Text>
       </Page>
     </Document>
   )
