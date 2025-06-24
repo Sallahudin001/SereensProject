@@ -142,8 +142,9 @@ const styles = StyleSheet.create({
 
   // Scope of Work - More professional without bounded container
   scopeContainer: {
-    marginBottom: 15,
-    marginTop: 5,
+    marginBottom: 20,
+    marginTop: 10,
+    paddingTop: 5,
   },
 
   scopeTitle: {
@@ -157,43 +158,86 @@ const styles = StyleSheet.create({
   scopeDivider: {
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
-    marginBottom: 8,
+    marginBottom: 12,
+  },
+
+  // Updated styles for scope items
+  scopeServiceContainer: {
+    marginBottom: 14,
+  },
+
+  scopeServiceTitle: {
+    fontSize: 11,
+    fontFamily: "Times-Bold",
+    marginBottom: 6,
+    paddingBottom: 2,
+    borderBottomWidth: 0.5,
+    borderBottomColor: "#888888",
+    textTransform: "uppercase",
+    letterSpacing: 0.2,
+  },
+
+  scopeServiceDetails: {
+    marginLeft: 15,
+    marginBottom: 6,
+  },
+
+  scopeItemRow: {
+    flexDirection: "row",
+    marginBottom: 3,
+    paddingVertical: 1,
+  },
+
+  scopeItemLabel: {
+    width: 90,
+    fontSize: 10,
+    fontFamily: "Times-Bold",
+  },
+
+  scopeItemValue: {
+    flex: 1,
+    fontSize: 10,
+    paddingRight: 5,
   },
 
   scopeItem: {
-    fontSize: 11,
-    marginBottom: 5,
+    fontSize: 10,
+    marginBottom: 4,
     flexDirection: "row",
     paddingLeft: 5,
   },
 
   scopeBullet: {
-    width: 10,
+    width: 12,
     textAlign: "center",
+    fontSize: 10,
   },
 
   scopeItemContent: {
     flex: 1,
+    fontSize: 10,
   },
 
   scopeSubItem: {
-    fontSize: 11,
-    marginBottom: 4,
+    fontSize: 10,
+    marginBottom: 3,
     marginLeft: 15,
     flexDirection: "row",
   },
 
   scopeSubBullet: {
-    width: 10,
+    width: 12,
     textAlign: "center",
+    fontSize: 10,
   },
 
   scopeSubItemContent: {
     flex: 1,
+    fontSize: 10,
   },
 
   scopeDetail: {
-    fontSize: 10,
+    fontSize: 9,
     marginLeft: 25,
     marginBottom: 4,
     lineHeight: 1.4,
@@ -869,7 +913,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
       </Page>
 
       {/* Page 2 - Scope of Work */}
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={styles.page} wrap={false}>
        
 
         {/* Article I - Scope of Work */}
@@ -886,196 +930,532 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           const productData = proposal.products[service]
           if (!productData) return null
 
+          // Calculate approximate height needed for this service section
+          const serviceHeight = 300 // Base height in points
+          
           return (
-            <View key={index} style={styles.scopeContainer}>
+            <View key={index} style={[styles.scopeContainer]} wrap={false}>
+              <View style={{ marginBottom: 6 }}>
               <Text style={styles.scopeTitle}>
                 {service.charAt(0).toUpperCase() + service.slice(1).replace(/-/g, " & ")} Installation
               </Text>
               <View style={styles.scopeDivider} />
+              </View>
 
-              {/* Service-specific details */}
-              {service === "windows-doors" && (
+              {/* Service-specific details with improved layout */}
+                              {service === "windows-doors" && (
                 <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Installation of {productData.windowCount || "0"}{" "}
-                      {productData.windowType?.replace(/-/g, " ") || "windows"}, {productData.windowMaterial || "Vinyl"}{" "}
-                      material, {productData.windowColor || "White"} color, {productData.energyRating || "Energy Star"}{" "}
-                      rated.
-                    </Text>
-                  </View>
-
-                  {productData.hasDoors && (
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Installation of {productData.doorCount || "1"}{" "}
-                        {productData.doorType?.replace(/-/g, " ") || "door(s)"}.
+                  {/* Product Specifications - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer} wrap={false}>
+                    <View style={{ borderBottomWidth: 0.5, borderBottomColor: '#888888', paddingBottom: 2, marginBottom: 8 }}>
+                      <Text style={[styles.scopeServiceTitle, { textTransform: 'uppercase', letterSpacing: 0.2, borderBottomWidth: 0 }]}>
+                        Product Specifications
                       </Text>
                     </View>
-                  )}
-
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                    
+                    {/* Windows and Doors side by side */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Windows */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Window Installation:
+                        </Text>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Type:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.windowType?.replace(/-/g, " ") || "Standard Windows"}</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Material:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.windowMaterial || "Vinyl"} frame construction</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Color:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.windowColor || "White"} factory-finished</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Energy Rating:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.energyRating || "Energy Star"} certified efficiency</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Quantity:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.windowCount || "0"} unit(s)</Text>
+                        </View>
                       </View>
-                    ))}
+                      
+                      {/* Right Column - Doors if applicable */}
+                      {productData.hasDoors && (
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • Door Installation:
+                          </Text>
+                          <View style={styles.scopeItemRow}>
+                            <Text style={styles.scopeItemLabel}>Type:</Text>
+                            <Text style={styles.scopeItemValue}>{productData.doorType?.replace(/-/g, " ") || "Standard Doors"}</Text>
+                          </View>
+                          <View style={styles.scopeItemRow}>
+                            <Text style={styles.scopeItemLabel}>Quantity:</Text>
+                            <Text style={styles.scopeItemValue}>{productData.doorCount || "1"} unit(s)</Text>
+                          </View>
+                          {/* Add empty rows to balance columns */}
+                          <View style={{ height: 20 }}></View>
+                          <View style={{ height: 20 }}></View>
+                          <View style={{ height: 20 }}></View>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+
+                  {/* Installation and Additional Information - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Installation Process */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Installation Process:
+                        </Text>
+                        <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Careful removal and proper disposal of existing windows/doors</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Professional installation with industry-standard sealing and caulking</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Custom measurement and fitting to ensure proper alignment</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Thorough clean-up and debris removal upon completion</Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Right Column - Additional Specifications */}
+                      {productData.scopeNotes && (
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • Additional Specifications:
+                          </Text>
+                          <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                            {productData.scopeNotes.split(";").map((note: string, i: number) => (
+                              <View key={i} style={styles.scopeSubItem}>
+                                <Text style={styles.scopeSubBullet}>•</Text>
+                                <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {service === "hvac" && (
+                              {service === "hvac" && (
                 <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Installation of {productData.systemType?.replace(/-/g, " ") || "HVAC"} system, SEER Rating:{" "}
-                      {productData.seerRating || "N/A"}, Size: {productData.tonnage || "N/A"} tons, Brand:{" "}
-                      {productData.brand || "N/A"}, Model: {productData.model || "N/A"}
-                    </Text>
-                  </View>
-
-                  {productData.addons?.length > 0 && (
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Additional components: {productData.addons.join(", ")}
+                  {/* HVAC System - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ borderBottomWidth: 0.5, borderBottomColor: '#888888', paddingBottom: 2, marginBottom: 8 }}>
+                      <Text style={[styles.scopeServiceTitle, { textTransform: 'uppercase', letterSpacing: 0.2, borderBottomWidth: 0 }]}>
+                        HVAC System Specifications
                       </Text>
                     </View>
-                  )}
-
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                    
+                    {/* HVAC Details - Horizontal layout */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - System Specs */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • System Specifications:
+                        </Text>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>System Type:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.systemType?.replace(/-/g, " ") || "Complete HVAC"} system</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>SEER Rating:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.seerRating || "N/A"} (Seasonal Energy Efficiency Ratio)</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Capacity:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.tonnage || "N/A"} tons cooling capacity</Text>
+                        </View>
                       </View>
-                    ))}
+                      
+                      {/* Right Column - Brand/Model */}
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Manufacturer Details:
+                        </Text>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Manufacturer:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.brand || "N/A"}</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Model Series:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.model || "N/A"}</Text>
+                        </View>
+                        <View style={{ height: 20 }}></View>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Components and Installation Notes - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - HVAC Components */}
+                      {productData.addons?.length > 0 && (
+                        <View style={{ flex: 1, marginRight: 10 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • System Components:
+                          </Text>
+                          <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                            {productData.addons.map((addon: string, i: number) => (
+                              <View key={i} style={styles.scopeSubItem}>
+                                <Text style={styles.scopeSubBullet}>•</Text>
+                                <Text style={styles.scopeSubItemContent}>{addon}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                      
+                      {/* Right Column - Installation Notes */}
+                      {productData.scopeNotes && (
+                        <View style={{ flex: 1, marginLeft: productData.addons?.length > 0 ? 10 : 0 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • Installation Notes:
+                          </Text>
+                          <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                            {productData.scopeNotes.split(";").map((note: string, i: number) => (
+                              <View key={i} style={styles.scopeSubItem}>
+                                <Text style={styles.scopeSubBullet}>•</Text>
+                                <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {service === "roofing" && (
+                              {service === "roofing" && (
                 <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Complete roof replacement using {productData.material || "shingles"}, Coverage:{" "}
-                      {productData.squareCount || "N/A"} squares
-                    </Text>
-                  </View>
-
-                  {productData.addGutters && (
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Gutter installation: {productData.gutterLength || "N/A"} linear feet
+                  {/* Roofing - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ borderBottomWidth: 0.5, borderBottomColor: '#888888', paddingBottom: 2, marginBottom: 8 }}>
+                      <Text style={[styles.scopeServiceTitle, { textTransform: 'uppercase', letterSpacing: 0.2, borderBottomWidth: 0 }]}>
+                        Roofing Specifications
                       </Text>
                     </View>
-                  )}
-
-                  {productData.addPlywood && (
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Plywood replacement: {productData.plywoodPercentage || "100"}% of roof deck
-                      </Text>
-                    </View>
-                  )}
-
-                  <View style={styles.scopeSection}>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>Complete roof replacement including:</Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>
-                        Removal of existing roofing material down to the deck
-                      </Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>
-                        Inspection and replacement of damaged decking (if necessary)
-                      </Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>Installation of synthetic underlayment</Text>
-                    </View>
-                    <View style={styles.scopeSubItem}>
-                      <Text style={styles.scopeSubBullet}>-</Text>
-                      <Text style={styles.scopeSubItemContent}>
-                        Installation of ice and water shield in valleys and around penetrations
-                      </Text>
-                    </View>
-                  </View>
-
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                    
+                    {/* Materials and Add-ons - Horizontal layout */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Materials */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Materials & Coverage:
+                        </Text>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Material:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.material || "Architectural shingles"}</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Coverage Area:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.squareCount || "N/A"} squares (100 sq. ft. per square)</Text>
+                        </View>
                       </View>
-                    ))}
+                      
+                      {/* Right Column - Add-ons */}
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Additional Components:
+                        </Text>
+                        {productData.addGutters && (
+                          <View style={styles.scopeItemRow}>
+                            <Text style={styles.scopeItemLabel}>Gutter System:</Text>
+                            <Text style={styles.scopeItemValue}>{productData.gutterLength || "N/A"} linear feet with downspouts</Text>
+                          </View>
+                        )}
+                        {productData.addPlywood && (
+                          <View style={styles.scopeItemRow}>
+                            <Text style={styles.scopeItemLabel}>Decking:</Text>
+                            <Text style={styles.scopeItemValue}>{productData.plywoodPercentage || "100"}% replacement of roof decking as needed</Text>
+                          </View>
+                        )}
+                        {!productData.addGutters && !productData.addPlywood && (
+                          <View style={styles.scopeItemRow}>
+                            <Text style={styles.scopeItemLabel}>Standard:</Text>
+                            <Text style={styles.scopeItemValue}>Drip edge, flashing, and ridge venting included</Text>
+                          </View>
+                        )}
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Installation and Notes - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Installation Process */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Installation Process:
+                        </Text>
+                        <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Complete removal and proper disposal of existing roofing materials</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Thorough inspection and replacement of damaged decking as necessary</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Installation of premium synthetic underlayment for enhanced protection</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Application of ice and water shield in valleys and around roof penetrations</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Installation of new {productData.material || "shingles"} according to manufacturer specifications</Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Right Column - Additional Notes */}
+                      {productData.scopeNotes && (
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • Additional Notes:
+                          </Text>
+                          <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                            {productData.scopeNotes.split(";").map((note: string, i: number) => (
+                              <View key={i} style={styles.scopeSubItem}>
+                                <Text style={styles.scopeSubBullet}>•</Text>
+                                <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {service === "garage-doors" && (
+                              {service === "garage-doors" && (
                 <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Installation of {productData.quantity || "1"} garage door(s), Model: {productData.model || "T50L"}
-                      , Size: {productData.width || "16"}' × {productData.height || "7"}'
-                    </Text>
+                  {/* Garage Door - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ borderBottomWidth: 0.5, borderBottomColor: '#888888', paddingBottom: 2, marginBottom: 8 }}>
+                      <Text style={[styles.scopeServiceTitle, { textTransform: 'uppercase', letterSpacing: 0.2, borderBottomWidth: 0 }]}>
+                        Garage Door Specifications
+                      </Text>
+                    </View>
+                    
+                    {/* Door Specs - Horizontal layout */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Door Details */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Door Specifications:
+                        </Text>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Model Series:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.model || "T50L"} professional-grade door</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Dimensions:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.width || "16"}' Width × {productData.height || "7"}' Height</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Units:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.quantity || "1"} door unit(s)</Text>
+                        </View>
+                      </View>
+                      
+                      {/* Right Column - Add-ons */}
+                      {productData.addons?.length > 0 && (
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • Premium Add-ons:
+                          </Text>
+                          <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                            {productData.addons.map((addon: string, i: number) => (
+                              <View key={i} style={styles.scopeSubItem}>
+                                <Text style={styles.scopeSubBullet}>•</Text>
+                                <Text style={styles.scopeSubItemContent}>{addon}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                    </View>
                   </View>
 
-                  {productData.addons?.length > 0 && (
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>Add-ons: {productData.addons.join(", ")}</Text>
-                    </View>
-                  )}
-
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                  {/* Installation and Notes - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Installation Process */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Installation Process:
+                        </Text>
+                        <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Safe removal and proper disposal of existing garage door system</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Complete professional installation with all required hardware and mounting accessories</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Precision track alignment and spring system installation for smooth operation</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Comprehensive safety testing and operational adjustments</Text>
+                          </View>
+                        </View>
                       </View>
-                    ))}
+
+                      {/* Right Column - Additional Notes */}
+                      {productData.scopeNotes && (
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • Additional Notes:
+                          </Text>
+                          <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                            {productData.scopeNotes.split(";").map((note: string, i: number) => (
+                              <View key={i} style={styles.scopeSubItem}>
+                                <Text style={styles.scopeSubBullet}>•</Text>
+                                <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </View>
                 </View>
               )}
 
-              {service === "paint" && (
+                              {service === "paint" && (
                 <View>
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      {productData.serviceType || "Exterior"} painting service, Coverage:{" "}
-                      {productData.squareFootage || "0"} sq ft, {productData.colorTone || "1"}-tone finish
-                    </Text>
-                  </View>
-
-                  <View style={styles.scopeItem}>
-                    <Text style={styles.scopeBullet}>•</Text>
-                    <Text style={styles.scopeItemContent}>
-                      Includes: {productData.includePaint ? "Paint, " : ""}
-                      {productData.includePrimer ? "Primer, " : ""}
-                      {productData.includePrep ? "Surface Preparation" : ""}
-                    </Text>
-                  </View>
-
-                  {productData.scopeNotes &&
-                    productData.scopeNotes.split(";").map((note: string, i: number) => (
-                      <View key={i} style={styles.scopeSubItem}>
-                        <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                  {/* Paint Service - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ borderBottomWidth: 0.5, borderBottomColor: '#888888', paddingBottom: 2, marginBottom: 8 }}>
+                      <Text style={[styles.scopeServiceTitle, { textTransform: 'uppercase', letterSpacing: 0.2, borderBottomWidth: 0 }]}>
+                        Professional Painting Specifications
+                      </Text>
+                    </View>
+                    
+                    {/* Project and Materials - Horizontal layout */}
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Project Details */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Project Specifications:
+                        </Text>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Service Type:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.serviceType || "Exterior"} professional painting service</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Coverage Area:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.squareFootage || "0"} square feet of surface area</Text>
+                        </View>
+                        <View style={styles.scopeItemRow}>
+                          <Text style={styles.scopeItemLabel}>Color Scheme:</Text>
+                          <Text style={styles.scopeItemValue}>{productData.colorTone || "1"}-tone professional finish</Text>
+                        </View>
                       </View>
-                    ))}
+                      
+                      {/* Right Column - Materials */}
+                      <View style={{ flex: 1, marginLeft: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Included Materials:
+                        </Text>
+                        <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                          {productData.includePaint && (
+                            <View style={styles.scopeSubItem}>
+                              <Text style={styles.scopeSubBullet}>•</Text>
+                              <Text style={styles.scopeSubItemContent}>Premium-grade paint materials with color-matching</Text>
+                            </View>
+                          )}
+                          {productData.includePrimer && (
+                            <View style={styles.scopeSubItem}>
+                              <Text style={styles.scopeSubBullet}>•</Text>
+                              <Text style={styles.scopeSubItemContent}>Professional-grade primer for superior adhesion</Text>
+                            </View>
+                          )}
+                          {productData.includePrep && (
+                            <View style={styles.scopeSubItem}>
+                              <Text style={styles.scopeSubBullet}>•</Text>
+                              <Text style={styles.scopeSubItemContent}>Comprehensive surface preparation and cleaning</Text>
+                            </View>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  {/* Process and Notes - Horizontal Layout */}
+                  <View style={styles.scopeServiceContainer}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      {/* Left Column - Application Process */}
+                      <View style={{ flex: 1, marginRight: 10 }}>
+                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                          • Application Process:
+                        </Text>
+                        <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Thorough surface preparation including cleaning, scraping, and sanding as needed</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>High-pressure washing of exterior surfaces to ensure proper adhesion</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Professional repair of minor surface imperfections and damage</Text>
+                          </View>
+                          <View style={styles.scopeSubItem}>
+                            <Text style={styles.scopeSubBullet}>•</Text>
+                            <Text style={styles.scopeSubItemContent}>Precision application of primer and paint using industry-best practices</Text>
+                          </View>
+                        </View>
+                      </View>
+
+                      {/* Right Column - Additional Notes */}
+                      {productData.scopeNotes && (
+                        <View style={{ flex: 1, marginLeft: 10 }}>
+                          <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                            • Additional Notes:
+                          </Text>
+                          <View style={{ paddingLeft: 5, paddingTop: 2 }}>
+                            {productData.scopeNotes.split(";").map((note: string, i: number) => (
+                              <View key={i} style={styles.scopeSubItem}>
+                                <Text style={styles.scopeSubBullet}>•</Text>
+                                <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </View>
                 </View>
               )}
             </View>
