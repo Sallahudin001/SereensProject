@@ -144,8 +144,6 @@ const styles = StyleSheet.create({
   scopeContainer: {
     marginBottom: 15,
     marginTop: 5,
-    wrap: false, // Prevent splitting across pages
-    minPresenceAhead: 100, // Ensure minimum space before page break
   },
 
   scopeTitle: {
@@ -160,13 +158,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#000000",
     marginBottom: 8,
-  },
-
-  // Service section wrapper with better page break handling
-  serviceSection: {
-    marginBottom: 20,
-    wrap: false, // Prevent service sections from splitting
-    minPresenceAhead: 150, // Ensure enough space for service content
   },
 
   scopeItem: {
@@ -638,7 +629,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     lineHeight: 1.3,
     textAlign: "justify",
-    marginBottom: 2,
+    marginBottom: 3,
   },
 
   termsList: {
@@ -816,12 +807,6 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
     return numbers
   }
 
-  // Helper function to determine if content should start on new page
-  const shouldBreakPage = (serviceIndex: number, totalServices: number) => {
-    // If it's the last service and we have multiple services, consider a page break
-    return serviceIndex > 0 && serviceIndex === totalServices - 1
-  }
-
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -870,8 +855,28 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </View>
         </View>
 
+
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>
+            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+          </Text>
+        </View>
+
+        {/* Page Number */}
+        <Text style={styles.pageNumber}>Page 1 of 10</Text>
+      </Page>
+
+      {/* Page 2 - Scope of Work */}
+      <Page size="A4" style={styles.page}>
+       
+
         {/* Article I - Scope of Work */}
-        <Text style={styles.articleNumber}>ARTICLE I - SCOPE OF WORK</Text>
+        <Text style={[styles.articleNumber,{textAlign:"center"}]}>ARTICLE I - SCOPE OF WORK</Text>
+        <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3, marginBottom: 15 }}>
+          Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
+        </Text>
         <Text style={styles.termsText}>
           Contractor agrees to furnish all labor, materials, equipment, and services necessary to complete the work
           described herein in accordance with the terms and conditions of this Contract.
@@ -882,249 +887,215 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           if (!productData) return null
 
           return (
-            <View key={index} style={styles.serviceSection} wrap={false} break={index > 0 && index % 2 === 0}>
-              <View style={styles.scopeContainer}>
-                <Text style={styles.scopeTitle}>
-                  {service.charAt(0).toUpperCase() + service.slice(1).replace(/-/g, " & ")} Installation
-                </Text>
-                <View style={styles.scopeDivider} />
+            <View key={index} style={styles.scopeContainer}>
+              <Text style={styles.scopeTitle}>
+                {service.charAt(0).toUpperCase() + service.slice(1).replace(/-/g, " & ")} Installation
+              </Text>
+              <View style={styles.scopeDivider} />
 
-                {/* Service-specific details */}
-                {service === "windows-doors" && (
-                  <View wrap={false}>
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Installation of {productData.windowCount || "0"}{" "}
-                        {productData.windowType?.replace(/-/g, " ") || "windows"}, {productData.windowMaterial || "Vinyl"}{" "}
-                        material, {productData.windowColor || "White"} color, {productData.energyRating || "Energy Star"}{" "}
-                        rated.
-                      </Text>
-                    </View>
-
-                    {productData.hasDoors && (
-                      <View style={styles.scopeItem}>
-                        <Text style={styles.scopeBullet}>•</Text>
-                        <Text style={styles.scopeItemContent}>
-                          Installation of {productData.doorCount || "1"}{" "}
-                          {productData.doorType?.replace(/-/g, " ") || "door(s)"}.
-                        </Text>
-                      </View>
-                    )}
-
-                    {productData.scopeNotes &&
-                      productData.scopeNotes.split(";").map((note: string, i: number) => (
-                        <View key={i} style={styles.scopeSubItem}>
-                          <Text style={styles.scopeSubBullet}>-</Text>
-                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                        </View>
-                      ))}
+              {/* Service-specific details */}
+              {service === "windows-doors" && (
+                <View>
+                  <View style={styles.scopeItem}>
+                    <Text style={styles.scopeBullet}>•</Text>
+                    <Text style={styles.scopeItemContent}>
+                      Installation of {productData.windowCount || "0"}{" "}
+                      {productData.windowType?.replace(/-/g, " ") || "windows"}, {productData.windowMaterial || "Vinyl"}{" "}
+                      material, {productData.windowColor || "White"} color, {productData.energyRating || "Energy Star"}{" "}
+                      rated.
+                    </Text>
                   </View>
-                )}
 
-                {service === "hvac" && (
-                  <View wrap={false}>
+                  {productData.hasDoors && (
                     <View style={styles.scopeItem}>
                       <Text style={styles.scopeBullet}>•</Text>
                       <Text style={styles.scopeItemContent}>
-                        Installation of {productData.systemType?.replace(/-/g, " ") || "HVAC"} system, SEER Rating:{" "}
-                        {productData.seerRating || "N/A"}, Size: {productData.tonnage || "N/A"} tons, Brand:{" "}
-                        {productData.brand || "N/A"}, Model: {productData.model || "N/A"}
+                        Installation of {productData.doorCount || "1"}{" "}
+                        {productData.doorType?.replace(/-/g, " ") || "door(s)"}.
                       </Text>
                     </View>
+                  )}
 
-                    {productData.addons?.length > 0 && (
-                      <View style={styles.scopeItem}>
-                        <Text style={styles.scopeBullet}>•</Text>
-                        <Text style={styles.scopeItemContent}>
-                          Additional components: {productData.addons.join(", ")}
-                        </Text>
-                      </View>
-                    )}
-
-                    {productData.scopeNotes &&
-                      productData.scopeNotes.split(";").map((note: string, i: number) => (
-                        <View key={i} style={styles.scopeSubItem}>
-                          <Text style={styles.scopeSubBullet}>-</Text>
-                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-
-                {service === "roofing" && (
-                  <View wrap={false}>
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Complete roof replacement using {productData.material || "shingles"}, Coverage:{" "}
-                        {productData.squareCount || "N/A"} squares
-                      </Text>
-                    </View>
-
-                    {productData.addGutters && (
-                      <View style={styles.scopeItem}>
-                        <Text style={styles.scopeBullet}>•</Text>
-                        <Text style={styles.scopeItemContent}>
-                          Gutter installation: {productData.gutterLength || "N/A"} linear feet
-                        </Text>
-                      </View>
-                    )}
-
-                    {productData.addPlywood && (
-                      <View style={styles.scopeItem}>
-                        <Text style={styles.scopeBullet}>•</Text>
-                        <Text style={styles.scopeItemContent}>
-                          Plywood replacement: {productData.plywoodPercentage || "100"}% of roof deck
-                        </Text>
-                      </View>
-                    )}
-
-                    <View style={styles.scopeSection} wrap={false}>
-                      <View style={styles.scopeSubItem}>
+                  {productData.scopeNotes &&
+                    productData.scopeNotes.split(";").map((note: string, i: number) => (
+                      <View key={i} style={styles.scopeSubItem}>
                         <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>Complete roof replacement including:</Text>
+                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
                       </View>
-                      <View style={styles.scopeSubItem}>
+                    ))}
+                </View>
+              )}
+
+              {service === "hvac" && (
+                <View>
+                  <View style={styles.scopeItem}>
+                    <Text style={styles.scopeBullet}>•</Text>
+                    <Text style={styles.scopeItemContent}>
+                      Installation of {productData.systemType?.replace(/-/g, " ") || "HVAC"} system, SEER Rating:{" "}
+                      {productData.seerRating || "N/A"}, Size: {productData.tonnage || "N/A"} tons, Brand:{" "}
+                      {productData.brand || "N/A"}, Model: {productData.model || "N/A"}
+                    </Text>
+                  </View>
+
+                  {productData.addons?.length > 0 && (
+                    <View style={styles.scopeItem}>
+                      <Text style={styles.scopeBullet}>•</Text>
+                      <Text style={styles.scopeItemContent}>
+                        Additional components: {productData.addons.join(", ")}
+                      </Text>
+                    </View>
+                  )}
+
+                  {productData.scopeNotes &&
+                    productData.scopeNotes.split(";").map((note: string, i: number) => (
+                      <View key={i} style={styles.scopeSubItem}>
                         <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>
-                          Removal of existing roofing material down to the deck
-                        </Text>
+                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
                       </View>
-                      <View style={styles.scopeSubItem}>
+                    ))}
+                </View>
+              )}
+
+              {service === "roofing" && (
+                <View>
+                  <View style={styles.scopeItem}>
+                    <Text style={styles.scopeBullet}>•</Text>
+                    <Text style={styles.scopeItemContent}>
+                      Complete roof replacement using {productData.material || "shingles"}, Coverage:{" "}
+                      {productData.squareCount || "N/A"} squares
+                    </Text>
+                  </View>
+
+                  {productData.addGutters && (
+                    <View style={styles.scopeItem}>
+                      <Text style={styles.scopeBullet}>•</Text>
+                      <Text style={styles.scopeItemContent}>
+                        Gutter installation: {productData.gutterLength || "N/A"} linear feet
+                      </Text>
+                    </View>
+                  )}
+
+                  {productData.addPlywood && (
+                    <View style={styles.scopeItem}>
+                      <Text style={styles.scopeBullet}>•</Text>
+                      <Text style={styles.scopeItemContent}>
+                        Plywood replacement: {productData.plywoodPercentage || "100"}% of roof deck
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.scopeSection}>
+                    <View style={styles.scopeSubItem}>
+                      <Text style={styles.scopeSubBullet}>-</Text>
+                      <Text style={styles.scopeSubItemContent}>Complete roof replacement including:</Text>
+                    </View>
+                    <View style={styles.scopeSubItem}>
+                      <Text style={styles.scopeSubBullet}>-</Text>
+                      <Text style={styles.scopeSubItemContent}>
+                        Removal of existing roofing material down to the deck
+                      </Text>
+                    </View>
+                    <View style={styles.scopeSubItem}>
+                      <Text style={styles.scopeSubBullet}>-</Text>
+                      <Text style={styles.scopeSubItemContent}>
+                        Inspection and replacement of damaged decking (if necessary)
+                      </Text>
+                    </View>
+                    <View style={styles.scopeSubItem}>
+                      <Text style={styles.scopeSubBullet}>-</Text>
+                      <Text style={styles.scopeSubItemContent}>Installation of synthetic underlayment</Text>
+                    </View>
+                    <View style={styles.scopeSubItem}>
+                      <Text style={styles.scopeSubBullet}>-</Text>
+                      <Text style={styles.scopeSubItemContent}>
+                        Installation of ice and water shield in valleys and around penetrations
+                      </Text>
+                    </View>
+                  </View>
+
+                  {productData.scopeNotes &&
+                    productData.scopeNotes.split(";").map((note: string, i: number) => (
+                      <View key={i} style={styles.scopeSubItem}>
                         <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>
-                          Inspection and replacement of damaged decking (if necessary)
-                        </Text>
+                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
                       </View>
-                      <View style={styles.scopeSubItem}>
+                    ))}
+                </View>
+              )}
+
+              {service === "garage-doors" && (
+                <View>
+                  <View style={styles.scopeItem}>
+                    <Text style={styles.scopeBullet}>•</Text>
+                    <Text style={styles.scopeItemContent}>
+                      Installation of {productData.quantity || "1"} garage door(s), Model: {productData.model || "T50L"}
+                      , Size: {productData.width || "16"}' × {productData.height || "7"}'
+                    </Text>
+                  </View>
+
+                  {productData.addons?.length > 0 && (
+                    <View style={styles.scopeItem}>
+                      <Text style={styles.scopeBullet}>•</Text>
+                      <Text style={styles.scopeItemContent}>Add-ons: {productData.addons.join(", ")}</Text>
+                    </View>
+                  )}
+
+                  {productData.scopeNotes &&
+                    productData.scopeNotes.split(";").map((note: string, i: number) => (
+                      <View key={i} style={styles.scopeSubItem}>
                         <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>Installation of synthetic underlayment</Text>
+                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
                       </View>
-                      <View style={styles.scopeSubItem}>
+                    ))}
+                </View>
+              )}
+
+              {service === "paint" && (
+                <View>
+                  <View style={styles.scopeItem}>
+                    <Text style={styles.scopeBullet}>•</Text>
+                    <Text style={styles.scopeItemContent}>
+                      {productData.serviceType || "Exterior"} painting service, Coverage:{" "}
+                      {productData.squareFootage || "0"} sq ft, {productData.colorTone || "1"}-tone finish
+                    </Text>
+                  </View>
+
+                  <View style={styles.scopeItem}>
+                    <Text style={styles.scopeBullet}>•</Text>
+                    <Text style={styles.scopeItemContent}>
+                      Includes: {productData.includePaint ? "Paint, " : ""}
+                      {productData.includePrimer ? "Primer, " : ""}
+                      {productData.includePrep ? "Surface Preparation" : ""}
+                    </Text>
+                  </View>
+
+                  {productData.scopeNotes &&
+                    productData.scopeNotes.split(";").map((note: string, i: number) => (
+                      <View key={i} style={styles.scopeSubItem}>
                         <Text style={styles.scopeSubBullet}>-</Text>
-                        <Text style={styles.scopeSubItemContent}>
-                          Installation of ice and water shield in valleys and around penetrations
-                        </Text>
+                        <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
                       </View>
-                    </View>
-
-                    {productData.scopeNotes &&
-                      productData.scopeNotes.split(";").map((note: string, i: number) => (
-                        <View key={i} style={styles.scopeSubItem}>
-                          <Text style={styles.scopeSubBullet}>-</Text>
-                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-
-                {service === "garage-doors" && (
-                  <View wrap={false}>
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Installation of {productData.quantity || "1"} garage door(s), Model: {productData.model || "T50L"}
-                        , Size: {productData.width || "16"}' × {productData.height || "7"}'
-                      </Text>
-                    </View>
-
-                    {productData.addons?.length > 0 && (
-                      <View style={styles.scopeItem}>
-                        <Text style={styles.scopeBullet}>•</Text>
-                        <Text style={styles.scopeItemContent}>Add-ons: {productData.addons.join(", ")}</Text>
-                      </View>
-                    )}
-
-                    {productData.scopeNotes &&
-                      productData.scopeNotes.split(";").map((note: string, i: number) => (
-                        <View key={i} style={styles.scopeSubItem}>
-                          <Text style={styles.scopeSubBullet}>-</Text>
-                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-
-                {service === "paint" && (
-                  <View wrap={false}>
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        {productData.serviceType || "Exterior"} painting service, Coverage:{" "}
-                        {productData.squareFootage || "0"} sq ft, {productData.colorTone || "1"}-tone finish
-                      </Text>
-                    </View>
-
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Includes: {productData.includePaint ? "Paint, " : ""}
-                        {productData.includePrimer ? "Primer, " : ""}
-                        {productData.includePrep ? "Surface Preparation" : ""}
-                      </Text>
-                    </View>
-
-                    {productData.scopeNotes &&
-                      productData.scopeNotes.split(";").map((note: string, i: number) => (
-                        <View key={i} style={styles.scopeSubItem}>
-                          <Text style={styles.scopeSubBullet}>-</Text>
-                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-
-                {service === "solar" && (
-                  <View wrap={false}>
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        Solar panel installation, System Size: {productData.systemSize || "N/A"} kW, Panel Count:{" "}
-                        {productData.panelCount || "N/A"}, Brand: {productData.brand || "N/A"}
-                      </Text>
-                    </View>
-
-                    {productData.addons?.length > 0 && (
-                      <View style={styles.scopeItem}>
-                        <Text style={styles.scopeBullet}>•</Text>
-                        <Text style={styles.scopeItemContent}>Additional components: {productData.addons.join(", ")}</Text>
-                      </View>
-                    )}
-
-                    {productData.scopeNotes &&
-                      productData.scopeNotes.split(";").map((note: string, i: number) => (
-                        <View key={i} style={styles.scopeSubItem}>
-                          <Text style={styles.scopeSubBullet}>-</Text>
-                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-
-                {/* Generic fallback for any other service types */}
-                {!["windows-doors", "hvac", "roofing", "garage-doors", "paint", "solar"].includes(service) && (
-                  <View wrap={false}>
-                    <View style={styles.scopeItem}>
-                      <Text style={styles.scopeBullet}>•</Text>
-                      <Text style={styles.scopeItemContent}>
-                        {service.charAt(0).toUpperCase() + service.slice(1).replace(/-/g, " ")} service installation
-                      </Text>
-                    </View>
-                    
-                    {productData.scopeNotes &&
-                      productData.scopeNotes.split(";").map((note: string, i: number) => (
-                        <View key={i} style={styles.scopeSubItem}>
-                          <Text style={styles.scopeSubBullet}>-</Text>
-                          <Text style={styles.scopeSubItemContent}>{note.trim()}</Text>
-                        </View>
-                      ))}
-                  </View>
-                )}
-              </View>
+                    ))}
+                </View>
+              )}
             </View>
           )
         })}
+
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>
+            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+          </Text>
+        </View>
+
+        {/* Page Number */}
+        <Text style={styles.pageNumber}>Page 2 of 10</Text>
+      </Page>
+
+      {/* Page 3 - Construction Lender, Contract Price and Contract Execution */}
+      <Page size="A4" style={styles.page}>
+       
 
         {/* Construction Lender Section */}
         <View style={styles.constructionLenderSection}>
@@ -1267,10 +1238,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           )}
         </View>
 
-
-
         {/* Contract Execution Section - Positioned before footer */}
-        <View style={[styles.signatureSection, { position: 'absolute', bottom: 80, left: 30, right: 30 }]}>
+        <View style={[styles.signatureSection, { position: 'absolute', bottom: 20, left: 30, right: 30 }]}>
           <Text style={styles.signatureTitle}>Contract Execution</Text>
 
           <View style={styles.signatureRow}>
@@ -1308,7 +1277,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         </View>
 
         {/* Page Number */}
-        <Text style={styles.pageNumber}>Page 1 of 8</Text>
+        <Text style={styles.pageNumber}>Page 3 of 10</Text>
       </Page>
 
       {/* Payment Terms Page */}
@@ -1601,7 +1570,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         </View>
 
         {/* Page Number */}
-        <Text style={styles.pageNumber}>Page 2 of 8</Text>
+        <Text style={styles.pageNumber}>Page 4 of 10</Text>
       </Page>
 
       {/* Terms and Conditions Page */}
@@ -1821,7 +1790,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
        
 
         {/* Page Number */}
-        <Text style={styles.pageNumber}>Page 3 of 8</Text>
+        <Text style={styles.pageNumber}>Page 5 of 10</Text>
       </Page>
 
       {/* Three-Day Right to Cancel Page */}
@@ -1924,7 +1893,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 4 of 8</Text>
+        <Text style={styles.pageNumber}>Page 6 of 10</Text>
       </Page>
 
       {/* Five-Day Right to Cancel Page */}
@@ -2027,7 +1996,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 5 of 8</Text>
+        <Text style={styles.pageNumber}>Page 7 of 10</Text>
       </Page>
 
       {/* Mechanics Lien Warning Page */}
@@ -2119,7 +2088,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 6 of 8</Text>
+        <Text style={styles.pageNumber}>Page 8 of 10</Text>
       </Page>
 
       {/* Insurance and Arbitration Page */}
@@ -2231,9 +2200,19 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             enrichment.
           </Text>
         </View>
+        
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text>
+            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+          </Text>
+        </View>
+        
+        {/* Page Number */}
+        <Text style={styles.pageNumber}>Page 9 of 10</Text>
       </Page>
 
-      {/* Page 8 - Arbitration and Customer Acknowledgment */}
+      {/* Page 10 - Arbitration and Customer Acknowledgment */}
       <Page size="A4" style={styles.page}>
         <View style={styles.termsArticle}>
           <Text style={[styles.termsArticleTitle,{textAlign:"center"}]}>ARBITRATION OF DISPUTES</Text>
@@ -2361,7 +2340,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
           </Text>
         </View>
-        <Text style={styles.pageNumber}>Page 8 of 8</Text>
+        <Text style={styles.pageNumber}>Page 10 of 10</Text>
       </Page>
     </Document>
   )
