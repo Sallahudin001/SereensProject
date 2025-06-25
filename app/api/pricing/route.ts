@@ -1,15 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { executeQuery } from "@/lib/db";
 
-// GET all pricing items
+// DEPRECATED: This endpoint manages financing plans, not product pricing
+// Use /api/products/pricing for product pricing management
+// Use /api/financing/plans for financing plan management
+
+// GET all pricing items (FINANCING PLANS)
 export async function GET(req: NextRequest) {
   try {
+    console.warn("[DEPRECATED] /api/pricing is deprecated. Use /api/financing/plans for financing plans or /api/products/pricing for product pricing.");
+    
     const pricing = await executeQuery(`
       SELECT * FROM pricing
       ORDER BY plan_number ASC
     `);
     
-    return NextResponse.json(pricing, { status: 200 });
+    // Add deprecation header
+    const response = NextResponse.json(pricing, { status: 200 });
+    response.headers.set('X-Deprecated', 'true');
+    response.headers.set('X-Deprecated-Message', 'Use /api/financing/plans for financing plans or /api/products/pricing for product pricing');
+    
+    return response;
   } catch (error) {
     console.error("Error fetching pricing data:", error);
     return NextResponse.json(
@@ -19,9 +30,11 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Add a new pricing item
+// POST - Add a new pricing item (FINANCING PLAN)
 export async function POST(req: NextRequest) {
   try {
+    console.warn("[DEPRECATED] /api/pricing is deprecated. Use /api/financing/plans for financing plans.");
+    
     const body = await req.json();
     const { plan_number, rate_name, notes, visible } = body;
     
@@ -49,7 +62,9 @@ export async function POST(req: NextRequest) {
       ]
     );
     
-    return NextResponse.json(result[0], { status: 201 });
+    const response = NextResponse.json(result[0], { status: 201 });
+    response.headers.set('X-Deprecated', 'true');
+    return response;
   } catch (error) {
     console.error("Error adding pricing item:", error);
     return NextResponse.json(
@@ -59,9 +74,11 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT - Update an existing pricing item
+// PUT - Update an existing pricing item (FINANCING PLAN)
 export async function PUT(req: NextRequest) {
   try {
+    console.warn("[DEPRECATED] /api/pricing is deprecated. Use /api/financing/plans for financing plans.");
+    
     const body = await req.json();
     const { id, plan_number, rate_name, notes, visible } = body;
     
@@ -109,7 +126,9 @@ export async function PUT(req: NextRequest) {
       );
     }
     
-    return NextResponse.json(result[0], { status: 200 });
+    const response = NextResponse.json(result[0], { status: 200 });
+    response.headers.set('X-Deprecated', 'true');
+    return response;
   } catch (error) {
     console.error("Error updating pricing item:", error);
     return NextResponse.json(
@@ -119,9 +138,11 @@ export async function PUT(req: NextRequest) {
   }
 }
 
-// DELETE - Delete a pricing item
+// DELETE - Delete a pricing item (FINANCING PLAN)
 export async function DELETE(req: NextRequest) {
   try {
+    console.warn("[DEPRECATED] /api/pricing is deprecated. Use /api/financing/plans for financing plans.");
+    
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
     
@@ -148,7 +169,9 @@ export async function DELETE(req: NextRequest) {
       );
     }
     
-    return NextResponse.json({ success: true }, { status: 200 });
+    const response = NextResponse.json({ success: true }, { status: 200 });
+    response.headers.set('X-Deprecated', 'true');
+    return response;
   } catch (error) {
     console.error("Error deleting pricing item:", error);
     return NextResponse.json(

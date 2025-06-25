@@ -5,9 +5,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import {
   Dialog,
   DialogContent,
@@ -17,310 +36,273 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import {
-  FileSpreadsheet,
   Upload,
   Download,
-  FileUp,
-  CheckCircle,
-  AlertCircle,
-  ArrowLeft,
   RefreshCw,
   Save,
-  X,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+  ArrowLeft
 } from "lucide-react"
 import Link from "next/link"
+import { toast } from "@/hooks/use-toast"
+import * as XLSX from 'xlsx'
 
-// At the top of the file, add the type declaration
-declare global {
-  interface Window {
-    gtag?: (command: string, action: string, params: object) => void;
-  }
-}
-
-// Define types for data
-type ProductData = {
-  id: number;
+interface ProductPricing {
+  id?: number;
   name: string;
   unit: string;
-  basePrice: number;
-  minPrice: number;
-  maxPrice: number;
+  base_price: number;
+  min_price: number;
+  max_price: number;
+  cost: number;
+  status: 'active' | 'inactive';
+  category: string;
 }
 
-type ValidationError = {
-  row: number;
-  column: string;
-  message: string;
-}
-
-type CategoryType = "roofing" | "hvac" | "windows" | "garage" | "paint" | "solar";
-
-// Mock data for spreadsheet preview
-const mockSpreadsheetData: Record<CategoryType, ProductData[]> = {
-  roofing: [
-    { id: 1, name: "Asphalt Shingles", unit: "sq ft", basePrice: 7.5, minPrice: 6.0, maxPrice: 9.0 },
-    { id: 2, name: "Metal Roofing", unit: "sq ft", basePrice: 12.0, minPrice: 10.0, maxPrice: 15.0 },
-    { id: 3, name: "Tile Roofing", unit: "sq ft", basePrice: 15.5, minPrice: 13.0, maxPrice: 18.0 },
-    { id: 4, name: "Flat Roof", unit: "sq ft", basePrice: 8.0, minPrice: 6.5, maxPrice: 10.0 },
-  ],
-  hvac: [
-    { id: 1, name: "AC Installation", unit: "unit", basePrice: 3500, minPrice: 3000, maxPrice: 4500 },
-    { id: 2, name: "Furnace Installation", unit: "unit", basePrice: 2800, minPrice: 2400, maxPrice: 3500 },
-    { id: 3, name: "Ductwork", unit: "linear ft", basePrice: 35, minPrice: 30, maxPrice: 45 },
-    { id: 4, name: "Heat Pump", unit: "unit", basePrice: 4200, minPrice: 3800, maxPrice: 5000 },
-  ],
-  windows: [
-    { id: 1, name: "Vinyl Windows", unit: "window", basePrice: 650, minPrice: 550, maxPrice: 800 },
-    { id: 2, name: "Wood Windows", unit: "window", basePrice: 950, minPrice: 850, maxPrice: 1200 },
-    { id: 3, name: "Fiberglass Windows", unit: "window", basePrice: 850, minPrice: 750, maxPrice: 1000 },
-    { id: 4, name: "Window Installation", unit: "window", basePrice: 250, minPrice: 200, maxPrice: 350 },
-  ],
-  garage: [],
-  paint: [],
-  solar: []
+interface ImportValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
 }
 
 export default function PricingImportPage() {
-  const [activeTab, setActiveTab] = useState("upload")
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType>("roofing")
-  const [file, setFile] = useState<File | null>(null)
-  const [fileName, setFileName] = useState("")
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [isUploading, setIsUploading] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [previewData, setPreviewData] = useState<ProductData[]>([])
-  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
-  const [importResults, setImportResults] = useState<any[]>([])
+  const [selectedCategory, setSelectedCategory] = useState("roofing");
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [parsedData, setParsedData] = useState<ProductPricing[]>([]);
+  const [validationResult, setValidationResult] = useState<ImportValidation | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [importResults, setImportResults] = useState<ProductPricing[]>([]);
+  const [showResultsDialog, setShowResultsDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("upload");
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
-      setFileName(e.target.files[0].name)
+  const categories = [
+    { id: 'roofing', name: 'Roofing', description: 'Shingles, tiles, TPO, metal roofing materials' },
+    { id: 'hvac', name: 'HVAC', description: 'Heating, cooling, ductwork systems' },
+    { id: 'windows', name: 'Windows & Doors', description: 'Vinyl windows, entry doors, patio doors' },
+    { id: 'garage', name: 'Garage Doors', description: 'Garage doors and openers' },
+    { id: 'paint', name: 'Paint', description: 'Interior and exterior painting materials' },
+  ];
+
+  const requiredColumns = ['Name', 'Unit', 'Base Price'];
+  const optionalColumns = ['Min Price', 'Max Price', 'Cost', 'Status'];
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv'
+    ];
+
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an Excel (.xlsx, .xls) or CSV file.",
+        variant: "destructive"
+      });
+      return;
     }
-  }
 
-  const handleUpload = async () => {
-    if (!file) return
+    setUploadedFile(file);
+    parseFile(file);
+  };
 
-    setIsUploading(true)
-    setUploadProgress(0)
-    setValidationErrors([])
-
-    // Create form data for file upload
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('category', selectedCategory)
-
+  const parseFile = async (file: File) => {
+    setIsProcessing(true);
+    
     try {
-      // Simulate upload progress (it will be fast in production)
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => Math.min(prev + 10, 90))
-      }, 100)
+      const arrayBuffer = await file.arrayBuffer();
+      let workbook;
 
-      // Send the file to the API
-      const response = await fetch('/api/pricing/import', {
-        method: 'POST',
-        body: formData,
-      })
-
-      clearInterval(progressInterval)
-      setUploadProgress(100)
-          setIsUploading(false)
-          setIsProcessing(true)
-
-      const data = await response.json()
-
-      if (!response.ok) {
-            setIsProcessing(false)
-
-        // Handle validation errors
-        if (data.validationErrors && data.validationErrors.length > 0) {
-          const errors: ValidationError[] = []
-          data.validationErrors.forEach((item: any) => {
-            item.errors.forEach((error: any) => {
-              errors.push(error)
-            })
-          })
-          setValidationErrors(errors)
-            setShowPreview(true)
-          
-          // Set preview data from the file for validation view
-          const fileReader = new FileReader()
-          fileReader.onload = (e) => {
-            if (e.target?.result) {
-              const csvData = e.target.result as string
-              const rows = csvData.split('\n')
-              const headers = rows[0].split(',')
-              
-              const previewProducts: ProductData[] = []
-              
-              // Parse first few rows for preview
-              for (let i = 1; i < Math.min(rows.length, 10); i++) {
-                if (!rows[i].trim()) continue
-                
-                const values = rows[i].split(',')
-                const product: any = {}
-                
-                headers.forEach((header, index) => {
-                  const cleanHeader = header.trim().toLowerCase().replace(/\s+/g, '')
-                  
-                  if (cleanHeader === 'id') {
-                    product.id = parseInt(values[index], 10) || i
-                  } else if (cleanHeader === 'name') {
-                    product.name = values[index].trim()
-                  } else if (cleanHeader === 'unit') {
-                    product.unit = values[index].trim()
-                  } else if (cleanHeader === 'baseprice' || cleanHeader === 'base price') {
-                    product.basePrice = parseFloat(values[index]) || 0
-                  } else if (cleanHeader === 'minprice' || cleanHeader === 'min price') {
-                    product.minPrice = parseFloat(values[index]) || 0
-                  } else if (cleanHeader === 'maxprice' || cleanHeader === 'max price') {
-                    product.maxPrice = parseFloat(values[index]) || 0
-                  }
-                })
-                
-                if (product.name) {
-                  previewProducts.push(product as ProductData)
-                }
-              }
-              
-              setPreviewData(previewProducts)
-            }
-          }
-          fileReader.readAsText(file)
-          
-          setActiveTab("preview")
-        } else {
-          alert(`Error: ${data.error || 'Failed to import data'}`)
-        }
+      if (file.type === 'text/csv') {
+        const text = new TextDecoder().decode(arrayBuffer);
+        workbook = XLSX.read(text, { type: 'string' });
       } else {
-        // Success case
-        setTimeout(() => {
-          setIsProcessing(false)
-          setShowSuccessDialog(true)
-          
-          // Reset state
-          setFile(null)
-          setFileName("")
-          setPreviewData([])
-              setValidationErrors([])
-          setShowPreview(false)
-          
-          // Store import results for display
-          setImportResults(data.items || [])
-        }, 1000)
+        workbook = XLSX.read(arrayBuffer, { type: 'array' });
       }
+
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+      if (jsonData.length < 2) {
+        throw new Error("File must contain at least a header row and one data row");
+      }
+
+      const headers = jsonData[0] as string[];
+      const dataRows = jsonData.slice(1) as any[][];
+
+      const parsedItems: ProductPricing[] = dataRows
+        .filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''))
+        .map((row) => {
+          const item: any = {};
+          headers.forEach((header, headerIndex) => {
+            const cleanHeader = header.trim();
+            const value = row[headerIndex];
+            
+            if (cleanHeader === 'Name') item.name = value?.toString().trim() || '';
+            if (cleanHeader === 'Unit') item.unit = value?.toString().trim() || '';
+            if (cleanHeader === 'Base Price') item.base_price = parseFloat(value) || 0;
+            if (cleanHeader === 'Min Price') item.min_price = parseFloat(value) || 0;
+            if (cleanHeader === 'Max Price') item.max_price = parseFloat(value) || 0;
+            if (cleanHeader === 'Cost') item.cost = parseFloat(value) || 0;
+            if (cleanHeader === 'Status') item.status = value?.toString().toLowerCase() === 'inactive' ? 'inactive' : 'active';
+          });
+
+          item.category = selectedCategory;
+          if (!item.min_price && item.base_price) item.min_price = item.base_price * 0.9;
+          if (!item.max_price && item.base_price) item.max_price = item.base_price * 1.2;
+          if (!item.cost && item.base_price) item.cost = item.base_price * 0.8;
+          if (!item.status) item.status = 'active';
+
+          return item;
+        });
+
+      setParsedData(parsedItems);
+      validateData(parsedItems, headers);
+      setActiveTab("validation");
+      
     } catch (error) {
-      console.error('Error uploading file:', error)
-      setIsUploading(false)
-      setIsProcessing(false)
-      alert('An error occurred while uploading the file.')
+      console.error('Error parsing file:', error);
+      toast({
+        title: "Parse Error",
+        description: error instanceof Error ? error.message : "Failed to parse the uploaded file.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
     }
-  }
+  };
+
+  const validateData = (data: ProductPricing[], headers: string[]) => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+    if (missingColumns.length > 0) {
+      errors.push(`Missing required columns: ${missingColumns.join(', ')}`);
+    }
+
+    data.forEach((item, index) => {
+      const rowNum = index + 2;
+
+      if (!item.name) {
+        errors.push(`Row ${rowNum}: Name is required`);
+      }
+
+      if (!item.unit) {
+        errors.push(`Row ${rowNum}: Unit is required`);
+      }
+
+      if (!item.base_price || item.base_price <= 0) {
+        errors.push(`Row ${rowNum}: Base price must be greater than 0`);
+      }
+
+      if (item.min_price && item.max_price && item.min_price > item.max_price) {
+        warnings.push(`Row ${rowNum}: Min price is greater than max price`);
+      }
+    });
+
+    setValidationResult({
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    });
+  };
 
   const handleImport = async () => {
-    if (!file || validationErrors.length > 0) return
-    
-    setIsProcessing(true)
-
-    // Re-upload the file after validation
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('category', selectedCategory)
-    
-    try {
-      const response = await fetch('/api/pricing/import', {
-        method: 'POST',
-        body: formData,
-      })
-      
-      const data = await response.json()
-      
-      setIsProcessing(false)
-      
-      if (!response.ok) {
-        alert(`Error: ${data.error || 'Failed to import data'}`)
-      } else {
-      setShowSuccessDialog(true)
-        
-        // Reset state
-        setFile(null)
-        setFileName("")
-        setPreviewData([])
-        setValidationErrors([])
-        setShowPreview(false)
-        
-        // Store import results for display
-        setImportResults(data.items || [])
-      }
-    } catch (error) {
-      console.error('Error importing file:', error)
-      setIsProcessing(false)
-      alert('An error occurred while importing the file.')
+    if (!validationResult?.isValid || parsedData.length === 0) {
+      toast({
+        title: "Cannot import",
+        description: "Please fix validation errors before importing.",
+        variant: "destructive"
+      });
+      return;
     }
-  }
 
-  const handleDownloadTemplate = () => {
-    // Make sure the template exists
-    const templateFileName = `${selectedCategory}-pricing-template.csv`;
-    const templatePath = `/templates/${templateFileName}`;
-    
-    // Create and trigger the download
-    const link = document.createElement('a');
-    link.href = templatePath;
-    link.download = templateFileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Add analytics tracking if available
+    setIsProcessing(true);
+
     try {
-      if (window.gtag) {
-        window.gtag('event', 'download', {
-          event_category: 'templates',
-          event_label: templateFileName
+      const importedItems: ProductPricing[] = [];
+
+      for (const item of parsedData) {
+        const response = await fetch('/api/products/pricing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(item),
         });
+
+        if (response.ok) {
+          const savedItem = await response.json();
+          importedItems.push(savedItem);
+        }
       }
-    } catch (e) {
-      console.log('Analytics not available');
+
+      setImportResults(importedItems);
+      setShowResultsDialog(true);
+      setActiveTab("import");
+
+      toast({
+        title: "Import complete",
+        description: `Successfully imported ${importedItems.length} items out of ${parsedData.length}.`
+      });
+
+    } catch (error) {
+      console.error('Error importing data:', error);
+      toast({
+        title: "Import Error",
+        description: "An error occurred during import. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
     }
-  }
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
-      minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+      minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(value)
-  }
+    }).format(value);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
             <Link href="/admin/pricing">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <ArrowLeft className="h-4 w-4" />
-                <span className="sr-only">Back</span>
+          <Button variant="outline" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Pricing
               </Button>
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Import Pricing Data</h1>
-          </div>
-          <p className="text-muted-foreground mt-1 ml-10">Import pricing data from Excel or CSV files.</p>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Import Product Pricing</h1>
+          <p className="text-muted-foreground mt-1">
+            Import pricing data from Excel or CSV files
+          </p>
         </div>
       </div>
 
-      <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="upload">Upload File</TabsTrigger>
-          <TabsTrigger value="preview" disabled={!showPreview}>
-            Preview & Validate
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="upload">
+            <Upload className="h-4 w-4 mr-2" />
+            Upload File
           </TabsTrigger>
-          <TabsTrigger value="import" disabled={!showPreview}>
+          <TabsTrigger value="validation" disabled={!parsedData.length}>
+            <AlertCircle className="h-4 w-4 mr-2" />
+            Validation
+          </TabsTrigger>
+          <TabsTrigger value="import" disabled={!validationResult?.isValid}>
+            <Save className="h-4 w-4 mr-2" />
             Import
           </TabsTrigger>
         </TabsList>
@@ -328,166 +310,166 @@ export default function PricingImportPage() {
         <TabsContent value="upload" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Upload Pricing Spreadsheet</CardTitle>
-              <CardDescription>Upload an Excel or CSV file with your pricing data.</CardDescription>
+              <CardTitle>Upload Pricing File</CardTitle>
+              <CardDescription>
+                Select the product category and upload an Excel (.xlsx) or CSV file with pricing data.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div className="space-y-2">
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
                     <Label htmlFor="category">Product Category</Label>
-                    <Select value={selectedCategory} onValueChange={(value: CategoryType) => setSelectedCategory(value)}>
-                      <SelectTrigger id="category">
-                        <SelectValue placeholder="Select category" />
+                  <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <SelectTrigger>
+                      <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="roofing">Roofing</SelectItem>
-                        <SelectItem value="hvac">HVAC</SelectItem>
-                        <SelectItem value="windows">Windows & Doors</SelectItem>
-                        <SelectItem value="garage">Garage Doors</SelectItem>
-                        <SelectItem value="paint">Paint</SelectItem>
-                        <SelectItem value="solar">Solar</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
                       </SelectContent>
                     </Select>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {categories.find(c => c.id === selectedCategory)?.description}
+                  </p>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>File Upload</Label>
-                    <div
-                      className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-md p-6 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => {
-                        const fileInput = document.getElementById("pricing-file");
-                        if (fileInput) {
-                          fileInput.click();
-                        }
-                      }}
-                    >
-                      <FileUp className="h-10 w-10 text-muted-foreground/50 mb-2" />
-                      <p className="text-sm font-medium mb-1">Click to upload or drag and drop</p>
-                      <p className="text-xs text-muted-foreground">Excel or CSV (Max 10MB)</p>
-                      {fileName && (
-                        <div className="mt-4 flex items-center gap-2 bg-muted p-2 rounded-md w-full">
-                          <FileSpreadsheet className="h-4 w-4 text-primary" />
-                          <span className="text-sm truncate">{fileName}</span>
-                        </div>
-                      )}
+                <div>
+                  <Label htmlFor="file">File Upload</Label>
                       <Input
-                        id="pricing-file"
+                    id="file"
                         type="file"
                         accept=".xlsx,.xls,.csv"
-                        className="hidden"
-                        onChange={handleFileChange}
+                    onChange={handleFileUpload}
+                    disabled={isProcessing}
                       />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Accepts Excel (.xlsx, .xls) and CSV files
+                  </p>
                     </div>
                   </div>
 
-                  {isUploading && (
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Uploading...</span>
-                        <span>{uploadProgress}%</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary transition-all duration-300 ease-in-out"
-                          style={{ width: `${uploadProgress}%` }}
-                        />
-                      </div>
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <h4 className="font-medium mb-2">Required Columns:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                  {requiredColumns.map((col) => (
+                    <div key={col} className="flex items-center gap-1">
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                      {col}
                     </div>
-                  )}
-
-                  {isProcessing && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      <span>Processing file...</span>
-                    </div>
-                  )}
-
-                  <div className="flex gap-4">
-                    <Button onClick={handleUpload} disabled={!file || isUploading || isProcessing} className="flex-1">
-                      <Upload className="mr-2 h-4 w-4" />
-                      {isUploading ? "Uploading..." : "Upload File"}
-                    </Button>
-
-                    <Button variant="outline" onClick={handleDownloadTemplate} className="flex-1">
-                      <Download className="mr-2 h-4 w-4" />
-                      Download Template
-                    </Button>
-                  </div>
+                  ))}
                 </div>
-
-                <div className="bg-muted/30 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-medium">Import Instructions</h3>
-                  <div className="space-y-4 text-sm">
-                    <p>To ensure a successful import, please follow these guidelines:</p>
-                    <ol className="list-decimal pl-5 space-y-2">
-                      <li>Select the appropriate product category.</li>
-                      <li>Use our template for the correct format (download button on the left).</li>
-                      <li>Ensure all required columns are present: Name, Unit, Base Price, Min Price, Max Price.</li>
-                      <li>Prices should be entered as numbers without currency symbols.</li>
-                      <li>Each row should represent a single product or service.</li>
-                    </ol>
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md p-3 mt-4">
-                      <div className="flex items-start gap-2">
-                        <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
-                        <div>
-                          <p className="text-xs text-amber-700 dark:text-amber-400">
-                            Importing will replace all existing pricing data for the selected category. Make sure your
-                            spreadsheet contains all products you want to keep.
-                          </p>
-                        </div>
-                      </div>
+                <h4 className="font-medium mb-2 mt-3">Optional Columns:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                  {optionalColumns.map((col) => (
+                    <div key={col} className="flex items-center gap-1">
+                      <div className="h-3 w-3 rounded-full bg-blue-600" />
+                      {col}
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="preview" className="space-y-4">
+        <TabsContent value="validation" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Preview & Validate</CardTitle>
-              <CardDescription>Review the data before importing. Fix any validation errors.</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                {validationResult?.isValid ? (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                )}
+                Data Validation
+              </CardTitle>
+              <CardDescription>
+                Review validation results before importing the data.
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {validationErrors.length > 0 && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-                    <div>
-                      <h4 className="text-sm font-medium text-red-800 dark:text-red-300">Validation Errors</h4>
-                      <p className="text-sm text-red-700 dark:text-red-400 mt-1">
-                        Please fix the following errors before importing:
-                      </p>
-                      <ul className="mt-2 space-y-1 text-sm text-red-700 dark:text-red-400">
-                        {validationErrors.map((error, index) => (
-                          <li key={index}>
-                            Row {error.row}: {error.message} (Column: {error.column})
-                          </li>
+              {validationResult && (
+                <div className="space-y-4">
+                  {validationResult.errors.length > 0 && (
+                    <div className="border border-red-200 rounded-lg p-4 bg-red-50">
+                      <h4 className="font-medium text-red-800 mb-2">Errors (must be fixed):</h4>
+                      <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                        {validationResult.errors.map((error, index) => (
+                          <li key={index}>{error}</li>
                         ))}
                       </ul>
                     </div>
+                  )}
+
+                  {validationResult.warnings.length > 0 && (
+                    <div className="border border-yellow-200 rounded-lg p-4 bg-yellow-50">
+                      <h4 className="font-medium text-yellow-800 mb-2">Warnings (review recommended):</h4>
+                      <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
+                        {validationResult.warnings.map((warning, index) => (
+                          <li key={index}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {validationResult.isValid && (
+                    <div className="border border-green-200 rounded-lg p-4 bg-green-50">
+                      <h4 className="font-medium text-green-800 mb-2">✓ Validation passed</h4>
+                      <p className="text-sm text-green-700">
+                        Found {parsedData.length} valid items ready for import.
+                      </p>
                   </div>
+                  )}
                 </div>
               )}
 
+              {parsedData.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="font-medium mb-3">Data Preview ({parsedData.length} items):</h4>
               <div className="rounded-md border overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>ID</TableHead>
                       <TableHead>Name</TableHead>
                       <TableHead>Unit</TableHead>
-                      <TableHead>Base Price</TableHead>
-                      <TableHead>Min Price</TableHead>
-                      <TableHead>Max Price</TableHead>
+                          <TableHead className="text-right">Base Price</TableHead>
+                          <TableHead className="text-right">Min Price</TableHead>
+                          <TableHead className="text-right">Max Price</TableHead>
+                          <TableHead className="text-right">Cost</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
+                      <TableBody>
+                        {parsedData.slice(0, 10).map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">{item.name}</TableCell>
+                            <TableCell>{item.unit}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.base_price)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.min_price)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.max_price)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
+                            <TableCell>
+                              <Badge variant={item.status === 'active' ? 'default' : 'secondary'}>
+                                {item.status}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {parsedData.length > 10 && (
+                          <TableRow>
+                            <TableCell colSpan={7} className="text-center text-sm text-muted-foreground">
+                              And {parsedData.length - 10} more items...
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
                 </Table>
               </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -499,7 +481,11 @@ export default function PricingImportPage() {
               <CardDescription>Confirm and import the validated pricing data.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Ready to import the data?</p>
+              {validationResult?.isValid ? (
+                <div className="space-y-4">
+                  <p className="text-sm">
+                    Ready to import {parsedData.length} pricing items into the <strong>{selectedCategory}</strong> category.
+                  </p>
               <Button onClick={handleImport} disabled={isProcessing}>
                 {isProcessing ? (
                   <>
@@ -513,43 +499,57 @@ export default function PricingImportPage() {
                   </>
                 )}
               </Button>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">
+                    Please fix validation errors before importing data.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
 
-      <Dialog open={showSuccessDialog} onOpenChange={() => setShowSuccessDialog(false)}>
-        <DialogContent className="sm:max-w-[425px]">
+      {/* Results Dialog */}
+      <Dialog open={showResultsDialog} onOpenChange={setShowResultsDialog}>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Import Successful</DialogTitle>
-            <DialogDescription>Pricing data has been successfully imported.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              Import Complete
+            </DialogTitle>
+            <DialogDescription>
+              Successfully imported {importResults.length} pricing items.
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center gap-4 py-4">
-            <CheckCircle className="h-12 w-12 text-green-500" />
-            <p className="text-lg font-semibold">Success!</p>
-            <p className="text-center text-muted-foreground">
-              Your {selectedCategory} pricing data has been imported into the system.
-            </p>
+          <div className="py-4">
             {importResults.length > 0 && (
-              <div className="w-full mt-4 max-h-48 overflow-y-auto">
-                <p className="text-sm font-medium mb-2">Imported Items:</p>
+              <div>
+                <h4 className="font-medium mb-3">Imported Items:</h4>
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Plan</TableHead>
-                        <TableHead>Rate Name</TableHead>
-                        <TableHead>Factor</TableHead>
-                        <TableHead>Fee %</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Unit</TableHead>
+                        <TableHead className="text-right">Base Price</TableHead>
+                        <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {importResults.slice(0, 5).map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.plan_number}</TableCell>
-                          <TableCell>{item.rate_name}</TableCell>
-                          <TableCell>{item.payment_factor}</TableCell>
-                          <TableCell>{item.merchant_fee}%</TableCell>
+                          <TableCell className="font-medium">{item.name}</TableCell>
+                          <TableCell>{item.unit}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(item.base_price)}</TableCell>
+                          <TableCell>
+                            <Badge variant={item.status === 'active' ? 'default' : 'secondary'}>
+                              {item.status}
+                            </Badge>
+                          </TableCell>
                         </TableRow>
                       ))}
                       {importResults.length > 5 && (
@@ -571,12 +571,12 @@ export default function PricingImportPage() {
             </Button>
             <Button asChild>
               <Link href="/admin/pricing">
-                Close
+                Done
               </Link>
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
