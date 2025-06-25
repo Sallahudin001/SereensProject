@@ -180,13 +180,13 @@ export async function PUT(request: NextRequest) {
       `
       
       const result = await executeQuery(query, [
-        data.name,
-        data.description,
-        data.category,
+        data.name || '',
+        data.description || '',
+        data.category || 'Roofing',
         data.discount_amount || null,
         data.discount_percentage || null,
         data.free_product_service || null,
-        data.expiration_type,
+        data.expiration_type || 'days',
         data.expiration_value || null,
         data.is_active ?? true,
         id
@@ -206,14 +206,14 @@ export async function PUT(request: NextRequest) {
       `
       
       const result = await executeQuery(query, [
-        data.name,
-        data.description,
-        data.required_services,
+        data.name || '',
+        data.description || '',
+        data.required_services || [],
         data.min_services || 2,
-        data.discount_type,
+        data.discount_type || 'percentage',
         data.discount_value || null,
         data.free_service || null,
-        data.bonus_message,
+        data.bonus_message || '',
         data.priority || 0,
         data.is_active ?? true,
         id
@@ -233,11 +233,11 @@ export async function PUT(request: NextRequest) {
       `
       
       const result = await executeQuery(query, [
-        data.trigger_phrase,
-        data.product_suggestion,
-        data.category,
-        data.base_price,
-        data.monthly_impact,
+        data.trigger_phrase || '',
+        data.product_suggestion || '',
+        data.category || 'comfort',
+        data.base_price || 0,
+        data.monthly_impact || 0,
         data.description || null,
         data.display_order || 0,
         data.is_active ?? true,

@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS upsell_interactions (
 );
 
 -- Insert initial lifestyle upsells based on client requirements
+-- Using ON CONFLICT DO NOTHING to prevent duplicates if run multiple times
 INSERT INTO lifestyle_upsells 
 (trigger_phrase, product_suggestion, category, base_price, monthly_impact, description, display_order)
 VALUES
@@ -70,9 +71,11 @@ VALUES
 ('Cut your utility bill even more?', 'Add a Heat Pump', 'efficiency', 8500.00, 85.00, 'Heat pumps are 3x more efficient than traditional HVAC systems', 3),
 ('Want to refresh your home exterior?', 'Add exterior paint', 'curb_appeal', 5000.00, 50.00, 'Fresh paint increases home value and curb appeal', 4),
 ('Looking for modern convenience?', 'Upgrade to smart thermostat', 'smart_home', 350.00, 5.00, 'Control your home temperature from anywhere', 5),
-('Want enhanced security?', 'Add smart garage door opener', 'security', 450.00, 8.00, 'Smart openers provide security and convenience', 6);
+('Want enhanced security?', 'Add smart garage door opener', 'security', 450.00, 8.00, 'Smart openers provide security and convenience', 6)
+ON CONFLICT (trigger_phrase, product_suggestion) DO NOTHING;
 
 -- Insert bundle rules based on client requirements
+-- Using ON CONFLICT DO NOTHING to prevent duplicates if run multiple times
 INSERT INTO bundle_rules 
 (name, description, required_services, min_services, discount_type, discount_value, bonus_message, priority)
 VALUES
@@ -80,7 +83,8 @@ VALUES
 ('Roof + HVAC Bundle', 'Roof and HVAC combination with free smart thermostat', ARRAY['roofing', 'hvac'], 2, 'free_service', 0, 'Add HVAC with your roof and receive a free smart thermostat upgrade.', 2),
 ('Triple Service Bundle', 'Three or more services get $1000 off', ARRAY['roofing', 'windows-doors', 'hvac'], 3, 'fixed_amount', 1000.00, 'Add a third service today and we''ll take $1000 off your total project.', 3),
 ('Paint + Windows Combo', 'Windows and paint combination bonus', ARRAY['windows-doors', 'paint'], 2, 'fixed_amount', 500.00, 'Bundle windows + paint and save $500 on your total project.', 4),
-('Complete Home Bundle', 'Four services get maximum discount', ARRAY['roofing', 'windows-doors', 'hvac', 'paint'], 4, 'percentage', 8.00, 'Complete home upgrade! 8% off when you bundle four services.', 5);
+('Complete Home Bundle', 'Four services get maximum discount', ARRAY['roofing', 'windows-doors', 'hvac', 'paint'], 4, 'percentage', 8.00, 'Complete home upgrade! 8% off when you bundle four services.', 5)
+ON CONFLICT (name) DO NOTHING;
 
 -- Add indexes for performance
 CREATE INDEX IF NOT EXISTS idx_lifestyle_upsells_category ON lifestyle_upsells(category);

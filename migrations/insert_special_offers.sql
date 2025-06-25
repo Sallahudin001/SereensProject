@@ -1,4 +1,5 @@
 -- Insert initial special offers based on client's requirements
+-- Using ON CONFLICT DO NOTHING to prevent duplicates if run multiple times
 INSERT INTO special_offers
 (name, description, category, discount_amount, discount_percentage, free_product_service, expiration_type, expiration_value, is_active)
 VALUES
@@ -26,7 +27,8 @@ VALUES
 -- Bundle offers
 ('$1000 Off Bundle Discount', 'Add a second service today (like paint or windows), and we''ll take $1000 off your total project.', 'Bundle', 1000.00, NULL, NULL, 'days', 1, TRUE),
 ('Free Attic Insulation with Bundle', 'Bundle roof + HVAC — we''ll throw in attic insulation labor at no charge to keep your home insulated.', 'Bundle', NULL, NULL, 'Attic Insulation Labor', 'days', 3, TRUE),
-('3 Free Monthly Payments', 'Bundle 2 services today and we''ll cover your first 3 monthly payments — delivered as a rebate check once the project is complete.', 'Bundle', NULL, NULL, '3 Monthly Payments Rebate', 'days', 1, TRUE);
+('3 Free Monthly Payments', 'Bundle 2 services today and we''ll cover your first 3 monthly payments — delivered as a rebate check once the project is complete.', 'Bundle', NULL, NULL, '3 Monthly Payments Rebate', 'days', 1, TRUE)
+ON CONFLICT (name, category) DO NOTHING;
 
 -- Insert offer templates for quick reuse
 INSERT INTO offer_templates
@@ -35,4 +37,5 @@ VALUES
 ('Free Gutters Template', 'Book your roof this week and we''ll include free gutters & downspouts', 'Roofing', NULL, NULL, 'Gutters & Downspouts', 'days', 7, TRUE),
 ('10% Off Template', 'Sign within 72 hours and receive 10% off your entire project.', 'Any', NULL, 10.00, NULL, 'hours', 72, TRUE),
 ('$500 Off Template', 'Add an additional service today and we''ll discount $500 off your package', 'Any', 500.00, NULL, NULL, 'days', 7, TRUE),
-('Free Smart Device Template', 'Sign today and receive a free smart home device with your installation', 'Any', NULL, NULL, 'Smart Home Device', 'days', 1, TRUE); 
+('Free Smart Device Template', 'Sign today and receive a free smart home device with your installation', 'Any', NULL, NULL, 'Smart Home Device', 'days', 1, TRUE)
+ON CONFLICT (name, category) DO NOTHING; 

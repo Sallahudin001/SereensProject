@@ -102,7 +102,7 @@ export default function OffersPage() {
   
   // Form states
   const [editingSpecial, setEditingSpecial] = useState<SpecialOffer | null>(null)
-  const [editingBundle, setBundleRule] = useState<BundleRule | null>(null)
+  const [editingBundle, setEditingBundle] = useState<BundleRule | null>(null)
   const [editingLifestyle, setEditingLifestyle] = useState<LifestyleUpsell | null>(null)
 
   // Form data states
@@ -174,28 +174,43 @@ export default function OffersPage() {
 
   const handleCreateSpecialOffer = async () => {
     try {
+      const method = editingSpecial ? 'PUT' : 'POST'
+      const body = editingSpecial 
+        ? { type: 'special', id: editingSpecial.id, ...specialForm }
+        : { type: 'special', ...specialForm }
+
       const response = await fetch('/api/offers', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'special', ...specialForm })
+        body: JSON.stringify(body)
       })
 
-      if (!response.ok) throw new Error('Failed to create offer')
+      if (!response.ok) throw new Error(`Failed to ${editingSpecial ? 'update' : 'create'} offer`)
       
-      const newOffer = await response.json()
-      setSpecialOffers([...specialOffers, newOffer])
+      const updatedOffer = await response.json()
+      
+      if (editingSpecial) {
+        setSpecialOffers(offers => 
+          offers.map(offer => 
+            offer.id === editingSpecial.id ? updatedOffer : offer
+          )
+        )
+      } else {
+        setSpecialOffers([...specialOffers, updatedOffer])
+      }
+      
       setShowSpecialDialog(false)
       resetSpecialForm()
       
       toast({
         title: "Success",
-        description: "Special offer created successfully!"
+        description: `Special offer ${editingSpecial ? 'updated' : 'created'} successfully!`
       })
     } catch (error) {
-      console.error('Error creating special offer:', error)
+      console.error(`Error ${editingSpecial ? 'updating' : 'creating'} special offer:`, error)
       toast({
         title: "Error",
-        description: "Failed to create special offer.",
+        description: `Failed to ${editingSpecial ? 'update' : 'create'} special offer.`,
         variant: "destructive"
       })
     }
@@ -203,28 +218,43 @@ export default function OffersPage() {
 
   const handleCreateBundleRule = async () => {
     try {
+      const method = editingBundle ? 'PUT' : 'POST'
+      const body = editingBundle 
+        ? { type: 'bundle', id: editingBundle.id, ...bundleForm }
+        : { type: 'bundle', ...bundleForm }
+
       const response = await fetch('/api/offers', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'bundle', ...bundleForm })
+        body: JSON.stringify(body)
       })
 
-      if (!response.ok) throw new Error('Failed to create bundle rule')
+      if (!response.ok) throw new Error(`Failed to ${editingBundle ? 'update' : 'create'} bundle rule`)
       
-      const newRule = await response.json()
-      setBundleRules([...bundleRules, newRule])
+      const updatedRule = await response.json()
+      
+      if (editingBundle) {
+        setBundleRules(rules => 
+          rules.map(rule => 
+            rule.id === editingBundle.id ? updatedRule : rule
+          )
+        )
+      } else {
+        setBundleRules([...bundleRules, updatedRule])
+      }
+      
       setShowBundleDialog(false)
       resetBundleForm()
       
       toast({
         title: "Success",
-        description: "Bundle rule created successfully!"
+        description: `Bundle rule ${editingBundle ? 'updated' : 'created'} successfully!`
       })
     } catch (error) {
-      console.error('Error creating bundle rule:', error)
+      console.error(`Error ${editingBundle ? 'updating' : 'creating'} bundle rule:`, error)
       toast({
         title: "Error",
-        description: "Failed to create bundle rule.",
+        description: `Failed to ${editingBundle ? 'update' : 'create'} bundle rule.`,
         variant: "destructive"
       })
     }
@@ -232,28 +262,43 @@ export default function OffersPage() {
 
   const handleCreateLifestyleUpsell = async () => {
     try {
+      const method = editingLifestyle ? 'PUT' : 'POST'
+      const body = editingLifestyle 
+        ? { type: 'lifestyle', id: editingLifestyle.id, ...lifestyleForm }
+        : { type: 'lifestyle', ...lifestyleForm }
+
       const response = await fetch('/api/offers', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'lifestyle', ...lifestyleForm })
+        body: JSON.stringify(body)
       })
 
-      if (!response.ok) throw new Error('Failed to create lifestyle upsell')
+      if (!response.ok) throw new Error(`Failed to ${editingLifestyle ? 'update' : 'create'} lifestyle upsell`)
       
-      const newUpsell = await response.json()
-      setLifestyleUpsells([...lifestyleUpsells, newUpsell])
+      const updatedUpsell = await response.json()
+      
+      if (editingLifestyle) {
+        setLifestyleUpsells(upsells => 
+          upsells.map(upsell => 
+            upsell.id === editingLifestyle.id ? updatedUpsell : upsell
+          )
+        )
+      } else {
+        setLifestyleUpsells([...lifestyleUpsells, updatedUpsell])
+      }
+      
       setShowLifestyleDialog(false)
       resetLifestyleForm()
       
       toast({
         title: "Success",
-        description: "Lifestyle upsell created successfully!"
+        description: `Lifestyle upsell ${editingLifestyle ? 'updated' : 'created'} successfully!`
       })
     } catch (error) {
-      console.error('Error creating lifestyle upsell:', error)
+      console.error(`Error ${editingLifestyle ? 'updating' : 'creating'} lifestyle upsell:`, error)
       toast({
         title: "Error",
-        description: "Failed to create lifestyle upsell.",
+        description: `Failed to ${editingLifestyle ? 'update' : 'create'} lifestyle upsell.`,
         variant: "destructive"
       })
     }
@@ -365,7 +410,7 @@ export default function OffersPage() {
       priority: 0,
       is_active: true
     })
-    setBundleRule(null)
+    setEditingBundle(null)
   }
 
   const resetLifestyleForm = () => {
@@ -389,6 +434,55 @@ export default function OffersPage() {
         ? prev.required_services.filter(s => s !== service)
         : [...prev.required_services, service]
     }))
+  }
+
+  // Edit handlers
+  const handleEditSpecialOffer = (offer: SpecialOffer) => {
+    setEditingSpecial(offer)
+    setSpecialForm({
+      name: offer.name,
+      description: offer.description,
+      category: offer.category,
+      discount_amount: offer.discount_amount?.toString() || "",
+      discount_percentage: offer.discount_percentage?.toString() || "",
+      free_product_service: offer.free_product_service || "",
+      expiration_type: offer.expiration_type,
+      expiration_value: offer.expiration_value?.toString() || "",
+      is_active: offer.is_active
+    })
+    setShowSpecialDialog(true)
+  }
+
+  const handleEditBundleRule = (rule: BundleRule) => {
+    setEditingBundle(rule)
+    setBundleForm({
+      name: rule.name,
+      description: rule.description,
+      required_services: rule.required_services || [],
+      min_services: rule.min_services,
+      discount_type: rule.discount_type,
+      discount_value: rule.discount_value?.toString() || "",
+      free_service: rule.free_service || "",
+      bonus_message: rule.bonus_message,
+      priority: rule.priority,
+      is_active: rule.is_active
+    })
+    setShowBundleDialog(true)
+  }
+
+  const handleEditLifestyleUpsell = (upsell: LifestyleUpsell) => {
+    setEditingLifestyle(upsell)
+    setLifestyleForm({
+      trigger_phrase: upsell.trigger_phrase,
+      product_suggestion: upsell.product_suggestion,
+      category: upsell.category,
+      base_price: upsell.base_price.toString(),
+      monthly_impact: upsell.monthly_impact.toString(),
+      description: upsell.description,
+      display_order: upsell.display_order,
+      is_active: upsell.is_active
+    })
+    setShowLifestyleDialog(true)
   }
 
   const filteredSpecialOffers = specialOffers.filter(offer =>
@@ -466,9 +560,9 @@ export default function OffersPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>Create Time-Sensitive Offer</DialogTitle>
+                      <DialogTitle>{editingSpecial ? 'Edit' : 'Create'} Time-Sensitive Offer</DialogTitle>
                       <DialogDescription>
-                        Set up a special offer with time constraints that reps can apply to proposals
+                        {editingSpecial ? 'Update the' : 'Set up a'} special offer with time constraints that reps can apply to proposals
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -585,7 +679,7 @@ export default function OffersPage() {
                         Cancel
                       </Button>
                       <Button onClick={handleCreateSpecialOffer}>
-                        Create Offer
+                        {editingSpecial ? 'Update' : 'Create'} Offer
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -647,7 +741,11 @@ export default function OffersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditSpecialOffer(offer)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button 
@@ -688,9 +786,9 @@ export default function OffersPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                      <DialogTitle>Create Bundle Discount Rule</DialogTitle>
+                      <DialogTitle>{editingBundle ? 'Edit' : 'Create'} Bundle Discount Rule</DialogTitle>
                       <DialogDescription>
-                        Set up automatic discounts when customers select specific service combinations
+                        {editingBundle ? 'Update automatic' : 'Set up automatic'} discounts when customers select specific service combinations
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -811,7 +909,7 @@ export default function OffersPage() {
                         Cancel
                       </Button>
                       <Button onClick={handleCreateBundleRule}>
-                        Create Bundle Rule
+                        {editingBundle ? 'Update' : 'Create'} Bundle Rule
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -879,7 +977,11 @@ export default function OffersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditBundleRule(rule)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button 
@@ -920,9 +1022,9 @@ export default function OffersPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                      <DialogTitle>Create Lifestyle Upsell</DialogTitle>
+                      <DialogTitle>{editingLifestyle ? 'Edit' : 'Create'} Lifestyle Upsell</DialogTitle>
                       <DialogDescription>
-                        Create emotional trigger-based upsells with monthly payment impacts
+                        {editingLifestyle ? 'Update emotional' : 'Create emotional'} trigger-based upsells with monthly payment impacts
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
@@ -1027,7 +1129,7 @@ export default function OffersPage() {
                         Cancel
                       </Button>
                       <Button onClick={handleCreateLifestyleUpsell}>
-                        Create Lifestyle Upsell
+                        {editingLifestyle ? 'Update' : 'Create'} Lifestyle Upsell
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -1090,7 +1192,11 @@ export default function OffersPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditLifestyleUpsell(upsell)}
+                            >
                               <Edit className="h-4 w-4" />
                             </Button>
                             <Button 

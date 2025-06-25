@@ -19,7 +19,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  Gift
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -69,6 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/approvals", label: "Approvals", icon: ShieldCheck },
     { href: "/admin/financing", label: "Financing", icon: DollarSign },
     { href: "/admin/pricing", label: "Pricing", icon: BarChart3 },
+    { href: "/admin/offers", label: "Offers & Upsells", icon: Gift },
     { href: "/admin/permissions", label: "User Permissions", icon: ShieldCheck },
   ]
 
