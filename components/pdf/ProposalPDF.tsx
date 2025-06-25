@@ -22,22 +22,26 @@ const styles = StyleSheet.create({
   },
 
   logoContainer: {
-    alignItems: "center",
+    alignItems: "flex-start",
     marginBottom: 8,
+
   },
 
   logo: {
     width: 250,
-    height: 100,
+    height: 150,
     objectFit: "contain",
+   
   },
 
+  
   contractTitle: {
     fontSize: 16, // Professional title size
     fontFamily: "Times-Bold",
     textTransform: "uppercase",
     letterSpacing: 0.5,
     textAlign: "center",
+    paddingBottom:10,
   },
 
   contractSubtitle: {
@@ -815,6 +819,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
   // Calculate totals
   const upgradesTotal = selectedUpgrades.reduce((sum, upgrade) => sum + (upgrade.price || 0), 0)
   const bundleDiscountTotal = uniqueBundleRules.reduce((sum, bundle) => sum + (bundle.discount_value || 0), 0)
+  // NOTE: Custom adders are already included in the proposal.pricing.total, so we don't add them again
   const customAddersTotal =
     proposal?.customAdders?.reduce((sum: number, adder: any) => sum + (Number.parseFloat(adder.cost) || 0), 0) || 0
   const appliedDiscountsTotal =
@@ -829,7 +834,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
     ) || 0
 
   const baseTotal = proposal?.pricing?.total || 0
-  const finalTotal = baseTotal + upgradesTotal + customAddersTotal - bundleDiscountTotal
+  // Only add upgrades to the base total since custom adders are already included in baseTotal
+  const finalTotal = baseTotal + upgradesTotal - bundleDiscountTotal
 
   const baseMonthlyPayment = proposal?.pricing?.monthlyPayment || 0
   const paymentFactor =
@@ -859,9 +865,9 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           <View style={styles.logoContainer}>
             <Image style={styles.logo} src="public\newlogo.png" />
           </View>
-          <Text style={styles.contractTitle}>HOME IMPROVEMENT CONTRACT</Text>
-          <Text style={styles.contractSubtitle}>NOT APPLICABLE TO SWIMMING POOLS OR SPAS</Text>
-          <Text style={[styles.contractSubtitle, { fontSize: 10, marginTop: 2 }]}>
+          <Text style={styles.contractTitle}>Evergreen Home Upgrades Services Agreement</Text>
+        
+          {/* <Text style={[styles.contractSubtitle, { fontSize: 10, marginTop: 2 }]}>
             (Complies with Section 7159 of California Business and Professions Code, and Civil Code Section 8170 as amended)
           </Text>
           <Text style={styles.contractSubtitle}>Evergreen Home Upgrades Services Agreement</Text>
@@ -870,7 +876,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           </Text>
           <Text style={[styles.contractSubtitle, { fontSize: 9, marginTop: 2 }]}>
             The Notice of Cancellation may be mailed to the address of the direct contractor as shown below:
-          </Text>
+          </Text> */}
           <View style={styles.proposalMeta}>
             <Text>Contract No: {proposal?.proposalNumber || "N/A"}</Text>
             <Text>Date: {formatDate(proposal?.createdAt)}</Text>
@@ -880,7 +886,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         {/* Parties Section */}
         <View style={styles.partiesSection}>
-          <Text style={styles.partiesSectionTitle}>CONTRACTING PARTIES</Text>
+          {/* <Text style={styles.partiesSectionTitle}>CONTRACTING PARTIES</Text> */}
           <View style={styles.partyInfo}>
             <View style={styles.partyColumn}>
               <Text style={styles.partyTitle}>CONTRACTOR:</Text>
@@ -921,10 +927,10 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         <Text style={{ fontSize: 8, textAlign: "center", marginTop: 3, marginBottom: 15 }}>
           Contract No: {proposal?.proposalNumber || "N/A"} | Customer: {proposal?.customer?.name || "N/A"}
         </Text>
-        <Text style={styles.termsText}>
+        {/* <Text style={styles.termsText}>
           Contractor agrees to furnish all labor, materials, equipment, and services necessary to complete the work
           described herein in accordance with the terms and conditions of this Contract.
-        </Text>
+        </Text> */}
 
         {proposal?.services?.map((service: string, index: number) => {
           const productData = proposal.products[service]
@@ -1075,19 +1081,21 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
                           <Text style={styles.scopeItemLabel}>System Type:</Text>
                           <Text style={styles.scopeItemValue}>{productData.systemType?.replace(/-/g, " ") || "Complete HVAC"} system</Text>
                         </View>
-                        <View style={styles.scopeItemRow}>
+                        {/* <View style={styles.scopeItemRow}>
                           <Text style={styles.scopeItemLabel}>SEER Rating:</Text>
                           <Text style={styles.scopeItemValue}>{productData.seerRating || "N/A"} (Seasonal Energy Efficiency Ratio)</Text>
-                        </View>
+                        </View> */}
                         <View style={styles.scopeItemRow}>
                           <Text style={styles.scopeItemLabel}>Capacity:</Text>
                           <Text style={styles.scopeItemValue}>{productData.tonnage || "N/A"} tons cooling capacity</Text>
                         </View>
                       </View>
+
                       
-                      {/* Right Column - Brand/Model */}
+                      
+                    
                       <View style={{ flex: 1, marginLeft: 10 }}>
-                        <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
+                        {/* <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
                           • Manufacturer Details:
                         </Text>
                         <View style={styles.scopeItemRow}>
@@ -1098,10 +1106,12 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
                           <Text style={styles.scopeItemLabel}>Model Series:</Text>
                           <Text style={styles.scopeItemValue}>{productData.model || "N/A"}</Text>
                         </View>
-                        <View style={{ height: 20 }}></View>
+                        <View style={{ height: 20 }}></View> */}
+
                       </View>
                     </View>
                   </View>
+                  
 
                   {/* Components and Installation Notes - Horizontal Layout */}
                   <View style={styles.scopeServiceContainer}>
@@ -1142,7 +1152,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
                     </View>
                   </View>
                 </View>
-              )}
+              )
+              }
 
                               {service === "roofing" && (
                 <View>
@@ -1165,10 +1176,10 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
                           <Text style={styles.scopeItemLabel}>Material:</Text>
                           <Text style={styles.scopeItemValue}>{productData.material || "Architectural shingles"}</Text>
                         </View>
-                        <View style={styles.scopeItemRow}>
+                        {/* <View style={styles.scopeItemRow}>
                           <Text style={styles.scopeItemLabel}>Coverage Area:</Text>
                           <Text style={styles.scopeItemValue}>{productData.squareCount || "N/A"} squares (100 sq. ft. per square)</Text>
-                        </View>
+                        </View> */}
                       </View>
                       
                       {/* Right Column - Add-ons */}
@@ -1182,12 +1193,13 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
                             <Text style={styles.scopeItemValue}>{productData.gutterLength || "N/A"} linear feet with downspouts</Text>
                           </View>
                         )}
-                        {productData.addPlywood && (
+                        {/* {productData.addPlywood && (
                           <View style={styles.scopeItemRow}>
                             <Text style={styles.scopeItemLabel}>Decking:</Text>
                             <Text style={styles.scopeItemValue}>{productData.plywoodPercentage || "100"}% replacement of roof decking as needed</Text>
                           </View>
-                        )}
+                        )
+                        } */}
                         {!productData.addGutters && !productData.addPlywood && (
                           <View style={styles.scopeItemRow}>
                             <Text style={styles.scopeItemLabel}>Standard:</Text>
@@ -1268,10 +1280,10 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
                         <Text style={{ fontSize: 11, fontFamily: "Times-Bold", borderBottomWidth: 0.5, borderBottomColor: '#aaaaaa', paddingBottom: 3, marginBottom: 5 }}>
                           • Door Specifications:
                         </Text>
-                        <View style={styles.scopeItemRow}>
+                        {/* <View style={styles.scopeItemRow}>
                           <Text style={styles.scopeItemLabel}>Model Series:</Text>
                           <Text style={styles.scopeItemValue}>{productData.model || "T50L"} professional-grade door</Text>
-                        </View>
+                        </View> */}
                         <View style={styles.scopeItemRow}>
                           <Text style={styles.scopeItemLabel}>Dimensions:</Text>
                           <Text style={styles.scopeItemValue}>{productData.width || "16"}' Width × {productData.height || "7"}' Height</Text>
@@ -1593,7 +1605,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         <View style={styles.totalsSection}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Subtotal:</Text>
-            <Text style={styles.totalAmount}>{formatCurrency(baseTotal + upgradesTotal + customAddersTotal)}</Text>
+            <Text style={styles.totalAmount}>{formatCurrency(baseTotal + upgradesTotal)}</Text>
           </View>
 
           {bundleDiscountTotal > 0 && (
@@ -2228,6 +2240,9 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             fail to do so, then you remain liable for performance of all obligations under the contract.
           </Text>
           <Text style={styles.termsText}>
+          Cancellations made after the right to cancel period may result in up to 30% of the total project cost being due. This includes restocking fees and any costs incurred up to that point
+          </Text>
+          <Text style={styles.termsText}>
             To cancel this transaction, mail or deliver a signed and dated copy of this cancellation notice, or any
             other written notice, or send a telegram to:
           </Text>
@@ -2329,6 +2344,9 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
             date of your notice of cancellation, you may retain or dispose of the goods without any further obligation.
             If you fail to make the goods available to the seller, or if you agree to return the goods to the seller and
             fail to do so, then you remain liable for performance of all obligations under the contract.
+          </Text>
+          <Text style={styles.termsText}>
+          Cancellations made after the right to cancel period may result in up to 30% of the total project cost being due. This includes restocking fees and any costs incurred up to that point
           </Text>
           <Text style={styles.termsText}>
             To cancel this transaction, mail or deliver a signed and dated copy of this cancellation notice, or any

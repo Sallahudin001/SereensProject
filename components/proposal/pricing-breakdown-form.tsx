@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { InfoIcon, AlertCircle, Calculator, Sparkles, TrendingUp, ShieldCheck, Clock, CheckCircle, XCircle, Plus, Percent, DollarSign, UserMinus } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { InfoIcon, AlertCircle, Calculator, Sparkles, TrendingUp, ShieldCheck, Clock, CheckCircle, XCircle, Plus, Percent, DollarSign, UserMinus, AlertTriangle } from "lucide-react"
 import {
   Select,
   SelectContent,
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -59,6 +60,8 @@ interface DiscountType {
   isEnabled: boolean
   amount: number
   percentageValue: number
+  priority: number
+  isSystemGenerated?: boolean
 }
 
 interface FinancingPlan {
@@ -112,15 +115,16 @@ interface PricingBreakdownFormProps {
   fullFormData?: any
 }
 
-// Define default discount types with their values
+// Define default discount types with their values and enhanced properties
 const DEFAULT_DISCOUNT_TYPES: DiscountType[] = [
-  { id: 'military', name: 'Military Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
-  { id: 'senior', name: 'Senior Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
-  { id: 'disability', name: 'Disability Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
-  { id: 'education', name: 'Education/Teacher Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0 },
-  { id: 'repeat', name: 'Repeat Customer Discount', defaultAmount: 750, category: 'Loyalty', isEnabled: false, amount: 0, percentageValue: 0 },
-  { id: 'bundle-two', name: 'Two-Product Bundle Discount', defaultAmount: 1000, category: 'Volume', isEnabled: false, amount: 0, percentageValue: 0 },
-  { id: 'bundle-three', name: 'Three-or-More Product Bundle Discount', defaultAmount: 1750, category: 'Volume', isEnabled: false, amount: 0, percentageValue: 0 },
+  { id: 'military', name: 'Military Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0, priority: 1 },
+  { id: 'senior', name: 'Senior Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0, priority: 1 },
+  { id: 'disability', name: 'Disability Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0, priority: 1 },
+  { id: 'education', name: 'Education/Teacher Discount', defaultAmount: 500, category: 'Customer Type', isEnabled: false, amount: 0, percentageValue: 0, priority: 1 },
+  { id: 'repeat', name: 'Repeat Customer Discount', defaultAmount: 750, category: 'Loyalty', isEnabled: false, amount: 0, percentageValue: 0, priority: 2 },
+  { id: 'bundle-two', name: 'Two-Product Bundle Discount', defaultAmount: 1000, category: 'Bundle', isEnabled: false, amount: 0, percentageValue: 0, isSystemGenerated: true, priority: 3 },
+  { id: 'bundle-three', name: 'Three-or-More Product Bundle Discount', defaultAmount: 1750, category: 'Bundle', isEnabled: false, amount: 0, percentageValue: 0, isSystemGenerated: true, priority: 3 },
+  { id: 'auto-bundle', name: 'Service Bundle Discount', defaultAmount: 0, category: 'Bundle', isEnabled: false, amount: 0, percentageValue: 0, isSystemGenerated: true, priority: 4 }
 ]
 
 function PricingBreakdownForm({ services, products, data, updateData, proposalId, userId, customerData, fullFormData }: PricingBreakdownFormProps) {
@@ -421,12 +425,125 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     return discount
   }
 
-  // Calculate the total discount amount from all enabled discount types
+  // Calculate the total discount amount from all enabled discount types with priority handling
   function calculateTotalDiscountsFromTypes(): number {
-    return formData.discountTypes
-      .filter(discount => discount.isEnabled)
-      .reduce((total, discount) => total + discount.amount, 0);
+    // Group discounts by priority and handle conflicts
+    const enabledDiscounts = formData.discountTypes.filter(discount => discount.isEnabled);
+    
+    // Sort by priority (higher priority = later in array = takes precedence)
+    const sortedDiscounts = enabledDiscounts.sort((a, b) => (a.priority || 0) - (b.priority || 0));
+    
+    return sortedDiscounts.reduce((total, discount) => total + discount.amount, 0);
   }
+
+  // Enhanced discount calculation that properly manages bundle discounts
+  function calculateAndApplyBundleDiscount(serviceList: string[]): void {
+    if (!products || serviceList.length < 2) {
+      // Clear any existing auto-bundle discount
+      setFormData(prev => ({
+        ...prev,
+        discountTypes: prev.discountTypes.map(type => 
+          type.id === 'auto-bundle' ? { ...type, isEnabled: false, amount: 0 } : type
+        )
+      }));
+      return;
+    }
+
+    const bundleDiscount = calculateDiscount(serviceList);
+    
+    if (bundleDiscount > 0) {
+      setFormData(prev => {
+        const updatedDiscountTypes = prev.discountTypes.map(type => {
+          if (type.id === 'auto-bundle') {
+            return { 
+              ...type, 
+              isEnabled: true, 
+              amount: bundleDiscount,
+              percentageValue: prev.subtotal > 0 ? (bundleDiscount / prev.subtotal) * 100 : 0
+            };
+          }
+          return type;
+        });
+
+        // Calculate total discount including the new bundle discount
+        const totalDiscount = updatedDiscountTypes
+          .filter(d => d.isEnabled)
+          .reduce((sum, d) => sum + d.amount, 0);
+
+        return {
+          ...prev,
+          discountTypes: updatedDiscountTypes,
+          discount: totalDiscount
+        };
+      });
+    }
+  }
+
+  // New function to resolve conflicts between different discount types
+  function resolveDiscountConflicts(discountTypes: DiscountType[], changedDiscountId: string): DiscountType[] {
+    const changedDiscount = discountTypes.find(d => d.id === changedDiscountId);
+    if (!changedDiscount) return discountTypes;
+
+    // Rule 1: Only one customer type discount can be active
+    if (changedDiscount.category === 'Customer Type' && changedDiscount.isEnabled) {
+      return discountTypes.map(type => {
+        if (type.category === 'Customer Type' && type.id !== changedDiscountId) {
+          return { ...type, isEnabled: false, amount: 0 };
+        }
+        return type;
+      });
+    }
+
+    // Rule 2: Bundle discounts are mutually exclusive (except auto-bundle)
+    if (changedDiscount.category === 'Bundle' && changedDiscount.isEnabled && !changedDiscount.isSystemGenerated) {
+      return discountTypes.map(type => {
+        if (type.category === 'Bundle' && type.id !== changedDiscountId && !type.isSystemGenerated) {
+          return { ...type, isEnabled: false, amount: 0 };
+        }
+        return type;
+      });
+    }
+
+    return discountTypes;
+  }
+
+  // Helper function to sync discount systems and recalculate totals
+  const syncDiscountSystems = useCallback((newDiscountAmount: number, updatedDiscountTypes?: DiscountType[]) => {
+    setFormData(prev => {
+      const newSubtotal = prev.subtotal;
+      const newTotal = newSubtotal - newDiscountAmount;
+      
+      // Calculate new monthly payment
+      let newMonthlyPayment = prev.monthlyPayment;
+      if (prev.financingPlanId) {
+        const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId);
+        if (selectedPlan) {
+          newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, selectedPlan.payment_factor);
+        } else {
+          newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
+        }
+      } else {
+        newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
+      }
+      
+      return {
+        ...prev,
+        discount: newDiscountAmount,
+        total: newTotal,
+        monthlyPayment: newMonthlyPayment,
+        ...(updatedDiscountTypes && { discountTypes: updatedDiscountTypes })
+      };
+    });
+    
+    // Mark that we need to update the parent
+    hasUpdatedRef.current = false;
+  }, [financingPlans]);
+
+  // Helper function to calculate discount percentage based on services subtotal (not including custom adders)
+  const calculateDiscountPercentage = useCallback((discountAmount: number) => {
+    const servicesSubtotal = calculateSubtotal(services, []); // No custom adders
+    return servicesSubtotal > 0 ? (discountAmount / servicesSubtotal) * 100 : 0;
+  }, [services]);
 
   // Handle toggling a discount type on or off
   const handleToggleDiscountType = (discountId: string, isEnabled: boolean) => {
@@ -460,51 +577,75 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       .filter(d => d.isEnabled)
       .reduce((sum, d) => sum + d.amount, 0);
 
-    // Update the form data with new discount types and total
-    setFormData(prev => ({
-      ...prev,
-      discountTypes: updatedDiscountTypes,
-      discount: totalDiscount
-    }));
+    // Update the form data with new discount types and sync main discount field
+    setFormData(prev => {
+      const newSubtotal = prev.subtotal;
+      const newTotal = newSubtotal - totalDiscount;
+      
+      // Calculate new monthly payment
+      let newMonthlyPayment = prev.monthlyPayment;
+      if (prev.financingPlanId) {
+        const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId);
+        if (selectedPlan) {
+          newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, selectedPlan.payment_factor);
+        } else {
+          newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
+        }
+      } else {
+        newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
+      }
+      
+      return {
+        ...prev,
+        discountTypes: updatedDiscountTypes,
+        discount: totalDiscount,
+        total: newTotal,
+        monthlyPayment: newMonthlyPayment
+      };
+    });
 
     // Update the parent with the new data
     hasUpdatedRef.current = false;
   };
 
-  // Handle updating a discount amount (dollar value)
+  // Handle updating a discount amount (dollar value) with enhanced approval logic
   const handleUpdateDiscountAmount = (discountId: string, amount: number) => {
     const discountType = formData.discountTypes.find(d => d.id === discountId);
     if (!discountType) return;
 
-    // Check if the amount exceeds user permission thresholds
-    const discountPercent = formData.subtotal > 0 ? (amount / formData.subtotal) * 100 : 0;
-    
-    if (userPermissions && discountPercent > userPermissions.maxDiscountPercent) {
-      // Store the pending discount for approval
-      setPendingDiscount(amount);
-      setShowApprovalDialog(true);
+    // Don't set manually edited for system-generated discounts
+    if (!discountType.isSystemGenerated) {
+      setDiscountManuallyEdited(true);
+    }
+
+    // ENHANCED APPROVAL LOGIC: Only bundled and individual discounts skip approval
+    // Manual total discount field requires approval, but individual discount types don't
+    const isPreApprovedDiscount = discountType.category === 'Customer Type' || 
+                                  discountType.category === 'Loyalty' || 
+                                  discountType.category === 'Bundle' ||
+                                  discountType.isSystemGenerated;
+
+    // Only check permissions for non-pre-approved discounts
+    if (!isPreApprovedDiscount) {
+      const discountPercent = formData.subtotal > 0 ? (amount / formData.subtotal) * 100 : 0;
       
-      toast({
-        title: "Approval Required",
-        description: `Discount of ${discountPercent.toFixed(1)}% exceeds your limit of ${userPermissions.maxDiscountPercent}%. Manager approval is required.`,
-        variant: "destructive"
-      });
-      
-      return;
+      if (userPermissions && discountPercent > userPermissions.maxDiscountPercent) {
+        setPendingDiscount(amount);
+        setShowApprovalDialog(true);
+        
+        toast({
+          title: "Approval Required",
+          description: `Discount of ${discountPercent.toFixed(1)}% exceeds your limit of ${userPermissions.maxDiscountPercent}%. Manager approval is required.`,
+          variant: "destructive"
+        });
+        
+        return;
+      }
     }
 
     // Update the discount type with new amount
     const updatedDiscountTypes = formData.discountTypes.map(discount => {
       if (discount.id === discountId) {
-        // Log this discount change
-        const discountLog = [...formData.discountLog, {
-          timestamp: Date.now(),
-          userId: userId || 0,
-          discountType: discount.id,
-          previousValue: discount.amount,
-          newValue: amount
-        }];
-
         return { 
           ...discount, 
           amount,
@@ -514,27 +655,50 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       return discount;
     });
 
-    // Calculate the new total discount
-    const totalDiscount = updatedDiscountTypes
+    // ENHANCED: Smart conflict resolution
+    const resolvedDiscountTypes = resolveDiscountConflicts(updatedDiscountTypes, discountId);
+    
+    // Calculate new total
+    const totalDiscount = resolvedDiscountTypes
       .filter(d => d.isEnabled)
       .reduce((sum, d) => sum + d.amount, 0);
 
-    // Update the form data with new discount types and total
-    setFormData(prev => ({
-      ...prev,
-      discountTypes: updatedDiscountTypes,
-      discount: totalDiscount,
-      discountLog: [
-        ...prev.discountLog,
-        {
-          timestamp: Date.now(),
-          userId: userId || 0,
-          discountType: discountId,
-          previousValue: prev.discountTypes.find(d => d.id === discountId)?.amount || 0,
-          newValue: amount
+    // Update the form data with resolved discount types and sync main discount field
+    setFormData(prev => {
+      const newSubtotal = prev.subtotal;
+      const newTotal = newSubtotal - totalDiscount;
+      
+      // Calculate new monthly payment
+      let newMonthlyPayment = prev.monthlyPayment;
+      if (prev.financingPlanId) {
+        const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId);
+        if (selectedPlan) {
+          newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, selectedPlan.payment_factor);
+        } else {
+          newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
         }
-      ]
-    }));
+      } else {
+        newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
+      }
+      
+      return {
+        ...prev,
+        discountTypes: resolvedDiscountTypes,
+        discount: totalDiscount,
+        total: newTotal,
+        monthlyPayment: newMonthlyPayment,
+        discountLog: [
+          ...prev.discountLog,
+          {
+            timestamp: Date.now(),
+            userId: userId || 0,
+            discountType: discountId,
+            previousValue: prev.discountTypes.find(d => d.id === discountId)?.amount || 0,
+            newValue: amount
+          }
+        ]
+      };
+    });
 
     // Update the parent with the new data
     hasUpdatedRef.current = false;
@@ -542,8 +706,9 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
   // Handle updating a discount percentage
   const handleUpdateDiscountPercentage = (discountId: string, percentage: number) => {
-    // Convert percentage to dollar amount
-    const amount = (percentage / 100) * formData.subtotal;
+    // Calculate based on services subtotal only (no custom adders) for more consistent percentage calculations
+    const servicesSubtotal = calculateSubtotal(services, []); // Empty array = no custom adders
+    const amount = (percentage / 100) * servicesSubtotal;
     
     // Use the dollar amount handler
     handleUpdateDiscountAmount(discountId, amount);
@@ -559,13 +724,13 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     return calculateMonthlyPayment(total, term, rate);
   }
 
-  // Handle discount change with approval validation
+  // Enhanced manual discount handler with improved approval logic and conflict resolution
   const handleDiscountChange = useCallback(async (value: number) => {
     // Mark that discount has been manually edited
     setDiscountManuallyEdited(true)
     
-    // If this is a manual override of the total discount amount
-    // This now functions as a "manual discount" separate from the individual discount types
+    // ENHANCED APPROVAL LOGIC: Manual discount field ALWAYS requires approval if exceeding threshold
+    // This is different from individual discount types which are pre-approved
     
     // Always allow discount changes, but add approval logic if permissions are loaded
     if (!userPermissions) {
@@ -584,24 +749,47 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
     const discountPercent = formData.subtotal > 0 ? (value / formData.subtotal) * 100 : 0
     
-    // Check if discount exceeds user's threshold
+    // Manual discount field ALWAYS requires approval if exceeding threshold (unlike individual discounts)
     if (discountPercent > userPermissions.maxDiscountPercent) {
       setPendingDiscount(value)
       setShowApprovalDialog(true)
       
       toast({
         title: "Approval Required",
-        description: `Discount of ${discountPercent.toFixed(1)}% exceeds your limit of ${userPermissions.maxDiscountPercent}%. Manager approval is required.`,
+        description: `Manual discount of ${discountPercent.toFixed(1)}% exceeds your limit of ${userPermissions.maxDiscountPercent}%. Manager approval is required.`,
         variant: "destructive"
       })
       
       return
     }
     
+    // ENHANCED: Preserve system-generated discounts, only clear manual ones
+    const preservedDiscountTypes = formData.discountTypes.map(type => {
+      if (type.isSystemGenerated) {
+        // Keep system-generated discounts (like auto-bundle)
+        return type;
+      } else {
+        // Clear manual discount types to avoid conflicts
+        return {
+          ...type,
+          isEnabled: false,
+          amount: 0
+        };
+      }
+    });
+
+    // Calculate the difference between manual value and system discounts
+    const systemDiscountTotal = preservedDiscountTypes
+      .filter(d => d.isEnabled && d.isSystemGenerated)
+      .reduce((sum, d) => sum + d.amount, 0);
+
+    const manualDiscountAmount = Math.max(0, value - systemDiscountTotal);
+    
     // Apply discount normally if within threshold and update discount log
     setFormData(prev => ({
       ...prev,
       discount: value,
+      discountTypes: preservedDiscountTypes,
       discountLog: [
         ...prev.discountLog,
         {
@@ -628,13 +816,10 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
       // Recalculate total and monthly payment when relevant fields change
       if (field === "subtotal" || field === "discount") {
-        // Use the standardized calculation for total
-        const total = calculateTotalWithAdjustments(
-          field === "subtotal" ? value : prev.subtotal,
-          0, // No additional costs
-          0, // No savings
-          field === "discount" ? value : prev.discount
-        );
+        // Simple subtotal - discount calculation (no double-subtracting)
+        const subtotal = field === "subtotal" ? value : prev.subtotal;
+        const discount = field === "discount" ? value : prev.discount;
+        const total = subtotal - discount;
         
         newData.total = total
         
@@ -658,6 +843,13 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     hasUpdatedRef.current = false
   }, [financingPlans])
   
+  // Enhanced effect to auto-apply bundle discounts
+  useEffect(() => {
+    if (services.length >= 2 && !discountManuallyEdited) {
+      calculateAndApplyBundleDiscount(services);
+    }
+  }, [services, products, discountManuallyEdited]);
+
   // Check for approval request updates for this proposal
   useEffect(() => {
     async function checkApprovalStatus() {
@@ -995,8 +1187,10 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
         let newDiscount = prev.discount
         
         // Only auto-update discount if it hasn't been manually edited
-        if (!discountManuallyEdited) {
-          newDiscount = newBundleDiscount
+        // and if we don't have any enabled individual discount types
+        const hasEnabledDiscountTypes = prev.discountTypes?.some(d => d.isEnabled) || false;
+        if (!discountManuallyEdited && !hasEnabledDiscountTypes) {
+          newDiscount = newBundleDiscount;
         }
         
         const newTotal = newSubtotal - newDiscount
@@ -1288,22 +1482,85 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                     }}
                     className="pl-8 text-right font-medium"
                     placeholder="0.00"
-                    title="Enter discount amount"
+                    title="Manual discount entry - may require manager approval if exceeding your limit"
                   />
                   </div>
                 </div>
 
-                {/* Discount Management System */}
+                {/* Enhanced Discount Management System */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <h3 className="font-medium text-gray-800 mb-3 flex items-center gap-1">
                     <Sparkles className="h-4 w-4 text-blue-600" />
                     Discount Management
+                    {discountManuallyEdited && (
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        Manual Override Active
+                      </Badge>
+                    )}
                   </h3>
+                  
+                  {/* Bundle Discount Status */}
+                  {services.length >= 2 && (
+                    <div className="mb-3 p-2 bg-blue-50 rounded border border-blue-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-blue-800">
+                          🎯 Bundle discount available: ${calculateDiscount(services).toFixed(2)}
+                        </span>
+                        {discountManuallyEdited && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setDiscountManuallyEdited(false);
+                              calculateAndApplyBundleDiscount(services);
+                            }}
+                            className="text-xs text-blue-600 hover:text-blue-800"
+                          >
+                            Apply Bundle Discount
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Conflict warnings */}
+                  {(() => {
+                    const customerTypeDiscounts = formData.discountTypes.filter(d => 
+                      d.category === 'Customer Type' && d.isEnabled
+                    );
+                    const bundleDiscounts = formData.discountTypes.filter(d => 
+                      d.category === 'Bundle' && d.isEnabled && !d.isSystemGenerated
+                    );
+                    
+                    return (
+                      <>
+                        {customerTypeDiscounts.length > 1 && (
+                          <Alert className="mb-3">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Multiple Customer Discounts</AlertTitle>
+                            <AlertDescription>
+                              Only one customer type discount should be active. Consider combining or choosing the best option.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                        
+                        {bundleDiscounts.length > 1 && (
+                          <Alert className="mb-3">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Multiple Bundle Discounts</AlertTitle>
+                            <AlertDescription>
+                              Multiple bundle discounts are active. This may result in excessive discounting.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </>
+                    );
+                  })()}
                   
                   {/* Discount types accordion */}
                   <Accordion type="single" collapsible className="w-full">
                     {/* Group discounts by category */}
-                    {['Customer Type', 'Loyalty', 'Volume'].map(category => (
+                    {['Customer Type', 'Loyalty', 'Bundle'].map(category => (
                       <AccordionItem value={category} key={category}>
                         <AccordionTrigger className="py-2 text-sm">
                           {category} Discounts
@@ -1371,9 +1628,14 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                                                   </div>
                                                 </div>
                                                 
-                                                <div className="text-sm text-gray-500">
-                                                  Equivalent to {formData.subtotal > 0 ? ((discount.amount / formData.subtotal) * 100).toFixed(2) : '0.00'}% 
-                                                  of total project cost.
+                                                                                <div className="text-sm text-gray-500">
+                                  Equivalent to {calculateDiscountPercentage(discount.amount).toFixed(2)}% 
+                                  of services cost (excluding custom additions).
+                                </div>
+                                                
+                                                {/* Approval status indicator */}
+                                                <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
+                                                  ✓ This discount type does not require manager approval
                                                 </div>
                                                 
                                                 <div className="flex justify-between">
@@ -1398,7 +1660,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                                                     <Input
                                                       id="discount-percentage"
                                                       type="number"
-                                                      value={formData.subtotal > 0 ? ((discount.amount / formData.subtotal) * 100).toFixed(2) : '0.00'}
+                                                      value={calculateDiscountPercentage(discount.amount).toFixed(2)}
                                                       onChange={(e) => handleUpdateDiscountPercentage(discount.id, Number(e.target.value) || 0)}
                                                     />
                                                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">%</span>
@@ -1685,7 +1947,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
             </DialogTitle>
             <DialogDescription>
               The discount amount of ${pendingDiscount.toFixed(2)} 
-              ({formData.subtotal > 0 ? ((pendingDiscount / formData.subtotal) * 100).toFixed(1) : 0}%) 
+              ({calculateDiscountPercentage(pendingDiscount).toFixed(1)}%) 
               exceeds your maximum discount limit of {userPermissions?.maxDiscountPercent || 0}%.
             </DialogDescription>
           </DialogHeader>
@@ -1731,7 +1993,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
               <p><strong>User ID:</strong> {userId || 'Not provided'}</p>
               <p><strong>Proposal ID:</strong> {proposalId || 'New proposal (pending)'}</p>
               <p><strong>Discount Limit:</strong> {userPermissions?.maxDiscountPercent || 0}%</p>
-              <p><strong>Requested Discount:</strong> {formData.subtotal > 0 ? ((pendingDiscount / formData.subtotal) * 100).toFixed(1) : 0}%</p>
+                              <p><strong>Requested Discount:</strong> {calculateDiscountPercentage(pendingDiscount).toFixed(1)}%</p>
             </div>
           </div>
           
