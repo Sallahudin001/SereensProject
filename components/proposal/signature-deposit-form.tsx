@@ -4,8 +4,8 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Check, Mail, MessageSquare, Loader2 } from "lucide-react"
+
+import { Check, Mail, Loader2, FileText, DollarSign, AlertTriangle, Info } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { createProposal, markProposalAsSent } from "@/app/actions/proposal-actions"
 
@@ -32,16 +32,6 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
         toast({
           title: "Missing Email",
           description: "Customer email is required to send the proposal by email.",
-          variant: "destructive",
-        })
-        setIsSubmitting(false)
-        return
-      }
-
-      if (signatureMethod === "sms" && !formData.customer.phone) {
-        toast({
-          title: "Missing Phone Number",
-          description: "Customer phone number is required to send the proposal by SMS.",
           variant: "destructive",
         })
         setIsSubmitting(false)
@@ -90,7 +80,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
         proposalId = saveResult.proposalId
       }
 
-      // Send the proposal based on selected method
+      // Send the proposal via email
       if (signatureMethod === "email") {
         // Send the proposal email using the API route
         const response = await fetch('/api/email', {
@@ -119,33 +109,6 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
           setIsSubmitting(false)
           return
         }
-      } else if (signatureMethod === "sms") {
-        // Send the proposal via SMS using the Vonage API
-        const response = await fetch('/api/sms', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            phone: formData.customer.phone,
-            name: formData.customer.name,
-            proposalId: proposalId.toString(),
-            proposalNumber: formData.proposalNumber || `PRO-${Math.floor(10000 + Math.random() * 90000)}`,
-            message: `Your proposal #${formData.proposalNumber || 'New'} from Evergreen Home Upgrades is ready for review. View and sign here: ${baseUrl}/proposals/view/${proposalId}`,
-          }),
-        });
-
-        const result = await response.json();
-        
-        if (!result.success) {
-          toast({
-            title: "Failed to send SMS",
-            description: result.error || "An error occurred while sending the SMS.",
-            variant: "destructive",
-          })
-          setIsSubmitting(false)
-          return
-        }
       }
 
       // Update proposal status to 'sent' using the server action
@@ -157,7 +120,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
 
       toast({
         title: "Proposal sent successfully",
-        description: `The proposal has been saved and sent to the customer via ${signatureMethod === "email" ? "email" : "SMS"}.`,
+        description: "The proposal has been saved and sent to the customer via email.",
       })
       setIsComplete(true)
     } catch (error) {
@@ -173,42 +136,189 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Proposal Summary</h3>
-        <Card>
+    <div className="space-y-8">
+      {/* Enhanced Header Section */}
+      <div className="text-center space-y-4">
+        <div className="flex items-center justify-center gap-3">
+          <div className="p-3 bg-emerald-100 rounded-full">
+            <FileText className="h-8 w-8 text-emerald-600" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Proposal Finalization</h2>
+            <p className="text-lg text-gray-600">Ready to send to your customer</p>
+          </div>
+        </div>
+        
+        <div className="max-w-3xl mx-auto">
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg p-4 border border-emerald-200">
+            <p className="text-emerald-800 font-medium">
+              ✨ Your proposal is complete and ready to be sent for customer signature and payment processing.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Proposal Summary */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Customer & Project Details */}
+        <Card className="border-2 border-blue-200 shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6">
+            <h3 className="text-xl font-bold text-blue-900 flex items-center gap-2">
+              <div className="p-2 bg-blue-500 rounded-full">
+                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              Customer Information
+            </h3>
+            <p className="text-blue-700 text-sm mt-1">
+              Project details and contact information
+            </p>
+          </div>
+          
           <CardContent className="p-6">
             <div className="space-y-4">
+              {/* Customer Details Grid */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Customer</h4>
-                  <p className="font-medium">{formData.customer.name || "N/A"}</p>
-                  <p className="text-sm text-gray-600">{formData.customer.address || "N/A"}</p>
-                  <p className="text-sm text-gray-600">{formData.customer.email || "N/A"}</p>
-                  <p className="text-sm text-gray-600">{formData.customer.phone || "N/A"}</p>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Customer Name</Label>
+                  <p className="text-gray-900 font-medium mt-1">{formData.customer.name || "Not provided"}</p>
                 </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Phone</Label>
+                  <p className="text-gray-900 font-medium mt-1">{formData.customer.phone || "Not provided"}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Email Address</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-gray-900 font-medium">{formData.customer.email || "Not provided"}</p>
+                  {formData.customer.email ? (
+                    <div className="p-1 bg-green-100 rounded-full">
+                      <Check className="h-3 w-3 text-green-600" />
+                    </div>
+                  ) : (
+                    <div className="p-1 bg-red-100 rounded-full">
+                      <AlertTriangle className="h-3 w-3 text-red-600" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Project Address</Label>
+                <p className="text-gray-900 font-medium mt-1">{formData.customer.address || "Not provided"}</p>
+              </div>
+
+              {/* Proposal Metadata */}
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Proposal ID</Label>
+                    <p className="text-gray-900 font-mono mt-1">{formData.proposalNumber || `PRO-${Math.floor(10000 + Math.random() * 90000)}`}</p>
+                  </div>
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Services</h4>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {formData.services.map((service: string, index: number) => (
-                      <span key={index} className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded">
-                        {service.charAt(0).toUpperCase() + service.slice(1).replace("-", " & ")}
-                      </span>
-                    ))}
+                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Created</Label>
+                    <p className="text-gray-900 mt-1">{new Date().toLocaleDateString()}</p>
                   </div>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div className="border-t pt-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Amount</span>
-                  <span className="font-bold text-xl">${formData.pricing.total?.toFixed(2) || "0.00"}</span>
+        {/* Services & Financial Summary */}
+        <Card className="border-2 border-emerald-200 shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 border-b border-emerald-200 p-6">
+            <h3 className="text-xl font-bold text-emerald-900 flex items-center gap-2">
+              <div className="p-2 bg-emerald-500 rounded-full">
+                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              Project Summary
+            </h3>
+            <p className="text-emerald-700 text-sm mt-1">
+              Selected services and pricing breakdown
+            </p>
+          </div>
+          
+          <CardContent className="p-6">
+            <div className="space-y-6">
+              {/* Selected Services */}
+                <div>
+                <Label className="text-sm font-semibold text-gray-900 mb-3 block">Selected Services</Label>
+                <div className="space-y-2">
+                    {formData.services.map((service: string, index: number) => (
+                    <div key={index} className="flex items-center gap-3 bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                      <div className="p-1 bg-emerald-500 rounded-full">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                      <span className="text-emerald-900 font-medium">
+                        {service.charAt(0).toUpperCase() + service.slice(1).replace("-", " & ")}
+                      </span>
+                      <span className="ml-auto text-emerald-700 text-sm">✓ Included</span>
+                    </div>
+                    ))}
                 </div>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-gray-600">Monthly Payment</span>
-                  <span className="text-emerald-600 font-medium">
-                    ${formData.pricing.monthlyPayment?.toFixed(2) || "0.00"}/mo
+              </div>
+
+              {/* Enhanced Financial Summary */}
+              <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <Label className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-gray-600" />
+                  Financial Summary
+                </Label>
+                
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-600">Project Subtotal</span>
+                    <span className="text-gray-900 font-medium text-lg">
+                      ${(formData.pricing.subtotal || 0).toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  {formData.pricing.discount && formData.pricing.discount > 0 && (
+                    <div className="flex justify-between items-center py-2">
+                      <span className="text-gray-600 flex items-center gap-1">
+                        <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                        </svg>
+                        Applied Discount
+                      </span>
+                      <span className="text-red-600 font-medium text-lg">
+                        -${formData.pricing.discount.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="border-t border-gray-300 pt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-gray-900">Total Project Cost</span>
+                      <span className="text-3xl font-bold text-emerald-600">
+                        ${(formData.pricing.total || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {formData.pricing.monthlyPayment && formData.pricing.monthlyPayment > 0 && (
+                    <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 mt-4">
+                <div className="flex justify-between items-center">
+                        <div>
+                          <span className="text-blue-900 font-semibold">Financing Available</span>
+                          {formData.pricing.financingPlanName && (
+                            <p className="text-sm text-blue-700 mt-1">
+                              {formData.pricing.financingPlanName}
+                            </p>
+                          )}
+                </div>
+                        <span className="text-blue-600 font-bold text-xl">
+                          ${formData.pricing.monthlyPayment.toFixed(2)}/mo
                   </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -216,99 +326,230 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
         </Card>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Delivery Method</h3>
-        <RadioGroup
-          value={signatureMethod}
-          onValueChange={setSignatureMethod}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <Card className={`cursor-pointer border ${signatureMethod === "email" ? "border-emerald-600" : ""}`}>
-            <CardContent className="p-4 flex items-start gap-3">
-              <RadioGroupItem
-                value="email"
-                id="method-email"
-                className={signatureMethod === "email" ? "text-emerald-600" : ""}
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <Label htmlFor="method-email" className="font-medium cursor-pointer">
-                    Email
-                  </Label>
-                </div>
-                <p className="text-sm text-gray-500 mt-1">Send via email for signature</p>
-                {formData.customer.email && (
-                  <p className="text-sm font-medium mt-1">Will be sent to: {formData.customer.email}</p>
-                )}
-                {!formData.customer.email && (
-                  <p className="text-sm text-amber-600 mt-1">No customer email provided in Customer Info</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+      {/* Enhanced Delivery Method */}
+      <Card className="border-2 border-blue-200 shadow-lg overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-6">
+          <h3 className="text-xl font-bold text-blue-900 flex items-center gap-2">
+            <div className="p-2 bg-blue-500 rounded-full">
+              <Mail className="h-5 w-5 text-white" />
+            </div>
+            Proposal Delivery
+          </h3>
+          <p className="text-blue-700 text-sm mt-1">
+            Secure email delivery with customer portal access
+          </p>
+        </div>
 
-          <Card className={`cursor-pointer border ${signatureMethod === "sms" ? "border-emerald-600" : ""}`}>
-            <CardContent className="p-4 flex items-start gap-3">
-              <RadioGroupItem
-                value="sms"
-                id="method-sms"
-                className={signatureMethod === "sms" ? "text-emerald-600" : ""}
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-gray-500" />
-                  <Label htmlFor="method-sms" className="font-medium cursor-pointer">
-                    SMS
-                  </Label>
+        <CardContent className="p-6">
+          <div className="grid md:grid-cols-2 gap-6">
+      <div className="space-y-4">
+              <div className="bg-blue-50 rounded-lg p-5 border border-blue-200">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-blue-500 rounded-full">
+                    <Mail className="h-6 w-6 text-white" />
+                  </div>
+            <div className="flex-1">
+                    <h4 className="text-lg font-semibold text-blue-900 mb-2">Email Delivery</h4>
+                    <p className="text-blue-800 text-sm mb-4">
+                      Professional email with secure proposal link, review portal, and e-signature capabilities.
+                    </p>
+                    
+                    {formData.customer.email ? (
+                      <div className="bg-white rounded-lg p-4 border border-blue-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Check className="h-5 w-5 text-green-600" />
+                          <span className="font-semibold text-gray-900">Ready to Send</span>
+                        </div>
+                        <p className="text-gray-700 text-sm">
+                          <span className="font-medium">Recipient:</span> {formData.customer.email}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <AlertTriangle className="h-5 w-5 text-amber-600" />
+                          <span className="font-semibold text-amber-900">Email Required</span>
+                        </div>
+                        <p className="text-amber-800 text-sm">
+                          Please provide customer email in the Customer Information section.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">Send via text message</p>
-                {formData.customer.phone && (
-                  <p className="text-sm font-medium mt-1">Will be sent to: {formData.customer.phone}</p>
-                )}
-                {!formData.customer.phone && (
-                  <p className="text-sm text-amber-600 mt-1">No customer phone number provided in Customer Info</p>
-                )}
               </div>
-            </CardContent>
-          </Card>
-        </RadioGroup>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-slate-50 rounded-lg p-5 border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <Info className="h-5 w-5 text-slate-600" />
+                  What's Included
+                </h4>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-slate-700">Professional proposal PDF</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-slate-700">Secure customer portal</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-slate-700">Electronic signature capture</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-slate-700">Integrated payment processing</span>
+                  </div>
+              <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span className="text-slate-700">Real-time status notifications</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+          </CardContent>
+        </Card>
+
+      {/* Enhanced Action Section */}
+      <Card className="border-2 border-gray-200 shadow-lg overflow-hidden">
+        <CardContent className="p-8">
+          {isComplete ? (
+            <div className="text-center space-y-6">
+              <div className="flex justify-center">
+                <div className="p-6 bg-green-100 rounded-full">
+                  <Check className="h-12 w-12 text-green-600" />
+                </div>
       </div>
 
-      <div className="pt-4">
-        {isComplete ? (
-          <div className="bg-green-50 border border-green-200 rounded-md p-4 text-center">
-            <Check className="h-6 w-6 text-green-600 mx-auto mb-2" />
-            <h3 className="text-lg font-medium text-green-800">Proposal Sent Successfully!</h3>
-            <p className="text-green-600">
-              The customer will receive the proposal shortly and can review, sign, and submit payment.
-            </p>
+              <div>
+                <h3 className="text-3xl font-bold text-green-800 mb-2">🎉 Proposal Sent Successfully!</h3>
+                <p className="text-green-700 text-lg max-w-2xl mx-auto">
+                  Your customer will receive the proposal shortly and can review, sign, and submit payment through our secure portal.
+                </p>
+              </div>
+              
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-green-50 rounded-lg p-6 border border-green-200">
+                  <h4 className="font-semibold text-green-800 mb-4 text-lg">Customer Journey:</h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
+                        <span className="text-green-700">Receives email notification</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+                        <span className="text-green-700">Reviews proposal details</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>
+                        <span className="text-green-700">Signs electronically</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>
+                        <span className="text-green-700">Submits payment/deposit</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">5</div>
+                        <span className="text-green-700">You receive confirmation</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">6</div>
+                        <span className="text-green-700">Project begins!</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
           </div>
         ) : (
+            <div className="space-y-8">
+              <div className="text-center space-y-4">
+                <h3 className="text-2xl font-bold text-gray-900">Ready to Send Proposal</h3>
+                <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                  Everything looks great! Click the button below to send this professional proposal to your customer for signature and payment.
+                </p>
+              </div>
+              
+              <div className="max-w-md mx-auto">
           <Button
             onClick={handleSendProposal}
-            disabled={isSubmitting || (signatureMethod === "email" && !formData.customer.email) || (signatureMethod === "sms" && !formData.customer.phone)}
-            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            disabled={isSubmitting || !formData.customer.email}
+                  className="w-full py-6 text-xl font-semibold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all duration-300 transform hover:scale-105"
           >
             {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              "Send Proposal for Signature"
+                    <div className="flex items-center justify-center gap-3">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span>Sending Proposal...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3">
+                      <Mail className="h-6 w-6" />
+                      <span>Send Proposal for Signature</span>
+                    </div>
             )}
           </Button>
+                
+                {!formData.customer.email && (
+                  <div className="text-center text-amber-700 text-sm mt-3 bg-amber-50 rounded-lg p-3 border border-amber-200">
+                    ⚠️ Customer email address is required to send the proposal
+                  </div>
         )}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mt-6">
-        <h3 className="text-lg font-medium text-blue-800">What happens next?</h3>
-        <p className="text-blue-600 mt-2">
-          After sending the proposal, your customer will receive a link to view, sign, and make a deposit. The payment
-          options will be presented to them at that time.
-        </p>
+              {/* Quick Action Tips */}
+              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                <h4 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                  <Info className="h-5 w-5 text-slate-600" />
+                  💡 Before Sending
+                </h4>
+                
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                      <div>
+                        <span className="text-slate-700 font-medium">Double-check customer email</span>
+                        <p className="text-slate-600">Ensure the email address is correct and active</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                      <div>
+                        <span className="text-slate-700 font-medium">Review all pricing</span>
+                        <p className="text-slate-600">Verify totals and financing options are accurate</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                      <div>
+                        <span className="text-slate-700 font-medium">Confirm project details</span>
+                        <p className="text-slate-600">Make sure all services and specifications are correct</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-4 w-4 text-green-500 mt-0.5" />
+                      <div>
+                        <span className="text-slate-700 font-medium">Set expectations</span>
+                        <p className="text-slate-600">Consider calling the customer to let them know it's coming</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
       </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

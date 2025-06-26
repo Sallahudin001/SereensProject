@@ -136,150 +136,209 @@ export default function RepOfferSelector({
 
   if (loading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Time-Sensitive Offers
-          </CardTitle>
-          <CardDescription>Loading available offers...</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="space-y-6">
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-bold text-gray-900">Sales Offers</h2>
+          <p className="text-gray-600">Loading available time-sensitive offers...</p>
+        </div>
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+        </div>
+      </div>
     )
   }
 
   return (
-    <div className="border border-amber-300 rounded-lg overflow-hidden">
-      {/* Header section matching the pricing breakdown style */}
-      <div className="bg-amber-100 border-b border-amber-300 p-4">
-        <div className="flex items-center gap-2">
-          <Clock className="h-5 w-5 text-amber-600" />
-          <h4 className="text-amber-900 text-xl font-bold">⏰ Limited Time Offers</h4>
-        </div>
-        <p className="text-amber-700 mt-1 text-sm">
-          Select time-sensitive offers to apply urgency and boost close rates. These will be visible to the customer with countdown timers.
+    <div className="space-y-8">
+      {/* Header Section */}
+      <div className="text-center space-y-3">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center justify-center gap-2">
+          <Clock className="h-6 w-6 text-amber-600" />
+          Sales Offers & Finalization
+        </h2>
+        <p className="text-gray-600 max-w-3xl mx-auto">
+          Select time-sensitive offers to create urgency and boost conversion rates. These offers will be visible to customers with countdown timers to encourage quick decisions.
         </p>
       </div>
       
-      {/* Offers list */}
-      <div className="bg-amber-50/60">
+      {/* Offers Selection Card */}
+      <Card className="border-2 border-amber-200 shadow-lg">
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 p-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500 rounded-full">
+              <Zap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-amber-900">⚡ Limited Time Offers</h3>
+              <p className="text-amber-700 text-sm">
+                Boost your close rate with strategic urgency-creating offers
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-6">
+          {/* Recommended Offers */}
         {relevantOffers.length > 0 && (
-          <div className="p-4 border-b border-amber-200">
-            <h5 className="font-medium text-amber-900 mb-3 flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Recommended for {services.join(' + ')}
-            </h5>
-            <div className="space-y-3">
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-4">
+                <Target className="h-5 w-5 text-emerald-600" />
+                <h4 className="text-lg font-semibold text-gray-900">
+                  🎯 Recommended for {services.join(' + ')}
+                </h4>
+                <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
+                  High Conversion
+                </Badge>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
               {relevantOffers.map(offer => (
-                <div key={offer.id} className="p-4 border-b border-amber-200 last:border-b-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start gap-3 flex-1">
+                  <Card key={offer.id} className={`transition-all duration-300 border-2 ${
+                    selectedOffers.includes(offer.id) 
+                      ? 'border-emerald-500 bg-emerald-50 shadow-md' 
+                      : 'border-gray-200 hover:border-emerald-300 hover:shadow-sm'
+                  }`}>
+                    <CardContent className="p-5">
+                      <div className="flex items-start gap-3">
                       <Checkbox
                         id={`offer-${offer.id}`}
                         checked={selectedOffers.includes(offer.id)}
                         onCheckedChange={() => toggleOfferSelection(offer.id)}
                         className="mt-1"
                       />
-                      <div className="flex-1">
-                        <div className="mb-2">
-                          <h6 className="text-amber-900 font-semibold text-lg">{offer.name}</h6>
-                          <p className="text-amber-800">{offer.description}</p>
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <h5 className="font-semibold text-gray-900 flex items-center gap-2">
+                              {getCategoryIcon(offer.category)}
+                              {offer.name}
+                            </h5>
+                            <p className="text-sm text-gray-600 mt-1">{offer.description}</p>
                         </div>
                         
-                        <div className="flex gap-2">
-                          <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-md text-xs font-medium">
+                          <div className="flex flex-wrap gap-2">
+                            <Badge className="bg-emerald-100 text-emerald-800">
                             {offer.category}
-                          </span>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                            </Badge>
+                            <Badge className="bg-green-100 text-green-800 font-semibold">
                             {formatOfferValue(offer)}
-                          </span>
+                            </Badge>
+                            <Badge variant="outline" className="border-amber-300 text-amber-700">
+                              ⏰ {formatExpiration(offer)}
+                            </Badge>
+                          </div>
+                          
+                          {selectedOffers.includes(offer.id) && (
+                            <div className="text-sm text-emerald-700 font-medium flex items-center gap-1">
+                              <CheckCircle className="h-4 w-4" />
+                              Will appear to customer with countdown timer
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="text-right ml-4">
-                      <div className="text-xs text-amber-700">Expires in:</div>
-                      <div className="text-amber-900 font-mono font-bold">
-                        {formatExpiration(offer)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    </CardContent>
+                  </Card>
               ))}
             </div>
           </div>
         )}
 
+          {/* General Offers */}
         {generalOffers.length > 0 && (
-          <div className="p-4 border-b border-amber-200">
-            <h5 className="font-medium text-amber-900 mb-3 flex items-center gap-2">
-              <Gift className="h-4 w-4" />
-              General Offers
-            </h5>
-            <div className="space-y-3">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Gift className="h-5 w-5 text-blue-600" />
+                <h4 className="text-lg font-semibold text-gray-900">💼 General Offers</h4>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                  Universal Appeal
+                </Badge>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
               {generalOffers.map(offer => (
-                <div key={offer.id} className="p-4 border-b border-amber-200 last:border-b-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start gap-3 flex-1">
+                  <Card key={offer.id} className={`transition-all duration-300 border-2 ${
+                    selectedOffers.includes(offer.id) 
+                      ? 'border-blue-500 bg-blue-50 shadow-md' 
+                      : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                  }`}>
+                    <CardContent className="p-5">
+                      <div className="flex items-start gap-3">
                       <Checkbox
                         id={`offer-${offer.id}`}
                         checked={selectedOffers.includes(offer.id)}
                         onCheckedChange={() => toggleOfferSelection(offer.id)}
                         className="mt-1"
                       />
-                      <div className="flex-1">
-                        <div className="mb-2">
-                          <h6 className="text-amber-900 font-semibold text-lg">{offer.name}</h6>
-                          <p className="text-amber-800">{offer.description}</p>
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <h5 className="font-semibold text-gray-900 flex items-center gap-2">
+                              {getCategoryIcon(offer.category)}
+                              {offer.name}
+                            </h5>
+                            <p className="text-sm text-gray-600 mt-1">{offer.description}</p>
                         </div>
                         
-                        <div className="flex gap-2">
-                          <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-md text-xs font-medium">
+                          <div className="flex flex-wrap gap-2">
+                            <Badge className="bg-blue-100 text-blue-800">
                             {offer.category}
-                          </span>
-                          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                            </Badge>
+                            <Badge className="bg-green-100 text-green-800 font-semibold">
                             {formatOfferValue(offer)}
-                          </span>
+                            </Badge>
+                            <Badge variant="outline" className="border-amber-300 text-amber-700">
+                              ⏰ {formatExpiration(offer)}
+                            </Badge>
+                          </div>
+                          
+                          {selectedOffers.includes(offer.id) && (
+                            <div className="text-sm text-blue-700 font-medium flex items-center gap-1">
+                              <CheckCircle className="h-4 w-4" />
+                              Will appear to customer with countdown timer
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                    
-                    <div className="text-right ml-4">
-                      <div className="text-xs text-amber-700">Expires in:</div>
-                      <div className="text-amber-900 font-mono font-bold">
-                        {formatExpiration(offer)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                    </CardContent>
+                  </Card>
               ))}
             </div>
           </div>
         )}
 
-        {selectedOffers.length > 0 && (
-          <div className="p-4 bg-green-50 border-b border-amber-200">
-            <div className="flex items-center gap-2 text-green-800">
-              <CheckCircle className="h-4 w-4" />
-              <span className="font-medium">
-                {selectedOffers.length} offer{selectedOffers.length !== 1 ? 's' : ''} selected
-              </span>
+          {/* No Offers State */}
+          {relevantOffers.length === 0 && generalOffers.length === 0 && (
+            <div className="text-center py-12">
+              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h4 className="text-lg font-medium text-gray-900 mb-2">No Active Offers Available</h4>
+              <p className="text-gray-600">
+                There are currently no time-sensitive offers configured. Contact your administrator to set up promotional offers.
+              </p>
             </div>
-            <p className="text-green-700 text-sm mt-1">
-              These will be shown to the customer with countdown timers to create urgency.
+          )}
+        </div>
+      </Card>
+
+      {/* Selection Summary */}
+      {selectedOffers.length > 0 && (
+        <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-500 rounded-full">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-emerald-900">
+                  {selectedOffers.length} Offer{selectedOffers.length !== 1 ? 's' : ''} Selected
+                </h4>
+                <p className="text-emerald-700 text-sm">
+                  These offers will be displayed to the customer with countdown timers to create urgency
             </p>
           </div>
+            </div>
+          </CardContent>
+        </Card>
         )}
 
-        {specialOffers.length === 0 && (
-          <div className="p-4">
-            <div className="flex items-center gap-2 text-amber-700">
-              <AlertTriangle className="h-4 w-4" />
-              <span>No time-sensitive offers are currently available. Check back later or contact an administrator.</span>
-            </div>
-          </div>
-        )}
-      </div>
+
     </div>
   )
 } 

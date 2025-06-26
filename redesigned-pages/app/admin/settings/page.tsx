@@ -39,7 +39,6 @@ type GeneralSettings = {
 
 type NotificationSettings = {
   emailNotifications: boolean;
-  smsNotifications: boolean;
   proposalCreated: boolean;
   proposalSigned: boolean;
   userRegistration: boolean;
@@ -115,7 +114,6 @@ export default function SystemSettings() {
     },
     notifications: {
       emailNotifications: true,
-      smsNotifications: false,
       proposalCreated: true,
       proposalSigned: true,
       userRegistration: true,
@@ -254,14 +252,7 @@ export default function SystemSettings() {
                     onCheckedChange={(checked) => handleSettingChange("notifications", "emailNotifications", checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="smsNotifications">SMS Notifications</Label>
-                  <Switch 
-                    id="smsNotifications" 
-                    checked={settings.notifications.smsNotifications} 
-                    onCheckedChange={(checked) => handleSettingChange("notifications", "smsNotifications", checked)}
-                  />
-                </div>
+
               </div>
             </CardContent>
           </Card>

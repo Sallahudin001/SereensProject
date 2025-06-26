@@ -1016,7 +1016,11 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                     <p><span className="font-medium">Window Type:</span> {productData.windowType?.replace(/-/g, " ")?.replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'N/A'}</p>
                                     <p><span className="font-medium">Window Color:</span> {productData.windowColor?.charAt(0).toUpperCase() + productData.windowColor?.slice(1) || 'N/A'}</p>
                                     <p><span className="font-medium">Number of Windows:</span> {productData.windowCount || '0'}</p>
-                                    <p><span className="font-medium">Window Price:</span> {formatCurrency(parseFloat(productData.windowPrice) || 0)}</p>
+                                    
+                                    {/* Show pricing only if showPricing is enabled */}
+                                    {(productData.showPricing !== false) && (
+                                      <p><span className="font-medium">Window Price:</span> {formatCurrency(parseFloat(productData.windowPrice) || 0)}</p>
+                                    )}
                                     
                                     {productData.doorTypes?.length > 0 && (
                                       <div>
@@ -1025,13 +1029,15 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                           {productData.doorTypes.map((door: string, i: number) => (
                                             <li key={i}>
                                               {door.charAt(0).toUpperCase() + door.slice(1)} Door
-                                              {productData.doorPrices && productData.doorPrices[door] && 
+                                              {/* Show individual door prices only if showPricing is enabled */}
+                                              {(productData.showPricing !== false) && productData.doorPrices && productData.doorPrices[door] && 
                                                 ` - ${formatCurrency(parseFloat(productData.doorPrices[door]) || 0)}`}
                                             </li>
                                           ))}
                                         </ul>
                                         <p><span className="font-medium">Number of Doors:</span> {productData.doorCount || '0'}</p>
-                                        {Object.keys(productData.doorPrices || {}).length > 0 && 
+                                        {/* Show total door price only if showPricing is enabled */}
+                                        {(productData.showPricing !== false) && Object.keys(productData.doorPrices || {}).length > 0 && 
                                           <p><span className="font-medium">Total Door Price:</span> {formatCurrency(
                                             (Object.values(productData.doorPrices || {}) as string[]).reduce(
                                               (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
@@ -1043,16 +1049,20 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                     {productData.customColors && 
                                       <p><span className="font-medium text-amber-600">Premium Color Upgrade Applied</span></p>
                                     }
-                                    <div className="border-t border-gray-200 pt-2 mt-2">
-                                      <p className="font-medium text-emerald-700 text-lg">
-                                        Total Windows & Doors Price: {formatCurrency(
-                                          (parseFloat(productData.windowPrice) || 0) + 
-                                          (Object.values(productData.doorPrices || {}) as string[]).reduce(
-                                            (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
-                                          )
-                                        )}
-                                      </p>
-                                    </div>
+                                    
+                                    {/* Show total pricing only if showPricing is enabled */}
+                                    {(productData.showPricing !== false) && (
+                                      <div className="border-t border-gray-200 pt-2 mt-2">
+                                        <p className="font-medium text-emerald-700 text-lg">
+                                          Total Windows & Doors Price: {formatCurrency(
+                                            (parseFloat(productData.windowPrice) || 0) + 
+                                            (Object.values(productData.doorPrices || {}) as string[]).reduce(
+                                              (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                            )
+                                          )}
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                                 
@@ -1062,49 +1072,56 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                     <p><span className="font-medium">SEER Rating:</span> {productData.seerRating || 'N/A'}</p>
                                     {productData.tonnage && <p><span className="font-medium">System Size:</span> {productData.tonnage} Tons</p>}
                                     
-                                    {/* HVAC Costs Section */}
-                                    <div className="border-t border-gray-200 pt-2 mt-3">
-                                      <p><span className="font-medium">System Cost:</span> {formatCurrency(parseFloat(productData.systemCost) || 0)}</p>
-                                      
-                                      {productData.ductworkCost && 
-                                        <p><span className="font-medium">Duct Cost:</span> {formatCurrency(parseFloat(productData.ductworkCost) || 0)}</p>}
-                                        
-                                      {productData.laborCost && 
-                                        <p><span className="font-medium">Labor Cost:</span> {formatCurrency(parseFloat(productData.laborCost) || 0)}</p>}
-                                        
-                                      {productData.addons?.length > 0 && (
-                                        <div>
-                                          <p className="font-medium">System Add-ons:</p>
-                                          <ul className="list-disc pl-5 mt-1">
-                                            {productData.addons.map((addon: string, i: number) => (
-                                              <li key={i}>
-                                                {addon.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                                                {productData.addonPrices && productData.addonPrices[addon] && 
-                                                  ` - ${formatCurrency(parseFloat(productData.addonPrices[addon]) || 0)}`}
-                                              </li>
-                                            ))}
-                                          </ul>
-                                          {Object.keys(productData.addonPrices || {}).length > 0 && 
-                                            <p><span className="font-medium">Total Add-on Cost:</span> {formatCurrency(
-                                              (Object.values(productData.addonPrices || {}) as string[]).reduce(
-                                                (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
-                                              )
-                                            )}</p>
-                                          }
-                                        </div>
-                                      )}
-                                      
-                                      <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
-                                        Total HVAC Cost: {formatCurrency(parseFloat(productData.totalPrice) || 
-                                          (parseFloat(productData.systemCost || '0') + 
-                                          parseFloat(productData.ductworkCost || '0') + 
-                                          parseFloat(productData.laborCost || '0') + 
-                                          (Object.values(productData.addonPrices || {}) as string[]).reduce(
-                                            (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
-                                          ))
+                                    {/* HVAC Costs Section - Show only if showPricing is enabled */}
+                                    {(productData.showPricing !== false) && (
+                                      <div className="border-t border-gray-200 pt-2 mt-3">
+                                        {/* Show breakdown only if showPriceBreakdown is enabled */}
+                                        {(productData.showPriceBreakdown !== false) && (
+                                          <>
+                                            <p><span className="font-medium">System Cost:</span> {formatCurrency(parseFloat(productData.systemCost) || 0)}</p>
+                                            
+                                            {productData.ductworkCost && 
+                                              <p><span className="font-medium">Duct Cost:</span> {formatCurrency(parseFloat(productData.ductworkCost) || 0)}</p>}
+                                              
+                                            {productData.laborCost && 
+                                              <p><span className="font-medium">Labor Cost:</span> {formatCurrency(parseFloat(productData.laborCost) || 0)}</p>}
+                                              
+                                            {productData.addons?.length > 0 && (
+                                              <div>
+                                                <p className="font-medium">System Add-ons:</p>
+                                                <ul className="list-disc pl-5 mt-1">
+                                                  {productData.addons.map((addon: string, i: number) => (
+                                                    <li key={i}>
+                                                      {addon.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                                      {productData.addonPrices && productData.addonPrices[addon] && 
+                                                        ` - ${formatCurrency(parseFloat(productData.addonPrices[addon]) || 0)}`}
+                                                    </li>
+                                                  ))}
+                                                </ul>
+                                                {Object.keys(productData.addonPrices || {}).length > 0 && 
+                                                  <p><span className="font-medium">Total Add-on Cost:</span> {formatCurrency(
+                                                    (Object.values(productData.addonPrices || {}) as string[]).reduce(
+                                                      (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                                    )
+                                                  )}</p>
+                                                }
+                                              </div>
+                                            )}
+                                          </>
                                         )}
-                                      </p>
-                                    </div>
+                                        
+                                        <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
+                                          Total HVAC Cost: {formatCurrency(parseFloat(productData.totalPrice) || 
+                                            (parseFloat(productData.systemCost || '0') + 
+                                            parseFloat(productData.ductworkCost || '0') + 
+                                            parseFloat(productData.laborCost || '0') + 
+                                            (Object.values(productData.addonPrices || {}) as string[]).reduce(
+                                              (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                            ))
+                                          )}
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                                 
@@ -1122,11 +1139,13 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                         <p><span className="font-medium">Includes Gutters:</span> Yes</p>
                                         {productData.gutterLength && 
                                           <p><span className="font-medium">Gutter Length:</span> {productData.gutterLength} ft</p>}
-                                        {productData.gutterPrice && 
+                                        {/* Show gutter pricing only if showPricing is enabled */}
+                                        {(productData.showPricing !== false) && productData.gutterPrice && 
                                           <p><span className="font-medium">Gutter Price:</span> {formatCurrency(parseFloat(productData.gutterPrice) || 0)}</p>}
                                         {productData.downspoutCount && 
                                           <p><span className="font-medium">Number of Downspouts:</span> {productData.downspoutCount}</p>}
-                                        {productData.downspoutPrice && 
+                                        {/* Show downspout pricing only if showPricing is enabled */}
+                                        {(productData.showPricing !== false) && productData.downspoutPrice && 
                                           <p><span className="font-medium">Downspout Price:</span> {formatCurrency(parseFloat(productData.downspoutPrice) || 0)}</p>}
                                       </div>
                                     )}
@@ -1134,26 +1153,34 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                     {productData.addPlywood && 
                                       <p><span className="font-medium">Includes Plywood:</span> Yes {productData.plywoodPercentage && `(${productData.plywoodPercentage}% replacement)`}</p>}
                                     
-                                    <div className="border-t border-gray-200 pt-2 mt-3">
-                                      <p><span className="font-medium">Price Per Square:</span> {productData.pricePerSquare && formatCurrency(parseFloat(productData.pricePerSquare) || 0)}</p>
-                                      <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
-                                        Total Roofing Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
-                                      </p>
-                                    </div>
+                                    {/* Show pricing section only if showPricing is enabled */}
+                                    {(productData.showPricing !== false) && (
+                                      <div className="border-t border-gray-200 pt-2 mt-3">
+                                        {/* Show price per square only if showPricePerSquare is enabled */}
+                                        {(productData.showPricePerSquare !== false) && productData.pricePerSquare && 
+                                          <p><span className="font-medium">Price Per Square:</span> {formatCurrency(parseFloat(productData.pricePerSquare) || 0)}</p>}
+                                        <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
+                                          Total Roofing Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
+                                        </p>
+                                      </div>
+                                    )}
                                     
-                                    {productData.options?.length > 0 && (
+                                    {/* Show additional options pricing only if showPricing is enabled */}
+                                    {(productData.showPricing !== false) && productData.options?.length > 0 && (
                                       <div className="border-t border-gray-200 pt-2 mt-3">
                                         <p className="font-medium">Additional Options:</p>
                                         <ul className="list-disc pl-5 mt-1">
                                           {productData.options.map((option: string, i: number) => (
                                             <li key={i}>
                                               {option.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                                              {productData.optionPrices && productData.optionPrices[option] && 
+                                              {/* Show option prices only if showPriceBreakdown is enabled */}
+                                              {(productData.showPriceBreakdown !== false) && productData.optionPrices && productData.optionPrices[option] && 
                                                 ` - ${formatCurrency(parseFloat(productData.optionPrices[option]) || 0)}`}
                                             </li>
                                           ))}
                                         </ul>
-                                        {Object.keys(productData.optionPrices || {}).length > 0 && 
+                                        {/* Show total options price only if showPriceBreakdown is enabled */}
+                                        {(productData.showPriceBreakdown !== false) && Object.keys(productData.optionPrices || {}).length > 0 && 
                                           <p><span className="font-medium">Total Options Price:</span> {formatCurrency(
                                             (Object.values(productData.optionPrices || {}) as string[]).reduce(
                                               (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
@@ -1179,12 +1206,14 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                           {productData.addons.map((addon: string, i: number) => (
                                             <li key={i}>
                                               {addon.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
-                                              {productData.addonPrices && productData.addonPrices[addon] && 
+                                              {/* Show addon prices only if showPricing is enabled */}
+                                              {(productData.showPricing !== false) && productData.addonPrices && productData.addonPrices[addon] && 
                                                 ` - ${formatCurrency(parseFloat(productData.addonPrices[addon]) || 0)}`}
                                             </li>
                                           ))}
                                         </ul>
-                                        {Object.keys(productData.addonPrices || {}).length > 0 && 
+                                        {/* Show addon total price only if showPricing is enabled */}
+                                        {(productData.showPricing !== false) && Object.keys(productData.addonPrices || {}).length > 0 && 
                                           <p><span className="font-medium">Add-ons Price:</span> {formatCurrency(
                                             (Object.values(productData.addonPrices || {}) as string[]).reduce(
                                               (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
@@ -1193,16 +1222,19 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                         }
                                       </div>
                                     )}
-                                    <div className="border-t border-gray-200 pt-2 mt-2">
-                                      <p className="font-medium text-emerald-700 text-lg">
-                                        Total Garage Door Price: {formatCurrency(
-                                          (parseFloat(productData.totalPrice) || 0) + 
-                                          (Object.values(productData.addonPrices || {}) as string[]).reduce(
-                                            (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
-                                          )
-                                        )}
-                                      </p>
-                                    </div>
+                                    {/* Show total pricing only if showPricing is enabled */}
+                                    {(productData.showPricing !== false) && (
+                                      <div className="border-t border-gray-200 pt-2 mt-2">
+                                        <p className="font-medium text-emerald-700 text-lg">
+                                          Total Garage Door Price: {formatCurrency(
+                                            (parseFloat(productData.totalPrice) || 0) + 
+                                            (Object.values(productData.addonPrices || {}) as string[]).reduce(
+                                              (sum: number, price: string) => sum + (parseFloat(price) || 0), 0
+                                            )
+                                          )}
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                                 
@@ -1219,9 +1251,12 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                       {productData.includePrimer && <p><span className="font-medium">Includes:</span> Primer</p>}
                                       {productData.includePrep && <p><span className="font-medium">Includes:</span> Surface Preparation</p>}
                                     
-                                      <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
-                                        Total Paint Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
-                                      </p>
+                                      {/* Show total pricing only if showPricing is enabled (Paint doesn't have individual breakdown toggles yet) */}
+                                      {(productData.showPricing !== false) && (
+                                        <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
+                                          Total Paint Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
+                                        </p>
+                                      )}
                                     </div>
                                   </div>
                                 )}
@@ -1267,12 +1302,29 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             <span className="font-medium">{formatCurrency(proposal?.pricing?.subtotal || 0)}</span>
                           </div>
 
-                          {/* Always show service breakdown for transparency */}
+                          {/* Service breakdown - respect individual service pricing display settings */}
                           <div className="pt-2">
                             <h4 className="text-sm font-medium text-gray-500 mb-1">Service Breakdown:</h4>
                             {proposal?.services?.map((service: string, index: number) => {
                               const productData = proposal.products[service];
                               if (!productData) return null;
+                              
+                              // Check if this service should show pricing
+                              const shouldShowPricing = productData.showPricing !== false;
+                              if (!shouldShowPricing) {
+                                // Show service but without pricing
+                                return (
+                                  <div key={index} className="flex justify-between py-1 pl-4 text-sm border-b border-dashed border-gray-100">
+                                    <span className="text-gray-500">
+                                      {service.charAt(0).toUpperCase() + service.slice(1).replace("-", " & ")}
+                                      {productData.windowCount && service === 'windows-doors' ? ` (${productData.windowCount} windows)` : ''}
+                                      {productData.doorCount && service === 'garage-doors' ? ` (${productData.doorCount} doors)` : ''}
+                                      {productData.roofSize && service === 'roofing' ? ` (${productData.roofSize} sq ft)` : ''}
+                                    </span>
+                                    <span className="font-medium text-gray-600">Pricing Not Displayed</span>
+                                  </div>
+                                );
+                              }
                               
                               // Get service-specific pricing
                               let servicePrice = 0;

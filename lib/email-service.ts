@@ -349,7 +349,7 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
           }
           .cta-button {
             display: inline-block;
-            background-color: #ef4444;
+            background-color: #059669;
             color: white;
             padding: 16px 40px;
             text-decoration: none;
@@ -362,7 +362,7 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
             transition: all 0.2s;
           }
           .cta-button:hover {
-            background-color: #dc2626;
+            background-color: #047857;
             transform: translateY(-2px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
           }

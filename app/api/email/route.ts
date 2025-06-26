@@ -199,8 +199,8 @@ export async function POST(request: NextRequest) {
             }
             .cta-button {
               display: inline-block;
-              background-color: #ef4444;
-              color: white;
+              background-color: #059669;
+              color: #ffffff !important;
               padding: 16px 40px;
               text-decoration: none;
               border-radius: 8px;
@@ -212,7 +212,8 @@ export async function POST(request: NextRequest) {
               transition: all 0.2s;
             }
             .cta-button:hover {
-              background-color: #dc2626;
+              background-color: #047857;
+              color: #ffffff !important;
               transform: translateY(-2px);
               box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             }

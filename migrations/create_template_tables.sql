@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS company_settings (
     accent_color VARCHAR(20),
     font_family VARCHAR(100),
     email_template TEXT,
-    sms_template TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

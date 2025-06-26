@@ -63,7 +63,6 @@ export default function SettingsPage() {
   // Notification settings
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
-    smsNotifications: false,
     appointmentReminders: true,
     leadNotifications: true,
     contractSignedNotifications: true,
@@ -331,20 +330,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <Separator />
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="sms-notifications">SMS Notifications</Label>
-                    <p className="text-sm text-muted-foreground">Receive notifications via text message</p>
-                  </div>
-                  <Switch
-                    id="sms-notifications"
-                    checked={notificationSettings.smsNotifications}
-                    onCheckedChange={(checked) =>
-                      setNotificationSettings({ ...notificationSettings, smsNotifications: checked })
-                    }
-                  />
-                </div>
-                <Separator />
+
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label htmlFor="appointment-reminders">Appointment Reminders</Label>

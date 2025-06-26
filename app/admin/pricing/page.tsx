@@ -547,7 +547,6 @@ export default function PricingPage() {
                           <Switch 
                                     checked={item.status === 'active'} 
                                     onCheckedChange={() => handleToggleStatus(item)}
-                                    size="sm"
                           />
                                 </div>
                         </TableCell>

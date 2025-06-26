@@ -59,12 +59,13 @@ const MemoizedSignatureDepositForm = memo(SignatureDepositForm)
 export default function NewProposalPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const proposalId = searchParams.get("id")
+  const proposalId = searchParams ? searchParams.get("id") : null
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [draftProposalId, setDraftProposalId] = useState<string | null>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
+  const [isCustomerInfoValid, setIsCustomerInfoValid] = useState(false)
   const [formData, setFormData] = useState<ProposalFormData>({
     customer: {
       name: "",
@@ -182,6 +183,16 @@ export default function NewProposalPage() {
   }
 
   const handleNext = async () => {
+    // Prevent navigation from customer info step if validation fails
+    if (currentStep === 0 && !isCustomerInfoValid) {
+      toast({
+        title: "Please complete customer information",
+        description: "All customer fields must be filled out with valid information before proceeding.",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (currentStep < steps.length - 1) {
       // Save draft before proceeding to next step (only after customer info is filled)
       if (currentStep >= 0 && formData.customer.name && formData.customer.email) {
@@ -389,7 +400,7 @@ export default function NewProposalPage() {
                   <CardContent className="pt-8 flex-1 flex flex-col">
                     {/* Use full width for all sections */}
                     <div className="w-full flex-1">
-                      {currentStep === 0 && <MemoizedCustomerInfoForm data={formData.customer} updateData={updateCustomer} />}
+                      {currentStep === 0 && <MemoizedCustomerInfoForm data={formData.customer} updateData={updateCustomer} onValidationChange={setIsCustomerInfoValid} />}
                       {currentStep === 1 && <MemoizedScopeOfWorkForm data={formData.services} updateData={updateServices} />}
                       {currentStep === 2 && (
                         <MemoizedProductSelectionForm
@@ -432,13 +443,21 @@ export default function NewProposalPage() {
                         {currentStep < steps.length - 1 ? (
                           <Button 
                             onClick={handleNext} 
-                            className="bg-emerald-600 hover:bg-emerald-700 px-6"
-                            disabled={isSavingDraft}
+                            className={`px-6 ${
+                              currentStep === 0 && !isCustomerInfoValid 
+                                ? 'bg-gray-400 hover:bg-gray-400 cursor-not-allowed' 
+                                : 'bg-emerald-600 hover:bg-emerald-700'
+                            }`}
+                            disabled={isSavingDraft || (currentStep === 0 && !isCustomerInfoValid)}
                           >
                             {isSavingDraft ? (
                               <>
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
                                 Saving...
+                              </>
+                            ) : currentStep === 0 && !isCustomerInfoValid ? (
+                              <>
+                                Complete Required Fields <ArrowRight className="ml-2 h-4 w-4" />
                               </>
                             ) : (
                               <>

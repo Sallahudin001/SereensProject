@@ -165,13 +165,25 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
   }, [formData, data, updateData])
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Roofing Material</h3>
+    <div className="space-y-8">
+      {/* Material Selection */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 rounded-full">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m0 0V11a1 1 0 011-1h2a1 1 0 011 1v10m3 0a1 1 0 001-1V10M9 21h6" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Roofing Material Selection</h3>
+            <p className="text-gray-600 text-sm">Choose the roofing material that best fits your project requirements</p>
+          </div>
+        </div>
+
         <RadioGroup
           value={formData.material}
           onValueChange={(value) => handleChange("material", value)}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
         >
           {[
             { value: "shingles", label: "Shingles", description: "Architectural asphalt shingles" },
@@ -182,19 +194,34 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
           ].map((option) => (
             <Card
               key={option.value}
-              className={`cursor-pointer border ${formData.material === option.value ? "border-emerald-600" : ""}`}
+              className={`cursor-pointer transition-all duration-300 border-2 ${
+                formData.material === option.value
+                  ? "border-blue-500 bg-blue-50 shadow-lg transform scale-105"
+                  : "border-gray-200 hover:border-blue-300 hover:shadow-md hover:scale-102"
+              }`}
+              onClick={() => handleChange("material", option.value)}
             >
-              <CardContent className="p-4 flex items-start gap-3">
-                <RadioGroupItem
-                  value={option.value}
-                  id={`material-${option.value}`}
-                  className={formData.material === option.value ? "text-emerald-600" : ""}
-                />
-                <div className="flex-1">
-                  <Label htmlFor={`material-${option.value}`} className="font-medium cursor-pointer">
-                    {option.label}
-                  </Label>
-                  <p className="text-sm text-gray-500">{option.description}</p>
+              <CardContent className="p-5">
+                <div className="flex items-start gap-3">
+                  <RadioGroupItem
+                    value={option.value}
+                    id={`material-${option.value}`}
+                    className={`mt-1 ${formData.material === option.value ? "text-blue-600" : ""}`}
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor={`material-${option.value}`} className="font-semibold cursor-pointer text-gray-900">
+                      {option.label}
+                    </Label>
+                    <p className="text-sm text-gray-600 mt-1">{option.description}</p>
+                    {formData.material === option.value && (
+                      <div className="mt-2 text-sm text-blue-700 font-medium flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        Selected
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -202,214 +229,350 @@ export default function RoofingProductForm({ data, updateData }: RoofingProductF
         </RadioGroup>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Roof Size</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="square-count">Number of Squares</Label>
-            <Input
-              id="square-count"
-              placeholder="0"
-              value={formData.squareCount}
-              onChange={(e) => handleChange("squareCount", e.target.value)}
-              className="max-w-xs"
-            />
-            <p className="text-xs text-gray-500">
-              1 square = 100 square feet of roof area
-            </p>
+      {/* Project Specifications */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 rounded-full">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
           </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Project Specifications</h3>
+            <p className="text-gray-600 text-sm">Enter roofing dimensions and pricing information</p>
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Square Count */}
+          <Card className="border border-gray-200 shadow-sm">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <Label className="text-sm font-semibold text-gray-900">Square Count</Label>
+              <p className="text-xs text-gray-600 mt-1">Total roofing squares</p>
+            </div>
+            <CardContent className="p-4">
+              <Input
+                type="number"
+                value={formData.squareCount}
+                onChange={(e) => handleChange("squareCount", e.target.value)}
+                placeholder="Enter squares"
+                min="1"
+                step="0.1"
+              />
+              {formData.squareCount && (
+                <div className="mt-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+                  ✓ {formData.squareCount} squares
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Price per Square */}
+          <Card className="border border-gray-200 shadow-sm">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <Label className="text-sm font-semibold text-gray-900">Price per Square</Label>
+              <p className="text-xs text-gray-600 mt-1">Cost per roofing square</p>
+            </div>
+            <CardContent className="p-4">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                <Input
+                  type="number"
+                  value={formData.pricePerSquare}
+                  onChange={(e) => handleChange("pricePerSquare", e.target.value)}
+                  placeholder="0.00"
+                  className="pl-8"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              {formData.pricePerSquare && (
+                <div className="mt-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+                  ✓ ${formData.pricePerSquare} per square
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Total Price */}
+          <Card className="border border-gray-200 shadow-sm">
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+              <Label className="text-sm font-semibold text-gray-900">Total Price</Label>
+              <p className="text-xs text-gray-600 mt-1">Total project cost</p>
+            </div>
+            <CardContent className="p-4">
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                <Input
+                  type="number"
+                  value={formData.totalPrice}
+                  onChange={(e) => handleChange("totalPrice", e.target.value)}
+                  placeholder="0.00"
+                  className="pl-8"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+              {formData.totalPrice && (
+                <div className="mt-2 text-xs text-green-700 bg-green-50 px-2 py-1 rounded">
+                  ✓ ${formData.totalPrice} total
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Add-ons</h3>
-        <div className="flex items-start space-x-3">
-          <Checkbox
-            id="add-gutters"
-            checked={formData.addGutters}
-            onCheckedChange={(checked) => handleChange("addGutters", !!checked)}
-            className={formData.addGutters ? "text-emerald-600" : ""}
-          />
-          <div className="space-y-1">
-            <Label htmlFor="add-gutters" className="font-medium cursor-pointer">
-              Gutters & Downspouts
-            </Label>
-            <p className="text-sm text-gray-500">New seamless gutters and downspouts</p>
+      {/* Additional Options */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 rounded-full">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100-4m0 4v2m0-6V4" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Additional Services</h3>
+            <p className="text-gray-600 text-sm">Select additional services for your roofing project</p>
           </div>
         </div>
 
-        {formData.addGutters && (
-          <div className="pl-7 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="gutter-length">Gutter Linear Feet</Label>
-                <Input
-                  id="gutter-length"
-                  placeholder="Enter linear feet"
-                  value={formData.gutterLength}
-                  onChange={(e) => handleChange("gutterLength", e.target.value)}
-                  className="max-w-xs"
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Plywood Replacement */}
+          <Card className={`border-2 transition-all duration-300 ${
+            formData.addPlywood ? "border-blue-500 bg-blue-50 shadow-md" : "border-gray-200"
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="add-plywood"
+                  checked={formData.addPlywood}
+                  onCheckedChange={(checked) => handleChange("addPlywood", checked)}
+                  className="mt-1"
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="gutter-price">Gutter Price</Label>
-                <div className="relative max-w-xs">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    id="gutter-price"
-                    placeholder="0.00"
-                    value={formData.gutterPrice}
-                    onChange={(e) => handleChange("gutterPrice", e.target.value)}
-                    className="pl-8"
-                  />
+                <div className="flex-1">
+                  <Label htmlFor="add-plywood" className="font-semibold cursor-pointer text-gray-900">
+                    Plywood Replacement
+                  </Label>
+                  <p className="text-sm text-gray-600 mt-1">Additional plywood replacement beyond standard 20%</p>
+                  
+                  {formData.addPlywood && (
+                    <div className="mt-3 space-y-2">
+                      <Label className="text-sm font-medium">Percentage of plywood to replace:</Label>
+                      <Input
+                        type="number"
+                        value={formData.plywoodPercentage}
+                        onChange={(e) => handleChange("plywoodPercentage", e.target.value)}
+                        placeholder="0"
+                        min="0"
+                        max="100"
+                        className="w-24"
+                      />
+                    </div>
+                  )}
+                  
+                  {formData.addPlywood && (
+                    <div className="mt-2 text-sm text-blue-700 font-medium flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Added to project
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="downspout-count">Number of Downspouts</Label>
-                <Input
-                  id="downspout-count"
-                  placeholder="0"
-                  value={formData.downspoutCount}
-                  onChange={(e) => handleChange("downspoutCount", e.target.value)}
-                  className="max-w-xs"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="downspout-price">Downspout Price</Label>
-                <div className="relative max-w-xs">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                  <Input
-                    id="downspout-price"
-                    placeholder="0.00"
-                    value={formData.downspoutPrice}
-                    onChange={(e) => handleChange("downspoutPrice", e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+            </CardContent>
+          </Card>
 
-        <div className="flex items-start space-x-3 mt-4">
-          <Checkbox
-            id="add-plywood"
-            checked={formData.addPlywood}
-            onCheckedChange={(checked) => handleChange("addPlywood", !!checked)}
-            className={formData.addPlywood ? "text-emerald-600" : ""}
-          />
-          <div className="space-y-1">
-            <Label htmlFor="add-plywood" className="font-medium cursor-pointer">
-              Additional Wood/Plywood
-            </Label>
-            <p className="text-sm text-gray-500">Additional plywood replacement beyond standard 20%</p>
-          </div>
+          {/* Gutter Work */}
+          <Card className={`border-2 transition-all duration-300 ${
+            formData.addGutters ? "border-blue-500 bg-blue-50 shadow-md" : "border-gray-200"
+          }`}>
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  id="add-gutters"
+                  checked={formData.addGutters}
+                  onCheckedChange={(checked) => handleChange("addGutters", checked)}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="add-gutters" className="font-semibold cursor-pointer text-gray-900">
+                    Gutter Installation
+                  </Label>
+                  <p className="text-sm text-gray-600 mt-1">New seamless gutters and downspouts</p>
+                  
+                  {formData.addGutters && (
+                    <div className="mt-3 space-y-3">
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Linear feet of gutters:</Label>
+                        <Input
+                          type="number"
+                          value={formData.gutterLength}
+                          onChange={(e) => handleChange("gutterLength", e.target.value)}
+                          placeholder="0"
+                          min="0"
+                          className="w-32"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Gutter price:</Label>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                            <Input
+                              type="number"
+                              value={formData.gutterPrice}
+                              onChange={(e) => handleChange("gutterPrice", e.target.value)}
+                              placeholder="0.00"
+                              className="pl-8"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Downspout count:</Label>
+                          <Input
+                            type="number"
+                            value={formData.downspoutCount}
+                            onChange={(e) => handleChange("downspoutCount", e.target.value)}
+                            placeholder="0"
+                            min="0"
+                            className="w-20"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Downspout price:</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">$</span>
+                          <Input
+                            type="number"
+                            value={formData.downspoutPrice}
+                            onChange={(e) => handleChange("downspoutPrice", e.target.value)}
+                            placeholder="0.00"
+                            className="pl-8 w-32"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {formData.addGutters && (
+                    <div className="mt-2 text-sm text-blue-700 font-medium flex items-center gap-1">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Added to project
+                    </div>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {formData.addPlywood && (
-          <div className="pl-7 space-y-2">
-            <Label htmlFor="plywood-percentage">Percentage of Plywood Replacement</Label>
-            <Input
-              id="plywood-percentage"
-              placeholder="Enter percentage (e.g., 30)"
-              value={formData.plywoodPercentage}
-              onChange={(e) => handleChange("plywoodPercentage", e.target.value)}
-              className="max-w-xs"
-            />
-            <p className="text-xs text-gray-500">
-              If you included more than 20% plywood in your total estimate, increase this percentage accordingly.
-            </p>
-          </div>
+        {/* Total with Add-ons Display */}
+        {(formData.addGutters || formData.totalPrice) && (
+          <Card className="border border-blue-200 bg-blue-50">
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold text-blue-900">Total Project Cost:</span>
+                <span className="text-xl font-bold text-blue-900">
+                  ${calculateTotalWithAddons(formData.totalPrice, formData.gutterPrice, formData.downspoutPrice)}
+                </span>
+              </div>
+              {formData.addGutters && (
+                <div className="mt-2 text-sm text-blue-700">
+                  Includes roofing: ${formData.totalPrice || "0.00"} + 
+                  gutters: ${(parseFloat(formData.gutterPrice) + parseFloat(formData.downspoutPrice) || 0).toFixed(2)}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">Pricing</h3>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="price-per-square">Price per Square</Label>
-            <div className="relative max-w-xs">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-              <Input
-                id="price-per-square"
-                placeholder="0.00"
-                value={formData.pricePerSquare}
-                onChange={(e) => handleChange("pricePerSquare", e.target.value)}
-                className="pl-8"
-              />
-            </div>
+      {/* Display Options */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 rounded-full">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="total-price">Roofing Price</Label>
-            <div className="relative max-w-xs">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-              <Input
-                id="total-price"
-                placeholder="0.00"
-                value={formData.totalPrice}
-                onChange={(e) => handleChange("totalPrice", e.target.value)}
-                className="pl-8"
-              />
-            </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Pricing Configuration</h3>
+            <p className="text-gray-600 text-sm">Set pricing details and display options</p>
           </div>
         </div>
 
-        {formData.addGutters && (
-          <div className="space-y-2 p-3 bg-gray-50 rounded-md">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium">Total with Add-ons: ${calculateTotalWithAddons(formData.totalPrice, formData.gutterPrice, formData.downspoutPrice)}</p>
+        <Card className="border border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <div className="grid gap-4 md:grid-cols-3">
               <div className="flex items-center space-x-2">
                 <Switch
-                  id="show-price-breakdown"
+                  id="showPricing"
+                  checked={formData.showPricing}
+                  onCheckedChange={(checked) => handleChange("showPricing", checked)}
+                />
+                <Label htmlFor="showPricing" className="text-sm font-medium">Show Pricing</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="showPriceBreakdown"
                   checked={formData.showPriceBreakdown}
                   onCheckedChange={(checked) => handleChange("showPriceBreakdown", checked)}
                 />
-                <Label htmlFor="show-price-breakdown" className="text-sm">
-                  Show price breakdown (roofing vs. gutters/downspouts)
-                </Label>
+                <Label htmlFor="showPriceBreakdown" className="text-sm font-medium">Show Breakdown</Label>
               </div>
-            </div>
-          </div>
-        )}
-        
-        {formData.totalPrice && formData.squareCount && parseFloat(formData.squareCount) > 0 && (
-          <div className="space-y-2 p-3 bg-gray-50 rounded-md">
-            <div className="flex items-center justify-between">
-              <p className="text-sm">
-                Price per Square: ${calculatePricePerSquare(formData.totalPrice, formData.squareCount)}
-              </p>
               <div className="flex items-center space-x-2">
                 <Switch
-                  id="show-price-per-square"
+                  id="showPricePerSquare"
                   checked={formData.showPricePerSquare}
                   onCheckedChange={(checked) => handleChange("showPricePerSquare", checked)}
                 />
-                <Label htmlFor="show-price-per-square" className="text-sm">
-                  Show price per square on proposal
-                </Label>
+                <Label htmlFor="showPricePerSquare" className="text-sm font-medium">Show Price/Square</Label>
               </div>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Scope Description</h3>
-        <Textarea
-          value={formData.scopeNotes}
-          onChange={(e) => handleChange("scopeNotes", e.target.value)}
-          rows={10}
-          className="font-mono text-sm"
-        />
+      {/* Scope Description */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-100 rounded-full">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Scope Description</h3>
+            <p className="text-gray-600 text-sm">Detailed description of work to be performed</p>
+          </div>
+        </div>
+
+        <Card className="border border-gray-200 shadow-sm">
+          <CardContent className="p-4">
+            <Textarea
+              value={formData.scopeNotes}
+              onChange={(e) => handleChange("scopeNotes", e.target.value)}
+              rows={8}
+              placeholder="Enter detailed scope of work notes..."
+              className="resize-none"
+            />
+            <div className="mt-2 text-xs text-gray-500">
+              Auto-generated based on your selections. You can edit as needed.
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

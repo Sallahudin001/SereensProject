@@ -44,11 +44,19 @@ export default function SettingsPage() {
   // General settings
   const [generalSettings, setGeneralSettings] = useState({
     companyName: "Evergreen Home Upgrades",
-    companyEmail: "info@evergreenenergy.io",
-    companyPhone: "(408) 333-9831",
+    companyAddress: "123 Main Street, San Jose, CA 95129",
+    companyPhone: "(408) 826-7377",
+    companyEmail: "info@evergreenenergyupgrades.com",
+    website: "www.evergreenenergyupgrades.com",
     logoUrl: "/evergreen.png",
     defaultCurrency: "USD",
     timeZone: "America/Los_Angeles",
+    defaultProposalValidityDays: 30,
+    autoDeleteExpiredProposals: false,
+    requireApprovalForLargeDiscounts: true,
+    allowCustomerEdits: false,
+    enableProposalComments: true,
+    defaultPaymentTerms: "Net 30",
   })
   
   // Proposal settings
@@ -64,11 +72,16 @@ export default function SettingsPage() {
   
   // Financial settings
   const [financialSettings, setFinancialSettings] = useState({
-    defaultFinancingTerm: "60", // months
-    defaultInterestRate: "5.99", // percent
-    defaultMinimumDeposit: "10", // percent
-    maxDiscountWithoutApproval: "10", // percent
+    defaultCurrency: "USD",
+    taxRate: 8.75,
+    enableTaxCalculation: true,
+    defaultPaymentTerms: "Net 30",
+    depositPercentage: 25,
     enableFinancingCalculator: true,
+    defaultFinancingTerm: "36", // Changed from defaultFinancingTerms to match usage
+    defaultInterestRate: 9.99,
+    defaultMinimumDeposit: 25,
+    maxDiscountWithoutApproval: 10,
     showMonthlyPayments: true,
     displayFinancingTermOptions: true,
   })
@@ -77,11 +90,8 @@ export default function SettingsPage() {
   const [notificationSettings, setNotificationSettings] = useState({
     sendEmailOnProposalCreation: true,
     sendEmailOnProposalSigned: true,
-    sendSmsOnProposalCreation: false,
-    sendSmsOnProposalSigned: true,
     notifyAdminOnLargeDiscounts: true,
-    emailNotifications: ["admin@evergreenenergy.io"],
-    smsNotifications: ["4088267377"],
+    emailNotifications: ["admin@evergreenenergyupgrades.com"],
   })
   
   const handleSaveSettings = () => {
@@ -475,34 +485,6 @@ export default function SettingsPage() {
                   </div>
                   
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">SMS Notifications</h3>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="sendSmsOnProposalCreation" className="font-medium">Send SMS on Proposal Creation</Label>
-                        <p className="text-sm text-gray-500">Send text messages when new proposals are created</p>
-                      </div>
-                      <Switch
-                        id="sendSmsOnProposalCreation"
-                        checked={notificationSettings.sendSmsOnProposalCreation}
-                        onCheckedChange={(checked) => handleInputChange("notification", "sendSmsOnProposalCreation", checked)}
-                      />
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label htmlFor="sendSmsOnProposalSigned" className="font-medium">Send SMS on Proposal Signed</Label>
-                        <p className="text-sm text-gray-500">Send text messages when proposals are signed</p>
-                      </div>
-                      <Switch
-                        id="sendSmsOnProposalSigned"
-                        checked={notificationSettings.sendSmsOnProposalSigned}
-                        onCheckedChange={(checked) => handleInputChange("notification", "sendSmsOnProposalSigned", checked)}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
                     <h3 className="text-lg font-medium">Administrative Alerts</h3>
                     
                     <div className="flex items-center justify-between">
@@ -526,17 +508,6 @@ export default function SettingsPage() {
                         onChange={(e) => handleInputChange("notification", "emailNotifications", e.target.value.split(",").map(email => email.trim()))}
                       />
                       <p className="text-xs text-gray-500">Enter email addresses separated by commas</p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="smsNotifications">SMS Notification Recipients</Label>
-                      <Input
-                        id="smsNotifications"
-                        placeholder="Enter phone numbers, comma separated"
-                        value={notificationSettings.smsNotifications.join(", ")}
-                        onChange={(e) => handleInputChange("notification", "smsNotifications", e.target.value.split(",").map(phone => phone.trim()))}
-                      />
-                      <p className="text-xs text-gray-500">Enter phone numbers separated by commas</p>
                     </div>
                   </div>
                 </div>

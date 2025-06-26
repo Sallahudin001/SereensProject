@@ -67,8 +67,7 @@
     "@types/pg": "latest",
     "@types/sql.js": "latest",
     "@vercel/postgres": "latest",
-    "@vonage/server-sdk": "^3.21.0",
-    "@vonage/sms": "^1.18.0",
+
     "@xata.io/client": "latest",
     "autoprefixer": "^10.4.20",
     "better-sqlite3": "latest",
