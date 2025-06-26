@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-
-import { Check, Mail, Loader2, FileText, DollarSign, AlertTriangle, Info } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Mail, Check, DollarSign, AlertTriangle, Info, FileText, Loader2 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { createProposal, markProposalAsSent } from "@/app/actions/proposal-actions"
 
@@ -17,6 +19,18 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
   const [signatureMethod, setSignatureMethod] = useState("email")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  const [proposalId, setProposalId] = useState("")
+  const [createdDate, setCreatedDate] = useState("")
+
+  // Generate proposal ID and date on client side to prevent hydration mismatch
+  useEffect(() => {
+    if (!formData.proposalNumber) {
+      setProposalId(`PRO-${Math.floor(10000 + Math.random() * 90000)}`)
+    } else {
+      setProposalId(formData.proposalNumber)
+    }
+    setCreatedDate(new Date().toLocaleDateString())
+  }, [formData.proposalNumber])
 
   const handleSendProposal = async () => {
     try {
@@ -135,6 +149,31 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
     }
   }
 
+  if (isComplete) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="border-2 border-green-200 shadow-lg">
+          <CardContent className="p-8 text-center">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <Check className="h-8 w-8 text-green-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-green-900 mb-2">Proposal Sent Successfully!</h2>
+            <p className="text-green-700 mb-4">
+              Your proposal has been delivered to {formData.customer.email}
+            </p>
+            <Button 
+              onClick={() => setIsComplete(false)} 
+              variant="outline"
+              className="border-green-300 text-green-700 hover:bg-green-50"
+            >
+              Send Another Proposal
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       {/* Enhanced Header Section */}
@@ -216,11 +255,11 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Proposal ID</Label>
-                    <p className="text-gray-900 font-mono mt-1">{formData.proposalNumber || `PRO-${Math.floor(10000 + Math.random() * 90000)}`}</p>
+                    <p className="text-gray-900 font-mono mt-1">{proposalId}</p>
                   </div>
                 <div>
                     <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Created</Label>
-                    <p className="text-gray-900 mt-1">{new Date().toLocaleDateString()}</p>
+                    <p className="text-gray-900 mt-1">{createdDate}</p>
                   </div>
                 </div>
               </div>
@@ -418,67 +457,15 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
       {/* Enhanced Action Section */}
       <Card className="border-2 border-gray-200 shadow-lg overflow-hidden">
         <CardContent className="p-8">
-          {isComplete ? (
-            <div className="text-center space-y-6">
-              <div className="flex justify-center">
-                <div className="p-6 bg-green-100 rounded-full">
-                  <Check className="h-12 w-12 text-green-600" />
-                </div>
-      </div>
-
-              <div>
-                <h3 className="text-3xl font-bold text-green-800 mb-2">🎉 Proposal Sent Successfully!</h3>
-                <p className="text-green-700 text-lg max-w-2xl mx-auto">
-                  Your customer will receive the proposal shortly and can review, sign, and submit payment through our secure portal.
-                </p>
-              </div>
-              
-              <div className="max-w-2xl mx-auto">
-                <div className="bg-green-50 rounded-lg p-6 border border-green-200">
-                  <h4 className="font-semibold text-green-800 mb-4 text-lg">Customer Journey:</h4>
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
-                        <span className="text-green-700">Receives email notification</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
-                        <span className="text-green-700">Reviews proposal details</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>
-                        <span className="text-green-700">Signs electronically</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>
-                        <span className="text-green-700">Submits payment/deposit</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">5</div>
-                        <span className="text-green-700">You receive confirmation</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">6</div>
-                        <span className="text-green-700">Project begins!</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-          </div>
-        ) : (
-            <div className="space-y-8">
-              <div className="text-center space-y-4">
-                <h3 className="text-2xl font-bold text-gray-900">Ready to Send Proposal</h3>
-                <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                  Everything looks great! Click the button below to send this professional proposal to your customer for signature and payment.
-                </p>
-              </div>
-              
-              <div className="max-w-md mx-auto">
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h3 className="text-2xl font-bold text-gray-900">Ready to Send Proposal</h3>
+              <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                Everything looks great! Click the button below to send this professional proposal to your customer for signature and payment.
+              </p>
+            </div>
+            
+            <div className="max-w-md mx-auto">
           <Button
             onClick={handleSendProposal}
             disabled={isSubmitting || !formData.customer.email}
@@ -546,8 +533,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
                   </div>
                 </div>
               </div>
-      </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -94,8 +94,49 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { action, targetUserId, clerkId } = await request.json()
-    
+    // Check if request has a body
+    const contentLength = request.headers.get('content-length')
+    if (!contentLength || contentLength === '0') {
+      console.error('Empty request body received')
+      return NextResponse.json({ 
+        error: 'Empty request body',
+        details: 'Request must include JSON body with action parameter'
+      }, { status: 400 })
+    }
+
+    // Get raw text first to check if it's valid JSON
+    const rawBody = await request.text()
+    if (!rawBody || rawBody.trim() === '') {
+      console.error('Empty or whitespace-only request body received')
+      return NextResponse.json({ 
+        error: 'Empty request body',
+        details: 'Request must include JSON body with action parameter'
+      }, { status: 400 })
+    }
+
+    // Try to parse JSON
+    let parsedBody
+    try {
+      parsedBody = JSON.parse(rawBody)
+    } catch (parseError) {
+      console.error('Invalid JSON in request body:', parseError)
+      console.error('Raw body received:', rawBody)
+      return NextResponse.json({ 
+        error: 'Invalid JSON format',
+        details: 'Request body must be valid JSON'
+      }, { status: 400 })
+    }
+
+    const { action, targetUserId, clerkId } = parsedBody
+
+    // Validate required fields
+    if (!action) {
+      return NextResponse.json({ 
+        error: 'Missing action parameter',
+        details: 'Request must include an "action" field'
+      }, { status: 400 })
+    }
+
     // Handle authentication 
     let sessionUserId;
     try {
@@ -105,7 +146,7 @@ export async function POST(request: NextRequest) {
       console.error('Authentication error:', authError)
       // Continue execution - we'll use the provided clerkId if available
     }
-    
+
     if (action === 'getCurrentUser') {
       // Use provided clerkId if available, otherwise use the session userId
       const effectiveClerkId = clerkId || sessionUserId
@@ -204,11 +245,17 @@ export async function POST(request: NextRequest) {
         }
       })
     }
-    
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+
+    return NextResponse.json({ 
+      error: 'Invalid action',
+      details: `Action "${action}" is not supported`
+    }, { status: 400 })
     
   } catch (error) {
     console.error('Error in users POST:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error occurred'
+    }, { status: 500 })
   }
 } 

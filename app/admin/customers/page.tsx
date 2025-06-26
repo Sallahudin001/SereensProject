@@ -1,10 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -42,7 +40,6 @@ import {
   FileText,
   Calendar,
   TrendingUp,
-  UserPlus,
   Activity
 } from "lucide-react"
 import { motion } from "framer-motion"
@@ -73,23 +70,14 @@ interface CustomerStats {
   conversionRate: number
 }
 
-const customerStatusConfig = {
-  lead: { label: "Lead", color: "bg-yellow-100 text-yellow-800" },
-  qualified: { label: "Qualified", color: "bg-blue-100 text-blue-800" },
-  proposal_sent: { label: "Proposal Sent", color: "bg-purple-100 text-purple-800" },
-  negotiating: { label: "Negotiating", color: "bg-orange-100 text-orange-800" },
-  signed: { label: "Signed", color: "bg-green-100 text-green-800" },
-  completed: { label: "Completed", color: "bg-emerald-100 text-emerald-800" },
-  lost: { label: "Lost", color: "bg-red-100 text-red-800" },
-  inactive: { label: "Inactive", color: "bg-gray-100 text-gray-800" },
-}
+
 
 export default function AllCustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [stats, setStats] = useState<CustomerStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
+
   const [sourceFilter, setSourceFilter] = useState("all")
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("desc")
@@ -134,15 +122,7 @@ export default function AllCustomersPage() {
     })
   }
 
-  const getStatusBadge = (status: string) => {
-    const config = customerStatusConfig[status as keyof typeof customerStatusConfig] || customerStatusConfig.lead
-    
-    return (
-      <Badge className={config.color}>
-        {config.label}
-      </Badge>
-    )
-  }
+
 
   const getConversionRate = (customer: Customer) => {
     if (customer.proposal_count === 0) return 0
@@ -157,7 +137,7 @@ export default function AllCustomersPage() {
         customer.creator_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.phone?.toLowerCase().includes(searchTerm.toLowerCase())
       
-      const matchesStatus = statusFilter === "all" || customer.status === statusFilter
+      const matchesStatus = true
       const matchesSource = sourceFilter === "all" || customer.lead_source === sourceFilter
       
       return matchesSearch && matchesStatus && matchesSource
@@ -209,12 +189,6 @@ export default function AllCustomersPage() {
               Comprehensive view of all customers and their interactions with sales representatives
             </p>
           </div>
-          <Button asChild>
-            <Link href="/dashboard/customers/create">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Customer
-            </Link>
-          </Button>
         </div>
       </motion.div>
 
@@ -262,7 +236,7 @@ export default function AllCustomersPage() {
                   <p className="text-2xl font-bold text-gray-900">{stats.newThisMonth}</p>
                 </div>
                 <div className="p-2 bg-purple-100 rounded-lg">
-                  <UserPlus className="h-5 w-5 text-purple-600" />
+                  <Users className="h-5 w-5 text-purple-600" />
                 </div>
               </div>
             </CardContent>
@@ -305,19 +279,7 @@ export default function AllCustomersPage() {
                 </div>
               </div>
               
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  {Object.entries(customerStatusConfig).map(([status, config]) => (
-                    <SelectItem key={status} value={status}>
-                      {config.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
 
               <Select value={sourceFilter} onValueChange={setSourceFilter}>
                 <SelectTrigger className="w-48">
@@ -378,7 +340,6 @@ export default function AllCustomersPage() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Contact Info</TableHead>
                     <TableHead>Sales Rep</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Proposals</TableHead>
                     <TableHead>Total Value</TableHead>
                     <TableHead>Created</TableHead>
@@ -437,9 +398,6 @@ export default function AllCustomersPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(customer.status)}
-                      </TableCell>
-                      <TableCell>
                         <div className="space-y-1">
                           <div className="font-medium">{customer.proposal_count} total</div>
                           {customer.signed_proposals > 0 && (
@@ -464,7 +422,7 @@ export default function AllCustomersPage() {
                 <Users className="mx-auto h-12 w-12 text-gray-300" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No customers found</h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {searchTerm || statusFilter !== "all" || sourceFilter !== "all"
+                  {searchTerm || sourceFilter !== "all"
                     ? "Try adjusting your search or filters."
                     : "No customers have been created yet."}
                 </p>
