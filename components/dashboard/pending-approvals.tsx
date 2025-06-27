@@ -153,16 +153,16 @@ export default function PendingApprovals() {
   // Show loading if RBAC is still loading
   if (rbac.isLoading || loading) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="h-full">
+        <CardHeader className="px-5 py-4 border-b">
           <CardTitle className="text-lg font-medium flex items-center">
-            <Clock className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+            <Clock className="w-5 h-5 mr-2 text-muted-foreground" /> Pending Approvals
           </CardTitle>
           <CardDescription>Proposals awaiting discount approval</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         </CardContent>
       </Card>
@@ -172,17 +172,17 @@ export default function PendingApprovals() {
   // Show message if not authenticated
   if (!rbac.isAuthenticated) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="h-full">
+        <CardHeader className="px-5 py-4 border-b">
           <CardTitle className="text-lg font-medium flex items-center">
-            <Clock className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+            <Clock className="w-5 h-5 mr-2 text-muted-foreground" /> Pending Approvals
           </CardTitle>
           <CardDescription>Proposals awaiting discount approval</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <AlertCircle className="h-12 w-12 text-amber-500 mb-2" />
-            <p className="text-sm text-gray-500">Please sign in to view pending approvals</p>
+            <AlertCircle className="h-10 w-10 text-amber-500 mb-2" />
+            <p className="text-sm text-muted-foreground">Please sign in to view pending approvals</p>
           </div>
         </CardContent>
       </Card>
@@ -191,17 +191,17 @@ export default function PendingApprovals() {
   
   if (pendingProposals.length === 0) {
     return (
-      <Card>
-        <CardHeader>
+      <Card className="h-full">
+        <CardHeader className="px-5 py-4 border-b">
           <CardTitle className="text-lg font-medium flex items-center">
-            <CheckCircle className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+            <CheckCircle className="w-5 h-5 mr-2 text-emerald-600" /> Pending Approvals
           </CardTitle>
           <CardDescription>Proposals awaiting discount approval</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-5">
           <div className="flex flex-col items-center justify-center py-6 text-center">
-            <CheckCircle className="h-12 w-12 text-emerald-500 mb-2" />
-            <p className="text-sm text-gray-500">No proposals awaiting approval</p>
+            <CheckCircle className="h-10 w-10 text-emerald-500 mb-2" />
+            <p className="text-sm text-muted-foreground">No proposals awaiting approval</p>
           </div>
         </CardContent>
       </Card>
@@ -209,78 +209,75 @@ export default function PendingApprovals() {
   }
   
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full">
+      <CardHeader className="px-5 py-4 border-b">
         <CardTitle className="text-lg font-medium flex items-center">
-          <Clock className="w-6 h-6 mr-3 text-emerald-600" /> Pending Approvals
+          <Clock className="w-5 h-5 mr-2 text-amber-500" /> Pending Approvals
         </CardTitle>
         <CardDescription>Proposals awaiting discount approval</CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
+      <CardContent className="p-5">
+        <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
           {pendingProposals.map((proposal, index) => (
             <motion.div
-              key={proposal.id}
+              key={proposal.approval_request_id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="border rounded-lg p-4 hover:bg-emerald-50 transition-colors"
+              transition={{ delay: index * 0.05 }}
+              className="border rounded-lg p-4 hover:bg-muted/30 transition-colors"
             >
               <div className="flex justify-between items-start mb-2">
-                <div>
-                  <h3 className="font-medium">{proposal.proposal_number}</h3>
-                  <p className="text-sm text-gray-500">{proposal.customer_name}</p>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium truncate">{proposal.proposal_number}</h3>
+                  <p className="text-xs text-muted-foreground truncate">{proposal.customer_name}</p>
                 </div>
-                <Badge variant="outline" className="flex items-center gap-1 border-amber-300 text-amber-700 bg-amber-50">
+                <Badge variant="outline" className="flex items-center gap-1 bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30 ml-2 whitespace-nowrap">
                   <Clock className="h-3 w-3" /> Pending
                 </Badge>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 mt-2 text-sm">
+              <div className="grid grid-cols-2 gap-3 mt-3 text-sm">
                 <div>
-                  <p className="text-gray-500">Original Value</p>
-                  <p>{formatCurrency(proposal.subtotal)}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Original Value</p>
+                  <p className="font-medium">{formatCurrency(proposal.subtotal)}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500">Requested Discount</p>
-                  <p className="font-semibold text-emerald-600">
+                  <p className="text-xs text-muted-foreground mb-1">Requested Discount</p>
+                  <p className="font-medium text-emerald-600 dark:text-emerald-400">
                     {formatCurrency(proposal.requested_discount)}
                   </p>
                 </div>
               </div>
               
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 text-xs text-gray-500 gap-2">
-                <div className="flex items-center">
-                  <FileText className="h-3 w-3 mr-1" />
-                  <span>Created: {formatDate(proposal.created_at)}</span>
-                </div>
-                <div>Requestor: {proposal.requestor_name}</div>
+              <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  By {proposal.requestor_name}
+                </span>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  className="h-8"
+                  onClick={() => router.push(`/admin/approvals?id=${proposal.approval_request_id}`)}
+                >
+                  Review
+                </Button>
               </div>
-              
-              {/* Only show action buttons for admin users */}
-              {rbac.isAdmin && (
-                <div className="flex gap-2 mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                    onClick={() => router.push(`/proposals/view/${proposal.id}?mode=admin`)}
-                  >
-                    <FileText className="h-3 w-3 mr-1" /> View Proposal
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                    onClick={() => router.push(`/admin/approvals?request=${proposal.approval_request_id}`)}
-                  >
-                    <Clock className="h-3 w-3 mr-1" /> Review Approval
-                  </Button>
-                </div>
-              )}
             </motion.div>
           ))}
         </div>
+        
+        {pendingProposals.length > 0 && (
+          <div className="mt-4 pt-3 border-t">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              className="w-full"
+              onClick={() => router.push('/admin/approvals')}
+            >
+              View All Approvals
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

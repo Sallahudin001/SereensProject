@@ -15,8 +15,8 @@ const CustomDot = (props: any) => {
   }
   
   // Different styling based on data type
-  const fill = dataKey === "proposals" ? themeGradients.secondary[0] : themeGradients.warning[0];
-  const stroke = dataKey === "proposals" ? themeGradients.secondary[1] : themeGradients.warning[1];
+  const fill = dataKey === "proposals" ? "var(--primary)" : "var(--chart-1)";
+  const stroke = dataKey === "proposals" ? "var(--primary)" : "var(--chart-1)";
   
   return (
     <circle 
@@ -40,6 +40,34 @@ export function DashboardPerformanceChart() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<PerformanceData[]>([]);
   const [hasData, setHasData] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  
+  // Check for dark mode
+  useEffect(() => {
+    // Check if document is available (client-side)
+    if (typeof document !== "undefined") {
+      // Initial check
+      setIsDarkMode(document.documentElement.classList.contains("dark"));
+      
+      // Create observer for theme changes
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (
+            mutation.type === "attributes" &&
+            mutation.attributeName === "class"
+          ) {
+            setIsDarkMode(document.documentElement.classList.contains("dark"));
+          }
+        });
+      });
+      
+      // Start observing
+      observer.observe(document.documentElement, { attributes: true });
+      
+      // Clean up
+      return () => observer.disconnect();
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchPerformanceData() {
@@ -95,8 +123,8 @@ export function DashboardPerformanceChart() {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      <div className="flex justify-center items-center h-[200px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -105,11 +133,11 @@ export function DashboardPerformanceChart() {
   if (!hasData || data.length === 0) {
     return (
       <div className="h-[200px] flex flex-col items-center justify-center text-center px-4">
-        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3">
-          <TrendingUp className="h-6 w-6 text-slate-400" />
+        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-3">
+          <TrendingUp className="h-5 w-5 text-muted-foreground" />
         </div>
-        <h3 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">No performance data yet</h3>
-        <p className="text-xs text-slate-500 dark:text-slate-500 max-w-[200px]">
+        <h3 className="text-sm font-medium mb-1">No performance data yet</h3>
+        <p className="text-xs text-muted-foreground max-w-[200px]">
           Create your first proposal to see performance trends over time.
         </p>
       </div>
@@ -129,20 +157,25 @@ export function DashboardPerformanceChart() {
       >
         <defs>
           <linearGradient id="proposalsGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={themeGradients.secondary[0]} stopOpacity={0.8}/>
-            <stop offset="95%" stopColor={themeGradients.secondary[1]} stopOpacity={0.2}/>
+            <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="var(--primary)" stopOpacity={0.2}/>
           </linearGradient>
           <linearGradient id="conversionGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor={themeGradients.warning[0]} stopOpacity={0.8}/>
-            <stop offset="95%" stopColor={themeGradients.warning[1]} stopOpacity={0.2}/>
+            <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.8}/>
+            <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0.2}/>
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+        <CartesianGrid 
+          strokeDasharray="3 3" 
+          vertical={false} 
+          stroke={isDarkMode ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"} 
+        />
         <XAxis 
           dataKey="date" 
           tick={{ fontSize: 12 }} 
           tickLine={false}
-          axisLine={{ stroke: '#E5E7EB' }}
+          axisLine={{ stroke: isDarkMode ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)" }}
+          stroke={isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)"}
         />
         <YAxis 
           yAxisId="left" 
@@ -151,6 +184,7 @@ export function DashboardPerformanceChart() {
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `${value}`}
+          stroke={isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)"}
           width={30}
         />
         <YAxis
@@ -160,6 +194,7 @@ export function DashboardPerformanceChart() {
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `${value}%`}
+          stroke={isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)"}
           width={40}
         />
         <Tooltip
@@ -168,11 +203,12 @@ export function DashboardPerformanceChart() {
             return [value.toString(), "Proposals"];
           }}
           contentStyle={{
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            backgroundColor: isDarkMode ? "rgba(30, 41, 59, 0.95)" : "rgba(255, 255, 255, 0.95)",
             borderRadius: "8px",
             border: "none",
             boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
             fontSize: "12px",
+            color: isDarkMode ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)",
           }}
         />
         <Legend 
@@ -183,15 +219,16 @@ export function DashboardPerformanceChart() {
               proposals: "Proposals",
               conversion: "Conversion Rate"
             };
-            return <span style={{ fontSize: "12px", color: "#6B7280" }}>{labels[value] || value}</span>;
+            return <span style={{ fontSize: "12px", color: isDarkMode ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)" }}>{labels[value] || value}</span>;
           }}
+          wrapperStyle={{ paddingTop: "10px" }}
         />
         <Line
           yAxisId="left"
           type="monotone"
           dataKey="proposals"
-          stroke={themeGradients.secondary[0]}
-          strokeWidth={3}
+          stroke="var(--primary)"
+          strokeWidth={2.5}
           dot={<CustomDot dataKey="proposals" />}
           activeDot={{ r: 6, strokeWidth: 2 }}
           connectNulls
@@ -200,8 +237,8 @@ export function DashboardPerformanceChart() {
           yAxisId="right"
           type="monotone"
           dataKey="conversion"
-          stroke={themeGradients.warning[0]}
-          strokeWidth={3}
+          stroke="var(--chart-1)"
+          strokeWidth={2.5}
           dot={<CustomDot dataKey="conversion" />}
           activeDot={{ r: 6, strokeWidth: 2 }}
           connectNulls
