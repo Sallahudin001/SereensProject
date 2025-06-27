@@ -2,7 +2,7 @@ import { executeQuery } from "@/lib/db"
 import { NextRequest, NextResponse } from "next/server"
 import { getRBACContext, applyRBACFilter } from "@/lib/rbac"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Get RBAC context
     const context = await getRBACContext();
@@ -10,12 +10,26 @@ export async function GET() {
     if (!context) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
+
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
     
+    const offset = (page - 1) * limit;
+    
+    let countQuery;
     let query;
     let params: any[] = [];
+    let countParams: any[] = [];
     
     if (context.isAdmin) {
       // Admin users can see all customers with proposal count
+      countQuery = `
+        SELECT COUNT(DISTINCT c.id) as total
+        FROM customers c
+      `;
+      
       query = `
         SELECT 
           c.*,
@@ -29,9 +43,19 @@ export async function GET() {
           c.id
         ORDER BY 
           c.created_at DESC
+        LIMIT $1 OFFSET $2
       `;
+      params = [limit, offset];
     } else {
       // Regular users see customers from their proposals
+      countQuery = `
+        SELECT COUNT(DISTINCT c.id) as total
+        FROM customers c
+        INNER JOIN proposals p ON c.id = p.customer_id
+        WHERE p.user_id = $1
+      `;
+      countParams = [context.userId];
+      
       query = `
         SELECT 
           c.*,
@@ -47,17 +71,28 @@ export async function GET() {
           c.id
         ORDER BY 
           c.created_at DESC
+        LIMIT $2 OFFSET $3
       `;
-      params = [context.userId];
+      params = [context.userId, limit, offset];
     }
+
+    // Get total count
+    const countResult = await executeQuery(countQuery, countParams);
+    const totalCount = parseInt(countResult[0]?.total || '0');
     
+    // Get paginated data
     const customers = await executeQuery(query, params);
 
     return NextResponse.json({ 
       success: true, 
       customers,
       userRole: context.role,
-      totalCount: customers.length
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNext: page * limit < totalCount,
+      hasPrev: page > 1
     });
   } catch (error) {
     console.error("Error fetching customers:", error);

@@ -3,7 +3,7 @@ import { executeQuery } from "@/lib/db"
 import { useIsAdmin } from "@/components/admin-check"
 import { auth } from "@clerk/nextjs/server"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Check if user is authenticated and admin
     const { userId } = await auth()
@@ -11,10 +11,25 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 })
     }
 
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    
+    const offset = (page - 1) * limit;
+
     // For now, we'll allow access and let the component handle admin checks
     // In production, you'd want to verify admin status here
     
-    // Get all proposals with creator and customer information
+    // Get total count of proposals for pagination
+    const countQuery = `
+      SELECT COUNT(DISTINCT p.id) as total
+      FROM proposals p
+    `
+    const countResult = await executeQuery(countQuery)
+    const totalCount = parseInt(countResult[0]?.total || '0')
+
+    // Get paginated proposals with creator and customer information
     const proposalsQuery = `
       SELECT 
         p.id,
@@ -49,17 +64,25 @@ export async function GET() {
         c.name, c.email, c.phone, c.address, u.name, u.email
       ORDER BY 
         p.created_at DESC
+      LIMIT $1 OFFSET $2
     `
 
-    const proposals = await executeQuery(proposalsQuery)
+    const proposals = await executeQuery(proposalsQuery, [limit, offset])
 
-    // Calculate statistics
-    const totalProposals = proposals.length
-    const totalValue = proposals.reduce((sum: number, p: any) => sum + (parseFloat(p.total) || 0), 0)
+    // Get all proposals for stats calculation (without pagination)
+    const allProposalsQuery = `
+      SELECT p.id, p.status, p.total
+      FROM proposals p
+    `
+    const allProposals = await executeQuery(allProposalsQuery)
+
+    // Calculate statistics using all proposals
+    const totalProposals = allProposals.length
+    const totalValue = allProposals.reduce((sum: number, p: any) => sum + (parseFloat(p.total) || 0), 0)
     const averageValue = totalProposals > 0 ? totalValue / totalProposals : 0
 
-    // Count proposals by status
-    const statusCounts = proposals.reduce((acc: Record<string, number>, proposal: any) => {
+    // Count proposals by status using all proposals
+    const statusCounts = allProposals.reduce((acc: Record<string, number>, proposal: any) => {
       const status = proposal.status || 'draft'
       acc[status] = (acc[status] || 0) + 1
       return acc
@@ -76,6 +99,12 @@ export async function GET() {
       success: true,
       proposals,
       stats,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNext: page * limit < totalCount,
+      hasPrev: page > 1,
       userRole: 'admin' // TODO: Get actual user role
     })
 

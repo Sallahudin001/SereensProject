@@ -11,6 +11,7 @@ import { motion } from "framer-motion"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import Image from "next/image"
+import { Pagination } from "@/components/ui/pagination"
 
 // Animation variants
 const fadeIn = {
@@ -50,17 +51,27 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
 
   useEffect(() => {
     async function fetchCustomers() {
       try {
         setLoading(true)
 
-        const result = await fetch("/api/customers")
+        const result = await fetch(`/api/customers?page=${currentPage}&limit=${pageSize}`)
         const data = await result.json()
 
         if (data.success) {
           setCustomers(data.customers)
+          setTotalCount(data.totalCount)
+          setTotalPages(data.totalPages)
+          setHasNext(data.hasNext)
+          setHasPrev(data.hasPrev)
         }
       } catch (error) {
         console.error("Error fetching customers:", error)
@@ -70,9 +81,19 @@ export default function CustomersPage() {
     }
 
     fetchCustomers()
-  }, [])
+  }, [currentPage, pageSize])
 
-  // Filter customers based on search term
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize)
+    setCurrentPage(1) // Reset to first page when changing page size
+  }
+
+  // Filter customers based on search term (client-side for current page)
   const filteredCustomers = customers.filter(
     (customer) =>
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -230,6 +251,18 @@ export default function CustomersPage() {
                         </div>
                       )}
                     </CardContent>
+                    {!loading && filteredCustomers.length > 0 && (
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalCount={totalCount}
+                        pageSize={pageSize}
+                        hasNext={hasNext}
+                        hasPrev={hasPrev}
+                        onPageChange={handlePageChange}
+                        onPageSizeChange={handlePageSizeChange}
+                      />
+                    )}
                   </Card>
                 </motion.div>
               </CardContent>

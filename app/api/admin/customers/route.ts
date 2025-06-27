@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { executeQuery } from "@/lib/db"
 import { auth } from "@clerk/nextjs/server"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     // Check if user is authenticated and admin
     const { userId } = await auth()
@@ -10,10 +10,25 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 })
     }
 
+    // Get query parameters
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    
+    const offset = (page - 1) * limit;
+
     // For now, we'll allow access and let the component handle admin checks
     // In production, you'd want to verify admin status here
     
-    // Get all customers with creator information and proposal statistics
+    // Get total count of customers for pagination
+    const countQuery = `
+      SELECT COUNT(DISTINCT c.id) as total
+      FROM customers c
+    `
+    const countResult = await executeQuery(countQuery)
+    const totalCount = parseInt(countResult[0]?.total || '0')
+
+    // Get paginated customers with creator information and proposal statistics
     const customersQuery = `
       SELECT 
         c.id,
@@ -48,13 +63,30 @@ export async function GET() {
         c.user_id, u.name, u.email
       ORDER BY 
         c.created_at DESC
+      LIMIT $1 OFFSET $2
     `
 
-    const customers = await executeQuery(customersQuery)
+    const customers = await executeQuery(customersQuery, [limit, offset])
 
-    // Calculate statistics
-    const totalCustomers = customers.length
-    const activeCustomers = customers.filter((c: any) => 
+    // Get all customers for stats calculation (without pagination)
+    const allCustomersQuery = `
+      SELECT 
+        c.id,
+        c.created_at,
+        COUNT(DISTINCT p.id) as proposal_count,
+        COUNT(DISTINCT CASE WHEN p.status IN ('signed', 'completed') THEN p.id END) as signed_proposals
+      FROM 
+        customers c
+      LEFT JOIN 
+        proposals p ON c.id = p.customer_id
+      GROUP BY 
+        c.id, c.created_at
+    `
+    const allCustomers = await executeQuery(allCustomersQuery)
+
+    // Calculate statistics using all customers
+    const totalCustomers = allCustomers.length
+    const activeCustomers = allCustomers.filter((c: any) => 
       c.status !== 'inactive' && c.status !== 'lost'
     ).length
 
@@ -63,13 +95,13 @@ export async function GET() {
     thisMonth.setDate(1)
     thisMonth.setHours(0, 0, 0, 0)
     
-    const newThisMonth = customers.filter((c: any) => 
+    const newThisMonth = allCustomers.filter((c: any) => 
       new Date(c.created_at) >= thisMonth
     ).length
 
-    // Calculate overall conversion rate
-    const totalProposals = customers.reduce((sum: number, c: any) => sum + (parseInt(c.proposal_count) || 0), 0)
-    const totalSigned = customers.reduce((sum: number, c: any) => sum + (parseInt(c.signed_proposals) || 0), 0)
+    // Calculate overall conversion rate using all customers
+    const totalProposals = allCustomers.reduce((sum: number, c: any) => sum + (parseInt(c.proposal_count) || 0), 0)
+    const totalSigned = allCustomers.reduce((sum: number, c: any) => sum + (parseInt(c.signed_proposals) || 0), 0)
     const conversionRate = totalProposals > 0 ? Math.round((totalSigned / totalProposals) * 100) : 0
 
     const stats = {
@@ -114,6 +146,12 @@ export async function GET() {
       customers,
       stats,
       recentActivity,
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+      hasNext: page * limit < totalCount,
+      hasPrev: page > 1,
       userRole: 'admin' // TODO: Get actual user role
     })
 

@@ -11,6 +11,7 @@ import { Plus, Search, FileText } from "lucide-react"
 import { motion } from "framer-motion"
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import Image from "next/image"
+import { Pagination } from "@/components/ui/pagination"
 
 // Animation variants
 const fadeIn = {
@@ -51,17 +52,27 @@ export default function ProposalsPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
 
   useEffect(() => {
     async function fetchProposals() {
       try {
         setLoading(true)
 
-        const result = await fetch("/api/proposals")
+        const result = await fetch(`/api/proposals?page=${currentPage}&limit=${pageSize}`)
         const data = await result.json()
 
         if (data.success) {
           setProposals(data.proposals)
+          setTotalCount(data.totalCount)
+          setTotalPages(data.totalPages)
+          setHasNext(data.hasNext)
+          setHasPrev(data.hasPrev)
         }
       } catch (error) {
         console.error("Error fetching proposals:", error)
@@ -71,9 +82,19 @@ export default function ProposalsPage() {
     }
 
     fetchProposals()
-  }, [])
+  }, [currentPage, pageSize])
 
-  // Filter proposals based on search term and status
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize)
+    setCurrentPage(1) // Reset to first page when changing page size
+  }
+
+  // Filter proposals based on search term and status (client-side for current page)
   const filteredProposals = proposals.filter((proposal) => {
     const matchesSearch =
       proposal.proposal_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -294,6 +315,18 @@ export default function ProposalsPage() {
                         </div>
                       )}
                     </CardContent>
+                    {!loading && filteredProposals.length > 0 && (
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        totalCount={totalCount}
+                        pageSize={pageSize}
+                        hasNext={hasNext}
+                        hasPrev={hasPrev}
+                        onPageChange={handlePageChange}
+                        onPageSizeChange={handlePageSizeChange}
+                      />
+                    )}
                   </Card>
                 </motion.div>
               </CardContent>

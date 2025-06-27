@@ -44,6 +44,7 @@ import {
   XCircle
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { Pagination } from "@/components/ui/pagination"
 
 interface Proposal {
   id: number
@@ -90,20 +91,30 @@ export default function AllProposalsPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("desc")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
 
   useEffect(() => {
     fetchProposals()
-  }, [])
+  }, [currentPage, pageSize])
 
   const fetchProposals = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/admin/proposals")
+      const response = await fetch(`/api/admin/proposals?page=${currentPage}&limit=${pageSize}`)
       const data = await response.json()
       
       if (data.success) {
         setProposals(data.proposals)
         setStats(data.stats)
+        setTotalCount(data.totalCount)
+        setTotalPages(data.totalPages)
+        setHasNext(data.hasNext)
+        setHasPrev(data.hasPrev)
       } else {
         console.error("Failed to fetch proposals:", data.error)
       }
@@ -112,6 +123,16 @@ export default function AllProposalsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize)
+    setCurrentPage(1) // Reset to first page when changing page size
   }
 
   const formatCurrency = (amount: number) => {
@@ -340,7 +361,7 @@ export default function AllProposalsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Proposals ({filteredAndSortedProposals.length})
+              Proposals ({totalCount})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -416,6 +437,18 @@ export default function AllProposalsPage() {
               </div>
             )}
           </CardContent>
+          {!loading && filteredAndSortedProposals.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              hasNext={hasNext}
+              hasPrev={hasPrev}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
         </Card>
       </motion.div>
     </div>

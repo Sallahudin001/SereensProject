@@ -43,6 +43,7 @@ import {
   Activity
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { Pagination } from "@/components/ui/pagination"
 
 interface Customer {
   id: number
@@ -77,24 +78,33 @@ export default function AllCustomersPage() {
   const [stats, setStats] = useState<CustomerStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-
   const [sourceFilter, setSourceFilter] = useState("all")
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("desc")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalCount, setTotalCount] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
+  const [hasNext, setHasNext] = useState(false)
+  const [hasPrev, setHasPrev] = useState(false)
 
   useEffect(() => {
     fetchCustomers()
-  }, [])
+  }, [currentPage, pageSize])
 
   const fetchCustomers = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/admin/customers")
+      const response = await fetch(`/api/admin/customers?page=${currentPage}&limit=${pageSize}`)
       const data = await response.json()
       
       if (data.success) {
         setCustomers(data.customers)
         setStats(data.stats)
+        setTotalCount(data.totalCount)
+        setTotalPages(data.totalPages)
+        setHasNext(data.hasNext)
+        setHasPrev(data.hasPrev)
       } else {
         console.error("Failed to fetch customers:", data.error)
       }
@@ -103,6 +113,16 @@ export default function AllCustomersPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Handle pagination
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize)
+    setCurrentPage(1) // Reset to first page when changing page size
   }
 
   const formatCurrency = (amount: number) => {
@@ -329,7 +349,7 @@ export default function AllCustomersPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Customers ({filteredAndSortedCustomers.length})
+              Customers ({totalCount})
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -429,6 +449,18 @@ export default function AllCustomersPage() {
               </div>
             )}
           </CardContent>
+          {!loading && filteredAndSortedCustomers.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              hasNext={hasNext}
+              hasPrev={hasPrev}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
         </Card>
       </motion.div>
     </div>

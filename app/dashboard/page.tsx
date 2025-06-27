@@ -54,23 +54,7 @@ interface Metrics {
   conversionRate: number
 }
 
-// Dashboard Footer Component
-const DashboardFooter = () => (
-  <div className="w-full bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left mt-8">
-    <div className="container mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
-      <div className="sm:col-span-1">
-        <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
-      </div>
-      <div className="sm:col-span-2 text-sm">
-        <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
-        <p>C: (408) 826-7377 | O: (408)333-9831</p>
-        <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
-        <p>www.evergreenenergy.io</p>
-        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
-      </div>
-    </div>
-  </div>
-)
+
 
 export default function DashboardPage() {
   const headerSection = useScrollAnimation({ threshold: 0.1 })
@@ -103,7 +87,7 @@ export default function DashboardPage() {
         }
         
         // Fetch proposals
-        const proposalsResponse = await fetch('/api/proposals')
+        const proposalsResponse = await fetch('/api/proposals?recent=true&limit=10')
         const proposalsData = await proposalsResponse.json()
         
         if (proposalsData.success) {
@@ -326,9 +310,9 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                           <CardTitle className="flex items-center text-gray-800">
-                            <FileText className="w-6 h-6 mr-3 text-emerald-600" /> Recent Proposals
+                            <FileText className="w-6 h-6 mr-3 text-emerald-600" /> Recent Proposals (10)
                           </CardTitle>
-                  <CardDescription>View and manage your recent proposals</CardDescription>
+                  <CardDescription>View and manage your 10 most recent proposals</CardDescription>
                 </div>
                 <Tabs value={activeFilter} onValueChange={setActiveFilter} className="w-full sm:w-auto">
                   <TabsList className="grid grid-cols-4 w-full sm:w-auto">
@@ -488,8 +472,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
             
-            {/* Dashboard Footer - only appears on dashboard */}
-            <DashboardFooter />
+
         </motion.div>
       </div>
     </DashboardLayout>
