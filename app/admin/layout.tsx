@@ -101,7 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="p-6 h-full flex flex-col">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center">
-                      <div className="bg-white/95 p-2 rounded-lg shadow-lg border border-white/20">
+                      <div className="p-2 rounded-xl bg-white shadow-lg">
                         <Image 
                           src={logoSrc}
                           alt="Evergreen Home Upgrades Logo" 
@@ -165,7 +165,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Sheet>
             <Link href="/admin" className="flex items-center">
               <div className="flex items-center">
-                <div className="bg-white/95 p-2 sm:p-3 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
+                <div className="p-2 sm:p-3 rounded-xl bg-white shadow-lg">
                   <Image 
                     src={logoSrc}
                     alt="Evergreen Home Upgrades Logo" 

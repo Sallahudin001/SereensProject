@@ -96,7 +96,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center">
-                        <div className="bg-white/95 p-2 rounded-lg shadow-lg border border-white/20">
+                        <div className="p-2 rounded-xl bg-white shadow-lg">
                           <Image 
                             src={logoSrc}
                             alt="Evergreen Energy Upgrades Logo" 
@@ -240,7 +240,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center">
-                      <div className="bg-white/95 p-2 rounded-lg shadow-lg border border-white/20">
+                      <div className="p-2 rounded-xl bg-white shadow-lg">
                         <Image 
                           src={logoSrc}
                           alt="Evergreen Energy Upgrades Logo" 
@@ -274,7 +274,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </Sheet>
             <Link href="/dashboard" className="flex items-center">
               <div className="flex items-center">
-                <div className="bg-white/95 p-3 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
+                <div className="p-3 rounded-xl bg-white shadow-lg">
                 <Image 
                   src={logoSrc}
                   alt="Evergreen Energy Upgrades Logo" 
