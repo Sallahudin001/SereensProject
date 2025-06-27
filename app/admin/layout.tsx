@@ -157,35 +157,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           animate={{ width: sidebarCollapsed ? 80 : 288 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          {/* Floating Sidebar Container */}
+          {/* Sidebar Container - Fixed positioning that fills available space */}
           <div className={cn(
-            "fixed top-4 left-4 bottom-4 bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl overflow-hidden z-30",
-            sidebarCollapsed ? "w-16" : "w-64"
+            "fixed inset-y-0 left-0 top-[73px] bottom-0 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 shadow-lg z-30 transition-all duration-300 flex flex-col",
+            sidebarCollapsed ? "w-20" : "w-72"
           )}>
-            {/* Sidebar Header */}
-            <div className="p-6 border-b border-emerald-100/50">
-              <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-2 rounded-xl shadow-lg">
-                  <span className="text-white font-bold text-lg">E</span>
-                </div>
-                <AnimatePresence>
-                  {!sidebarCollapsed && (
-                    <motion.div
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: "auto" }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-              <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900">Evergreen</span>
-                        <span className="text-xs text-emerald-600 font-medium">Home Upgrades</span>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-
             {/* Toggle button */}
             <Button 
               variant="ghost" 
@@ -196,59 +172,61 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {sidebarCollapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
             </Button>
           
-            {/* Navigation */}
-            <div className="flex-1 p-4 space-y-2">
-              {menuItems.map((item, index) => {
-                const isActive = pathname === item.href;
-                return (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Link
-                      href={item.href}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
-                        isActive 
-                          ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25" 
-                          : "hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 text-gray-600 hover:text-emerald-700",
-                        sidebarCollapsed && "justify-center px-2"
-                      )}
-                      title={item.label}
+            {/* Navigation - Flex grow to fill available space */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="p-4 space-y-2 pt-16">
+                {menuItems.map((item, index) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <motion.div
+                      key={index}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <div className={cn(
-                        "flex items-center justify-center p-2 rounded-lg transition-all duration-300",
-                        isActive 
-                          ? "bg-white/20 text-white" 
-                          : "text-emerald-600 group-hover:text-emerald-700 group-hover:bg-emerald-100/50"
-                      )}>
-                        <item.icon className="h-5 w-5" />
-                      </div>
-                      <AnimatePresence>
-                        {!sidebarCollapsed && (
-                          <motion.span 
-                            className={cn(
-                              "text-sm font-medium transition-colors flex-1",
-                              isActive ? "text-white" : "text-gray-700 group-hover:text-emerald-800"
-                            )}
-                            initial={{ opacity: 0, width: 0 }}
-                            animate={{ opacity: 1, width: "auto" }}
-                            exit={{ opacity: 0, width: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            {item.label}
-                          </motion.span>
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
+                          isActive 
+                            ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25" 
+                            : "hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 text-gray-600 hover:text-emerald-700",
+                          sidebarCollapsed && "justify-center px-2"
                         )}
-                      </AnimatePresence>
-                      </Link>
-                  </motion.div>
-                );
-              })}
+                        title={item.label}
+                      >
+                        <div className={cn(
+                          "flex items-center justify-center p-2 rounded-lg transition-all duration-300",
+                          isActive 
+                            ? "bg-white/20 text-white" 
+                            : "text-emerald-600 group-hover:text-emerald-700 group-hover:bg-emerald-100/50"
+                        )}>
+                          <item.icon className="h-5 w-5" />
+                        </div>
+                        <AnimatePresence>
+                          {!sidebarCollapsed && (
+                            <motion.span 
+                              className={cn(
+                                "text-sm font-medium transition-colors flex-1",
+                                isActive ? "text-white" : "text-gray-700 group-hover:text-emerald-800"
+                              )}
+                              initial={{ opacity: 0, width: 0 }}
+                              animate={{ opacity: 1, width: "auto" }}
+                              exit={{ opacity: 0, width: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              {item.label}
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
+                        </Link>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* User Profile */}
-            <div className="p-4 border-t border-emerald-100/50">
+            {/* User Profile - Fixed at bottom */}
+            <div className="flex-shrink-0 p-4 border-t border-emerald-100/50 bg-white/50">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className={cn(
@@ -339,16 +317,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-              </div>
+          </div>
         </motion.aside>
 
         {/* Main Content Area */}
         <div className="flex flex-col flex-1 overflow-hidden">
-          <main className={cn(
-            "flex-1 p-4 sm:p-6 md:p-8 w-full overflow-x-hidden bg-gradient-to-br from-gray-50/50 to-slate-100/50 transition-all duration-300",
-            sidebarCollapsed ? "ml-4" : "ml-8"
-          )}>
-            {children}
+          <main className="flex-1 overflow-x-hidden bg-gradient-to-br from-gray-50/50 to-slate-100/50 min-w-0">
+            <div className="w-full h-full">{children}</div>
           </main>
         </div>
       </div>

@@ -215,7 +215,7 @@ export default function DashboardPage() {
                   className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
         >
           <div>
-                      <CardTitle className="text-3xl sm:text-4xl font-bold">Business Dashboard</CardTitle>
+                      <CardTitle className="text-3xl sm:text-4xl font-bold">Main Dashboard</CardTitle>
                       <CardDescription className="text-green-100 text-sm sm:text-base">Comprehensive overview of your business performance</CardDescription>
                     </div>
           <div className="flex gap-2 w-full sm:w-auto">
