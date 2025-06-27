@@ -141,7 +141,7 @@ export default function LandingPage() {
               </div>
               <div className="ml-4 hidden sm:block">
                 <span className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                  EverGreen Home Proposals
+                  Evergreen Home Proposals
                 </span>
                 <div className="text-xs text-emerald-600 font-medium">Professional Sales Tools</div>
                 </div>

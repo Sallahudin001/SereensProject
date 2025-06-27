@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   BarChart, 
@@ -35,24 +34,6 @@ interface RecentActivity {
   timestamp: string
   details: string
 }
-
-// Dashboard Footer Component
-const AdminFooter = () => (
-  <div className="w-full bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left mt-8">
-    <div className="container mx-auto max-w-7xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
-      <div className="sm:col-span-1">
-        <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
-      </div>
-      <div className="sm:col-span-2 text-sm">
-        <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
-        <p>C: (408) 826-7377 | O: (408)333-9831</p>
-        <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
-        <p>www.evergreenenergy.io</p>
-        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
-      </div>
-    </div>
-  </div>
-)
 
 export default function AdminDashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetric[]>([])
@@ -134,19 +115,20 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      <Card className="shadow-lg rounded-xl overflow-hidden bg-white">
-        <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
+    <div className="flex-1 space-y-6 p-6">
+      {/* Header Card */}
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-white border-0">
+        <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
             <div>
-              <CardTitle className="text-3xl font-bold tracking-tight">Admin Dashboard</CardTitle>
-              <CardDescription className="text-green-100">
+              <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight">Admin Dashboard</CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">
                 Overview of your home improvement proposal system
               </CardDescription>
             </div>
-            <div className="flex gap-2">
-              <Link href="/dashboard">
-                <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-200">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Link href="/dashboard" className="w-full sm:w-auto">
+                <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-200 w-full sm:w-auto">
                   <Home className="mr-2 h-4 w-4" />
                   Main Dashboard
                 </Button>
@@ -156,29 +138,34 @@ export default function AdminDashboardPage() {
         </CardHeader>
       </Card>
 
+      {/* Metrics Cards */}
       {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-          {[...Array(4)].map((_, index) => (
-            <Card key={index} className="h-[140px] animate-pulse w-full">
+        <div className="grid gap-4 md:grid-cols-3">
+          {[...Array(3)].map((_, index) => (
+            <Card key={index} className="h-[142px] animate-pulse w-full border-0 shadow-md">
               <CardContent className="p-6">
-                <div className="h-6 w-1/2 bg-emerald-100 rounded mb-4"></div>
-                <div className="h-10 w-2/3 bg-emerald-50 rounded"></div>
+                <div className="h-4 w-1/2 bg-emerald-100 rounded mb-4"></div>
+                <div className="h-8 w-2/3 bg-emerald-50 rounded mb-2"></div>
+                <div className="h-3 w-1/3 bg-gray-100 rounded"></div>
                 </CardContent>
               </Card>
             ))}
           </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+        <div className="grid gap-4 md:grid-cols-3">
           {metrics.map((metric) => (
-            <Card key={metric.id} className="w-full border-emerald-100 shadow-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <Card key={metric.id} className="h-[142px] border-0 shadow-md hover:shadow-lg transition-all duration-300">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-gray-900">
                   {metric.name}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-black">
+                <div className="text-2xl font-bold text-black mb-1">
                   {metric.id === "revenue" ? `$${metric.value.toLocaleString()}` : metric.value.toLocaleString()}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Compared to last period
                 </div>
               </CardContent>
             </Card>
@@ -186,49 +173,75 @@ export default function AdminDashboardPage() {
                 </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-7 gap-6 w-full">
-        <div className="col-span-7 lg:col-span-4 w-full">
-          <Card className="h-full w-full border-transparent shadow-md">
+      {/* Main Content Grid - Charts and Activity */}
+      <div className="grid gap-6 lg:grid-cols-5">
+        {/* Chart Section - Reduced width */}
+        <div className="lg:col-span-3">
+          <Card className="h-full">
               <CardHeader>
               <CardTitle className="text-black text-lg font-semibold">Monthly Proposal Trends</CardTitle>
               <CardDescription className="text-gray-700">Proposals created per month</CardDescription>
               </CardHeader>
               <CardContent>
-              <div className="h-[200px] md:h-[300px]">
+              <div className="h-[300px] w-full">
                 <MonthlyProposalTrendsChart />
               </div>
               </CardContent>
             </Card>
           </div>
-        <div className="col-span-7 lg:col-span-3 w-full">
-          <Card className="h-full w-full border-emerald-100 shadow-md">
+
+        {/* Activity Section - Increased width */}
+        <div className="lg:col-span-2">
+          <Card className="h-full">
             <CardHeader>
               <CardTitle className="text-black text-lg font-semibold">Recent Activity</CardTitle>
               <CardDescription className="text-gray-700">Latest actions in the system</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3">
-                    <div className="bg-gray-100 p-2 rounded-full shadow-sm">
+              <div className="space-y-4 max-h-[300px] overflow-y-auto">
+                {loading ? (
+                  <>
+                    {[...Array(5)].map((_, index) => (
+                      <div key={index} className="flex items-start gap-3 animate-pulse">
+                        <div className="bg-gray-200 p-2 rounded-full w-8 h-8 flex-shrink-0"></div>
+                        <div className="flex-1 min-w-0">
+                          <div className="h-4 bg-gray-200 rounded mb-2 w-3/4"></div>
+                          <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : recentActivity.length > 0 ? (
+                  recentActivity.map((activity) => (
+                    <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                      <div className="bg-gray-100 p-2 rounded-full shadow-sm flex-shrink-0">
                       {getActivityIcon(activity.type)}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-black">{activity.details}</p>
-                      <p className="text-xs text-gray-600">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-black truncate pr-2">{activity.details}</p>
+                        <p className="text-xs text-gray-600 truncate">
                         {activity.user} · {activity.timestamp}
                       </p>
+                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-2">
+                      <FileText className="h-8 w-8 mx-auto" />
+                    </div>
+                    <p className="text-sm text-gray-500">No recent activity</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="col-span-1 border-emerald-100 shadow-md hover:shadow-lg transition-all duration-300 group">
+      {/* Action Cards Grid */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 group h-full">
             <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-2 rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300">
@@ -240,16 +253,16 @@ export default function AdminDashboardPage() {
             </CardHeader>
             <CardContent>
             <div className="flex flex-col items-center text-center gap-4">
-              <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-6 rounded-2xl border border-emerald-100 group-hover:border-emerald-200 transition-all duration-300">
-                <Package className="h-12 w-12 text-emerald-600 group-hover:text-emerald-700 transition-colors duration-300" />
+              <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-6 rounded-2xl border border-emerald-100 group-hover:border-emerald-200 transition-all duration-300 w-full">
+                <Package className="h-12 w-12 text-emerald-600 group-hover:text-emerald-700 transition-colors duration-300 mx-auto" />
                       </div>
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   Manage your products, categories, and pricing in one place.
                 </p>
                 <Link 
                   href="/admin/products" 
-                  className="text-emerald-600 font-medium text-sm inline-block mt-3 hover:underline group-hover:text-emerald-700 transition-colors duration-300"
+                  className="text-emerald-600 font-medium text-sm inline-block hover:underline group-hover:text-emerald-700 transition-colors duration-300"
                 >
                   Manage Products →
                 </Link>
@@ -258,7 +271,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1 border-emerald-100 shadow-md hover:shadow-lg transition-all duration-300 group">
+        <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 group h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300">
@@ -270,16 +283,16 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center text-center gap-4">
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100 group-hover:border-blue-200 transition-all duration-300">
-                <CreditCard className="h-12 w-12 text-blue-600 group-hover:text-blue-700 transition-colors duration-300" />
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100 group-hover:border-blue-200 transition-all duration-300 w-full">
+                <CreditCard className="h-12 w-12 text-blue-600 group-hover:text-blue-700 transition-colors duration-300 mx-auto" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   Set up financing plans, payment factors, and merchant fees.
                 </p>
                 <Link 
                   href="/admin/financing" 
-                  className="text-blue-600 font-medium text-sm inline-block mt-3 hover:underline group-hover:text-blue-700 transition-colors duration-300"
+                  className="text-blue-600 font-medium text-sm inline-block hover:underline group-hover:text-blue-700 transition-colors duration-300"
                 >
                   Configure Financing →
                 </Link>
@@ -288,7 +301,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="col-span-1 border-emerald-100 shadow-md hover:shadow-lg transition-all duration-300 group">
+        <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 group h-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <div className="bg-gradient-to-br from-purple-500 to-violet-600 p-2 rounded-lg shadow-md group-hover:shadow-lg transition-all duration-300">
@@ -300,16 +313,16 @@ export default function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center text-center gap-4">
-              <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-2xl border border-purple-100 group-hover:border-purple-200 transition-all duration-300">
-                <Users className="h-12 w-12 text-purple-600 group-hover:text-purple-700 transition-colors duration-300" />
+              <div className="bg-gradient-to-br from-purple-50 to-violet-50 p-6 rounded-2xl border border-purple-100 group-hover:border-purple-200 transition-all duration-300 w-full">
+                <Users className="h-12 w-12 text-purple-600 group-hover:text-purple-700 transition-colors duration-300 mx-auto" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   Manage user accounts, roles, and access permissions.
                 </p>
                 <Link 
                   href="/admin/permissions" 
-                  className="text-purple-600 font-medium text-sm inline-block mt-3 hover:underline group-hover:text-purple-700 transition-colors duration-300"
+                  className="text-purple-600 font-medium text-sm inline-block hover:underline group-hover:text-purple-700 transition-colors duration-300"
                 >
                   Manage Users →
                 </Link>
@@ -318,9 +331,6 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
-      
-      {/* Admin Footer - positioned consistently with dashboard */}
-      <AdminFooter />
     </div>
   )
 }

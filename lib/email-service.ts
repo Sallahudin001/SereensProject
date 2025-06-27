@@ -611,7 +611,7 @@ export async function sendProposalEmail(proposalId: string, baseUrl: string) {
     // Send the email
     const result = await sendEmail({
       to: proposal.customer_email,
-      subject: `Your Proposal #${proposal.proposal_number} from EverGreen Home Proposals`,
+      subject: `Your Proposal #${proposal.proposal_number} from Evergreen Home Proposals`,
       html,
     })
 

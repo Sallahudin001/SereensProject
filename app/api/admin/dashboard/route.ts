@@ -169,13 +169,6 @@ export async function GET(request: NextRequest) {
           value: pendingApprovals,
           change: parseFloat(approvalsChange.toFixed(1)),
           trend: approvalsChange >= 0 ? "up" : "down" // Negative change is good for pending approvals
-        },
-        {
-          id: "revenue",
-          name: "Monthly Revenue",
-          value: Math.round(lastMonthRevenue),
-          change: parseFloat(revenueChange.toFixed(1)),
-          trend: revenueChange >= 0 ? "up" : "down"
         }
       ]
     });

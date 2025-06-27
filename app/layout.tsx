@@ -9,7 +9,7 @@ import UserSyncProvider from "@/components/user-sync-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "EverGreen Home Proposals",
+  title: "Evergreen Home Upgrades",
   description: "Professional proposal generation tool for home improvement contractors",
 }
 
