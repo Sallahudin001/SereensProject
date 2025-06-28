@@ -1069,7 +1069,6 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                 {service === 'hvac' && (
                                   <div className="space-y-2">
                                     <p><span className="font-medium">System Type:</span> {productData.systemType?.replace(/-/g, " ")?.replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'N/A'}</p>
-                                    <p><span className="font-medium">SEER Rating:</span> {productData.seerRating || 'N/A'}</p>
                                     {productData.tonnage && <p><span className="font-medium">System Size:</span> {productData.tonnage} Tons</p>}
                                     
                                     {/* HVAC Costs Section - Show only if showPricing is enabled */}
@@ -1271,6 +1270,153 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                         })}
                       </div>
                     </motion.div>
+
+                    {/* EXCLUSIVE BONUS OFFERS SECTION - Positive and welcoming */}
+                    {specialOffers && specialOffers.length > 0 && (
+                      <motion.div 
+                        variants={fadeIn}
+                        className="pt-8 border-t border-gray-200 mb-8"
+                      >
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5 }}
+                          className="relative"
+                        >
+                          <div className="border-2 border-emerald-300 rounded-xl shadow-lg bg-white overflow-hidden">
+                            {/* Header with welcoming styling */}
+                            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white">
+                              <div className="text-center">
+                                <div className="flex items-center justify-center gap-3 mb-2">
+                                  <span className="text-2xl">🎁</span>
+                                  <h3 className="text-2xl sm:text-3xl font-bold tracking-wide">
+                                    Exclusive Bonus Offers
+                                  </h3>
+                                  <span className="text-2xl">🌟</span>
+                                </div>
+                                <p className="text-emerald-100 text-lg font-medium">
+                                  We're excited to include these special benefits just for you!
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Offers content */}
+                            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50">
+                              <div className="space-y-6">
+                                {specialOffers.map((offer: any, index: number) => {
+                                  const timer = offerTimers.get(offer.id)
+                                  
+                                  return (
+                                    <motion.div 
+                                      key={index}
+                                      initial={{ opacity: 0, x: -10 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                                      className="bg-white border-2 border-emerald-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                                    >
+                                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-3 mb-2">
+                                            <span className="text-xl">🎉</span>
+                                            <h4 className="text-xl font-semibold text-emerald-900">
+                                              {offer.name}
+                                            </h4>
+                                            <span className="text-xl">💝</span>
+                                          </div>
+                                          <p className="text-emerald-800 font-medium mb-3">{offer.description}</p>
+                                          
+                                          <div className="flex flex-wrap gap-2">
+                                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium">
+                                              {offer.category.charAt(0).toUpperCase() + offer.category.slice(1)}
+                                            </span>
+                                            <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-sm font-semibold shadow-sm">
+                                              {offer.discount_amount ? `$${offer.discount_amount} Value` : 
+                                               offer.discount_percentage ? `${offer.discount_percentage}% Savings` :
+                                               offer.free_product_service ? `Complimentary: ${offer.free_product_service}` : "Special Bonus"}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Gentle availability indicator */}
+                                        <div className="text-center lg:text-right">
+                                          <div className="bg-gradient-to-br from-amber-400 to-orange-400 text-white p-4 rounded-lg shadow-sm">
+                                            <div className="text-amber-50 text-sm font-medium mb-1">
+                                              {timer ? "🕐 Available until:" : "⭐ Special Offer"}
+                                            </div>
+                                            <div className="text-lg lg:text-xl font-semibold">
+                                              {timer ? `${timer.hours}h ${timer.minutes}m ${timer.seconds}s remaining` : "Today Only"}
+                                            </div>
+                                            {timer && (
+                                              <div className="text-amber-100 text-xs font-medium mt-1">
+                                                Reserve your savings
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                  )
+                                })}
+                              </div>
+                              
+                              {/* Positive call to action */}
+                              <div className="mt-6 text-center p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-lg border border-emerald-200">
+                                <p className="text-lg font-semibold text-emerald-900 mb-2">
+                                  🎊 Good news! These bonuses are already included in your proposal
+                                </p>
+                                <p className="text-emerald-700 font-medium">
+                                  Moving forward today ensures you'll receive all these valuable extras
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    )}
+
+                    {/* Bundle Discounts - Now separated and less prominent */}
+                    {bundleRules && bundleRules.length > 0 && (
+                      <motion.div 
+                        variants={fadeIn}
+                        className="mb-8"
+                      >
+                        <div className="border border-green-300 rounded-lg overflow-hidden shadow-md">
+                          <div className="bg-green-100 border-b border-green-300 p-4">
+                            <div className="flex items-center gap-2">
+                              <Award className="h-5 w-5 text-green-600" />
+                              <h4 className="text-green-900 text-xl font-bold">🎉 Bundle Savings Applied!</h4>
+                            </div>
+                            <p className="text-green-700 mt-1 text-sm">You're already saving money by combining multiple services.</p>
+                          </div>
+                          <div className="bg-green-50/60">
+                            {/* Use Set to deduplicate bundle names */}
+                            {Array.from(new Set(bundleRules.map(bundle => bundle.name))).map((uniqueBundleName: string) => {
+                              const bundle = bundleRules.find(b => b.name === uniqueBundleName);
+                              if (!bundle) return null;
+                              
+                              return (
+                                <div key={uniqueBundleName} className="p-4 border-b border-green-200 last:border-b-0">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h5 className="text-green-900 font-semibold text-lg">{bundle.name}</h5>
+                                      <p className="text-green-800">{bundle.bonus_message}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                                        Bundle Discount
+                                      </span>
+                                      <span className="px-2 py-1 bg-green-200 text-green-900 rounded-md text-xs font-medium font-bold">
+                                        ${bundle.discount_value} Saved
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
 
                     {/* Pricing Section */}
                     <motion.div
@@ -1513,103 +1659,6 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             )}
                         </CardContent>
                       </Card>
-
-                       {/* Combined Offers Section - Bundle Discounts and Time-Sensitive Offers */} 
-                       {((bundleRules && bundleRules.length > 0) || (specialOffers && specialOffers.length > 0)) && (
-                            <motion.div 
-                                variants={fadeIn}
-                                className="mt-6 space-y-4"
-                            >
-                                {/* Bundle Discounts - Always show if they exist, but deduplicate */}
-                                {bundleRules && bundleRules.length > 0 && (
-                                    <div className="border border-green-300 rounded-lg overflow-hidden">
-                                        <div className="bg-green-100 border-b border-green-300 p-4">
-                                            <div className="flex items-center gap-2">
-                                                <Award className="h-5 w-5 text-green-600" />
-                                                <h4 className="text-green-900 text-xl font-bold">🎉 Bundle Savings Applied!</h4>
-                                            </div>
-                                            <p className="text-green-700 mt-1 text-sm">You're already saving money by combining multiple services.</p>
-                                        </div>
-                                        <div className="bg-green-50/60">
-                                            {/* Use Set to deduplicate bundle names */}
-                                            {Array.from(new Set(bundleRules.map(bundle => bundle.name))).map((uniqueBundleName: string) => {
-                                                const bundle = bundleRules.find(b => b.name === uniqueBundleName);
-                                                if (!bundle) return null;
-                                                
-                                                return (
-                                                    <div key={uniqueBundleName} className="p-4 border-b border-green-200 last:border-b-0">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <h5 className="text-green-900 font-semibold text-lg">{bundle.name}</h5>
-                                                            <p className="text-green-800">{bundle.bonus_message}</p>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
-                                                                Bundle Discount
-                                                            </span>
-                                                            <span className="px-2 py-1 bg-green-200 text-green-900 rounded-md text-xs font-medium font-bold">
-                                                                ${bundle.discount_value} Saved
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Time-Sensitive Offers - Only show if rep selected them */}
-                                {specialOffers && specialOffers.length > 0 && (
-                                    <div className="border border-amber-300 rounded-lg overflow-hidden">
-                                        <div className="bg-amber-100 border-b border-amber-300 p-4">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-5 w-5 text-amber-600" />
-                                                <h4 className="text-amber-900 text-xl font-bold">⏰ Limited Time Offers</h4>
-                                            </div>
-                                            <p className="text-amber-700 mt-1 text-sm">Act fast! These exclusive offers won't last long.</p>
-                                        </div>
-                                        <div className="bg-amber-50/60">
-                                            {specialOffers.map((offer: any, index: number) => {
-                                                const timer = offerTimers.get(offer.id)
-                                                
-                                                return (
-                                                    <div key={index} className="p-4 border-b border-amber-200 last:border-b-0">
-                                                        <div className="mb-2">
-                                                            <h5 className="text-amber-900 font-semibold text-lg">{offer.name}</h5>
-                                                            <p className="text-amber-800">{offer.description}</p>
-                                                        </div>
-                                                        
-                                                        <div className="flex justify-between items-center mt-3">
-                                                            <div className="flex gap-2">
-                                                                <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-md text-xs font-medium">
-                                                                    {offer.category}
-                                                                </span>
-                                                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
-                                                                    {offer.discount_amount ? `$${offer.discount_amount} off` : 
-                                                                     offer.discount_percentage ? `${offer.discount_percentage}% off` :
-                                                                     offer.free_product_service ? `FREE: ${offer.free_product_service}` : "Special Offer"}
-                                                                </span>
-                                                            </div>
-                                                            
-                                                            <div className="text-right">
-                                                                <div className="text-xs text-amber-700">
-                                                                    {timer ? "Expires in:" : "Limited Time"}
-                                                                </div>
-                                                                <div className="text-amber-900 font-mono font-bold">
-                                                                    {timer ? `${timer.hours}h ${timer.minutes}m ${timer.seconds}s` : "Act Now"}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
-
                     </motion.div>
 
                     {!readOnly && !isRejected && proposal?.status !== 'signed' && (

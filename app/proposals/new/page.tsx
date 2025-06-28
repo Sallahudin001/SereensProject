@@ -13,7 +13,7 @@ import ProductSelectionForm from "@/components/proposal/product-selection-form"
 import PricingBreakdownForm from "@/components/proposal/pricing-breakdown-form"
 import SignatureDepositForm from "@/components/proposal/signature-deposit-form"
 import ProposalStepper from "@/components/proposal/proposal-stepper"
-import RepOfferSelector from "@/components/proposal/rep-offer-selector"
+import EnhancedRepOfferSelector from "@/components/proposal/enhanced-rep-offer-selector"
 import { createProposal, getProposalById } from "@/app/actions/proposal-actions"
 import { toast } from "@/hooks/use-toast"
 import Image from "next/image"
@@ -39,12 +39,24 @@ interface PricingData {
   financingNotes?: string;
 }
 
+interface CustomizedOffer {
+  originalOfferId: number;
+  name: string;
+  description: string;
+  discount_amount?: number;
+  discount_percentage?: number;
+  free_product_service?: string;
+  expiration_value?: number;
+  expiration_type: string;
+}
+
 interface ProposalFormData {
   customer: CustomerInfo;
   services: string[];
   products: Record<string, any>;
   pricing: PricingData;
   selectedOffers: number[];
+  customizedOffers: CustomizedOffer[];
   id?: string;
   proposalNumber?: string;
 }
@@ -86,6 +98,7 @@ export default function NewProposalPage() {
       merchantFee: 0,
     },
     selectedOffers: [],
+    customizedOffers: [],
   })
 
   // Fetch current user and pre-fill form if editing an existing proposal
@@ -118,6 +131,7 @@ export default function NewProposalPage() {
             products: proposal.products,
             pricing: proposal.pricing,
             selectedOffers: [],
+            customizedOffers: [],
             id: proposal.id,
             proposalNumber: proposal.proposalNumber,
           })
@@ -327,12 +341,19 @@ export default function NewProposalPage() {
     })
   }, [])
 
-  const updateSelectedOffers = useCallback((data: number[]) => {
+  const updateSelectedOffers = useCallback((offerIds: number[], customizedOffers?: CustomizedOffer[]) => {
     setFormData((prev) => {
-      if (JSON.stringify(prev.selectedOffers) === JSON.stringify(data)) {
+      const hasOffersChanged = JSON.stringify(prev.selectedOffers) !== JSON.stringify(offerIds)
+      const hasCustomizedChanged = JSON.stringify(prev.customizedOffers) !== JSON.stringify(customizedOffers || [])
+      
+      if (!hasOffersChanged && !hasCustomizedChanged) {
         return prev // No change
       }
-      return { ...prev, selectedOffers: data }
+      return { 
+        ...prev, 
+        selectedOffers: offerIds,
+        customizedOffers: customizedOffers || []
+      }
     })
   }, [])
 
@@ -410,9 +431,10 @@ export default function NewProposalPage() {
                         />
                       )}
                       {currentStep === 3 && (
-                        <RepOfferSelector
+                        <EnhancedRepOfferSelector
                           services={formData.services}
                           selectedOffers={formData.selectedOffers}
+                          customizedOffers={formData.customizedOffers}
                           onOffersChange={updateSelectedOffers}
                         />
                       )}

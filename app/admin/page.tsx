@@ -321,7 +321,7 @@ export default function AdminDashboardPage() {
                   Manage user accounts, roles, and access permissions.
                 </p>
                 <Link 
-                  href="/admin/permissions" 
+                  href="/admin/users" 
                   className="text-purple-600 font-medium text-sm inline-block hover:underline group-hover:text-purple-700 transition-colors duration-300"
                 >
                   Manage Users →

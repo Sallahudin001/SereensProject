@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Remove user (demote to user role)
+// Remove user (demote to user role OR permanently delete)
 export async function DELETE(request: NextRequest) {
   try {
     const { userId } = await auth()
@@ -260,6 +260,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const userIdToUpdate = searchParams.get('id')
+    const action = searchParams.get('action') || 'demote' // 'demote' or 'delete'
 
     if (!userIdToUpdate) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
@@ -270,24 +271,45 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot modify your own account' }, { status: 400 })
     }
 
-    // Demote user to regular user role
     const targetUser = await clerk.users.getUser(userIdToUpdate)
-    await clerk.users.updateUserMetadata(userIdToUpdate, {
-      publicMetadata: {
-        ...targetUser.publicMetadata,
-        role: 'user'
-      }
-    })
 
-    return NextResponse.json({
-      success: true,
-      message: 'User demoted to regular user role'
-    })
+    if (action === 'delete') {
+      // Permanently delete user from Clerk
+      try {
+        await clerk.users.deleteUser(userIdToUpdate)
+        
+        // Note: The webhook will handle removing from our database when Clerk sends the user.deleted event
+        
+        return NextResponse.json({
+          success: true,
+          message: 'User permanently deleted from the system'
+        })
+      } catch (error) {
+        console.error('Error permanently deleting user:', error)
+        return NextResponse.json({ 
+          error: 'Failed to permanently delete user',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 })
+      }
+    } else {
+      // Default action: demote user to regular user role
+      await clerk.users.updateUserMetadata(userIdToUpdate, {
+        publicMetadata: {
+          ...targetUser.publicMetadata,
+          role: 'user'
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: 'User demoted to regular user role'
+      })
+    }
 
   } catch (error) {
-    console.error('Error demoting user:', error)
+    console.error('Error in user deletion/demotion:', error)
     return NextResponse.json({ 
-      error: 'Failed to demote user',
+      error: 'Failed to process user action',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }

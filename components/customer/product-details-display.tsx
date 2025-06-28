@@ -73,12 +73,6 @@ const ProductDetailsDisplay: React.FC<ProductDetailsDisplayProps> = ({
             <div>{productData.BTUs} BTUs</div>
           </div>
         )}
-        {productData.SEER && (
-          <div className="grid grid-cols-2 gap-4">
-            <div className="font-medium text-gray-700">SEER Rating:</div>
-            <div>{productData.SEER}</div>
-          </div>
-        )}
         {productData.ductwork && (
           <div className="grid grid-cols-2 gap-4">
             <div className="font-medium text-gray-700">Ductwork:</div>

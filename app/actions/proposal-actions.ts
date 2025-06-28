@@ -159,13 +159,22 @@ export async function getProposalById(id: string) {
       `
       SELECT
         po.offer_type,
+        po.offer_id,
         po.discount_amount,
+        po.custom_name,
+        po.custom_description,
+        po.custom_discount_amount,
+        po.custom_discount_percentage,
+        po.custom_free_service,
+        po.created_by_user,
         CASE 
+          WHEN po.custom_name IS NOT NULL THEN po.custom_name
           WHEN po.offer_type = 'special_offer' THEN so.name
           WHEN po.offer_type = 'bundle_rule' THEN br.name
           ELSE 'Custom Discount'
         END as name,
         CASE
+          WHEN po.custom_description IS NOT NULL THEN po.custom_description
           WHEN po.offer_type = 'special_offer' THEN so.description
           WHEN po.offer_type = 'bundle_rule' THEN br.description
           ELSE NULL
@@ -239,6 +248,22 @@ export async function getProposalById(id: string) {
         amount: Number.parseFloat(discount.discount_amount) || 0,
         category: discount.category
       })),
+      // Extract selected offers and customized offers
+      selectedOffers: discountsResult
+        .filter(discount => discount.offer_type === 'special_offer')
+        .map(discount => discount.offer_id),
+      customizedOffers: discountsResult
+        .filter(discount => discount.offer_type === 'special_offer' && discount.custom_name)
+        .map(discount => ({
+          originalOfferId: discount.offer_id,
+          name: discount.custom_name,
+          description: discount.custom_description,
+          discount_amount: discount.custom_discount_amount,
+          discount_percentage: discount.custom_discount_percentage,
+          free_product_service: discount.custom_free_service,
+          expiration_type: 'hours', // Default for now
+          expiration_value: 72 // Default for now
+        })),
       // Add custom adders to the response
       customAdders: customAddersResult.map(adder => ({
         id: adder.id,
@@ -430,35 +455,79 @@ export async function createProposal(data: any) {
           // Apply rep-selected special offers if any
           if (data.selectedOffers && data.selectedOffers.length > 0) {
             for (const offerId of data.selectedOffers) {
-              const offerQuery = `
-                SELECT id, name, category, discount_amount, discount_percentage, 
-                       expiration_type, expiration_value, is_active
-                FROM special_offers 
-                WHERE id = $1 AND is_active = true
-              `
+              // Check if this offer has customizations
+              const customization = data.customizedOffers?.find((co: any) => co.originalOfferId === offerId)
               
-              const offerResult = await executeQuery(offerQuery, [offerId])
-              
-              if (offerResult.length > 0) {
-                const offer = offerResult[0]
-                const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+              if (customization) {
+                // Use custom offer data
+                const expirationDate = calculateOfferExpirationDate(
+                  customization.expiration_type, 
+                  customization.expiration_value || 72 // Default 72 hours
+                )
                 
                 await executeQuery(
                   `
                   INSERT INTO proposal_offers (
-                    proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
-                  ) VALUES ($1, $2, $3, $4, $5, $6)
-                  ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+                    proposal_id, offer_type, offer_id, discount_amount, expiration_date, status,
+                    custom_name, custom_description, custom_discount_amount, 
+                    custom_discount_percentage, custom_free_service, created_by_user
+                  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                  ON CONFLICT (proposal_id, offer_type, offer_id) DO UPDATE SET
+                    custom_name = EXCLUDED.custom_name,
+                    custom_description = EXCLUDED.custom_description,
+                    custom_discount_amount = EXCLUDED.custom_discount_amount,
+                    custom_discount_percentage = EXCLUDED.custom_discount_percentage,
+                    custom_free_service = EXCLUDED.custom_free_service,
+                    created_by_user = EXCLUDED.created_by_user,
+                    updated_at = CURRENT_TIMESTAMP
                 `,
                   [
                     data.id,
                     'special_offer',
-                    offer.id,
-                    offer.discount_amount || 0,
+                    offerId,
+                    customization.discount_amount || customization.discount_percentage || 0,
                     expirationDate,
-                    'active'
+                    'active',
+                    customization.name,
+                    customization.description,
+                    customization.discount_amount || null,
+                    customization.discount_percentage || null,
+                    customization.free_product_service || null,
+                    userId
                   ]
                 )
+              } else {
+                // Use original offer data
+                const offerQuery = `
+                  SELECT id, name, category, discount_amount, discount_percentage, 
+                         expiration_type, expiration_value, is_active
+                  FROM special_offers 
+                  WHERE id = $1 AND is_active = true
+                `
+                
+                const offerResult = await executeQuery(offerQuery, [offerId])
+                
+                if (offerResult.length > 0) {
+                  const offer = offerResult[0]
+                  const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+                  
+                  await executeQuery(
+                    `
+                    INSERT INTO proposal_offers (
+                      proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
+                    ) VALUES ($1, $2, $3, $4, $5, $6)
+                    ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+                  `,
+                    [
+                      data.id,
+                      'special_offer',
+                      offer.id,
+                      offer.discount_amount || 0,
+                      expirationDate,
+                      'active'
+                    ]
+                  )
+                }
               }
             }
           }
@@ -689,36 +758,72 @@ export async function createProposal(data: any) {
       // Apply rep-selected special offers if any
       if (data.selectedOffers && data.selectedOffers.length > 0) {
         for (const offerId of data.selectedOffers) {
-          // Fetch offer details
-          const offerQuery = `
-            SELECT id, name, category, discount_amount, discount_percentage, 
-                   expiration_type, expiration_value, is_active
-            FROM special_offers 
-            WHERE id = $1 AND is_active = true
-          `
+          // Check if this offer has customizations
+          const customization = data.customizedOffers?.find((co: any) => co.originalOfferId === offerId)
           
-          const offerResult = await executeQuery(offerQuery, [offerId])
-          
-          if (offerResult.length > 0) {
-            const offer = offerResult[0]
-            const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+          if (customization) {
+            // Use custom offer data
+            const expirationDate = calculateOfferExpirationDate(
+              customization.expiration_type, 
+              customization.expiration_value || 72 // Default 72 hours
+            )
             
             await executeQuery(
               `
               INSERT INTO proposal_offers (
-                proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
-              ) VALUES ($1, $2, $3, $4, $5, $6)
+                proposal_id, offer_type, offer_id, discount_amount, expiration_date, status,
+                custom_name, custom_description, custom_discount_amount, 
+                custom_discount_percentage, custom_free_service, created_by_user
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
               ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
             `,
               [
                 proposalId,
                 'special_offer',
-                offer.id,
-                offer.discount_amount || 0,
+                offerId,
+                customization.discount_amount || customization.discount_percentage || 0,
                 expirationDate,
-                'active'
+                'active',
+                customization.name,
+                customization.description,
+                customization.discount_amount || null,
+                customization.discount_percentage || null,
+                customization.free_product_service || null,
+                userId
               ]
             )
+          } else {
+            // Use original offer data
+            const offerQuery = `
+              SELECT id, name, category, discount_amount, discount_percentage, 
+                     expiration_type, expiration_value, is_active
+              FROM special_offers 
+              WHERE id = $1 AND is_active = true
+            `
+            
+            const offerResult = await executeQuery(offerQuery, [offerId])
+            
+            if (offerResult.length > 0) {
+              const offer = offerResult[0]
+              const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+              
+              await executeQuery(
+                `
+                INSERT INTO proposal_offers (
+                  proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
+                ) VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+              `,
+                [
+                  proposalId,
+                  'special_offer',
+                  offer.id,
+                  offer.discount_amount || 0,
+                  expirationDate,
+                  'active'
+                ]
+              )
+            }
           }
         }
       }
