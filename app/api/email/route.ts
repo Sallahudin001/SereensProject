@@ -15,22 +15,27 @@ export async function POST(request: NextRequest) {
   try {
     // Check for allowed origins if needed
     const origin = request.headers.get('origin');
-    // Add localhost:3003 to allowed origins for development
-    const allowedOrigins = [
-      process.env.NEXT_PUBLIC_BASE_URL, 
-      'http://localhost:3000',
-      'http://localhost:3003'
-    ];
     
     console.log('Request origin:', origin);
-    console.log('Allowed origins:', allowedOrigins);
+    console.log('NEXT_PUBLIC_BASE_URL:', process.env.NEXT_PUBLIC_BASE_URL);
     
-    // In development, be more lenient with origin checking
-    if (process.env.NODE_ENV === 'production' && origin && !allowedOrigins.includes(origin)) {
-      return NextResponse.json(
-        { error: 'Unauthorized origin' },
-        { status: 403 }
-      );
+    // More flexible origin checking for production
+    if (process.env.NODE_ENV === 'production' && origin) {
+      const isValidOrigin = 
+        // Allow the configured base URL
+        origin === process.env.NEXT_PUBLIC_BASE_URL ||
+        // Allow Vercel deployment URLs (*.vercel.app)
+        origin.endsWith('.vercel.app') ||
+        // Allow custom domains if they match the base URL domain
+        (process.env.NEXT_PUBLIC_BASE_URL && new URL(origin).hostname === new URL(process.env.NEXT_PUBLIC_BASE_URL).hostname);
+      
+      if (!isValidOrigin) {
+        console.error('Unauthorized origin:', origin);
+        return NextResponse.json(
+          { error: 'Unauthorized origin' },
+          { status: 403 }
+        );
+      }
     }
 
     // Parse request body
