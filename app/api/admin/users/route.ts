@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Only administrators can modify users.' }, { status: 403 })
     }
 
-    const { clerk_id, role, first_name, last_name } = await request.json()
+    const { clerk_id, role } = await request.json()
 
     if (!clerk_id || !role) {
       return NextResponse.json({ 
@@ -154,19 +154,11 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    // Also update basic info if provided
-    if (first_name || last_name) {
-      await clerk.users.updateUser(clerk_id, {
-        firstName: first_name,
-        lastName: last_name
-      })
-    }
-
     // Log the permission change with clerk_id tracking
     await logPermissionChangeWithClerkId(
       userId, // Admin clerk_id
       clerk_id, // Target user's clerk_id
-      `${first_name || targetUser.firstName || ''} ${last_name || targetUser.lastName || ''}`.trim(),
+      targetUser.emailAddresses[0]?.emailAddress || 'unknown',
       targetUser.publicMetadata?.role?.toString() || 'user',
       role
     );
@@ -202,11 +194,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Only administrators can create user invitations.' }, { status: 403 })
     }
 
-    const { email, first_name, last_name, role = 'user' } = await request.json()
+    const { email, role = 'user' } = await request.json()
 
-    if (!email || !first_name || !last_name) {
+    if (!email) {
       return NextResponse.json({ 
-        error: 'Missing required fields: email, first_name, last_name' 
+        error: 'Missing required field: email' 
       }, { status: 400 })
     }
 

@@ -100,8 +100,6 @@ export default function UserManagementPage() {
   
   // Form data for adding/editing users
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
     email: "",
     role: "user"
   })
@@ -144,8 +142,6 @@ export default function UserManagementPage() {
   // Handle adding a new user
   const handleAddUser = () => {
     setFormData({
-      first_name: "",
-      last_name: "",
       email: "",
       role: "user"
     })
@@ -156,8 +152,6 @@ export default function UserManagementPage() {
   // Handle editing an existing user
   const handleEditUser = (user: SystemUser) => {
     setFormData({
-      first_name: user.first_name,
-      last_name: user.last_name,
       email: user.email,
       role: user.role
     })
@@ -179,10 +173,10 @@ export default function UserManagementPage() {
 
   // Submit add user form
   const handleSubmitAddUser = async () => {
-    if (!formData.first_name || !formData.last_name || !formData.email) {
+    if (!formData.email) {
       toast({
         title: "Validation Error",
-        description: "Please fill in all required fields",
+        description: "Please provide an email address",
         variant: "destructive"
       })
       return
@@ -231,7 +225,7 @@ export default function UserManagementPage() {
 
   // Submit edit user form
   const handleSubmitEditUser = async () => {
-    if (!selectedUser || !formData.first_name || !formData.last_name || !formData.email) {
+    if (!selectedUser || !formData.email) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -251,8 +245,8 @@ export default function UserManagementPage() {
         body: JSON.stringify({
           clerk_id: selectedUser.clerk_id,
           role: formData.role,
-          first_name: formData.first_name,
-          last_name: formData.last_name
+         
+          email: formData.email
         })
       })
       
@@ -269,8 +263,7 @@ export default function UserManagementPage() {
             ? { 
                 ...user, 
                 role: formData.role,
-                first_name: formData.first_name,
-                last_name: formData.last_name
+                email: formData.email
               }
             : user
         )
@@ -278,7 +271,7 @@ export default function UserManagementPage() {
       
       toast({
         title: "User Updated",
-        description: `${formData.first_name} ${formData.last_name} has been updated successfully`
+        description: `${formData.email} has been updated successfully`
       })
       
       setShowEditUserDialog(false)
@@ -323,7 +316,7 @@ export default function UserManagementPage() {
       
       toast({
         title: "User Access Removed",
-        description: `${selectedUser.first_name} ${selectedUser.last_name} has been demoted to regular user`
+        description: `${selectedUser.email} has been demoted to regular user`
       })
       
       setShowDeleteDialog(false)
@@ -362,7 +355,7 @@ export default function UserManagementPage() {
       
       toast({
         title: "User Permanently Deleted",
-        description: `${selectedUser.first_name} ${selectedUser.last_name} has been permanently removed from the system`
+        description: `${selectedUser.email} has been permanently removed from the system`
       })
       
       setShowPermanentDeleteDialog(false)
@@ -562,34 +555,10 @@ export default function UserManagementPage() {
           <DialogHeader>
             <DialogTitle>Add New User</DialogTitle>
             <DialogDescription>
-              Send an invitation to a new user to join the system.
+              Send an invitation to a new user to join the system. The user will be prompted to set their name during registration.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="first_name" className="text-right">
-                First Name
-              </Label>
-              <Input
-                id="first_name"
-                value={formData.first_name}
-                onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                className="col-span-3"
-                placeholder="John"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="last_name" className="text-right">
-                Last Name
-              </Label>
-              <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                className="col-span-3"
-                placeholder="Doe"
-              />
-            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="email" className="text-right">
                 Email
@@ -640,28 +609,6 @@ export default function UserManagementPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_first_name" className="text-right">
-                First Name
-              </Label>
-              <Input
-                id="edit_first_name"
-                value={formData.first_name}
-                onChange={(e) => setFormData({...formData, first_name: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit_last_name" className="text-right">
-                Last Name
-              </Label>
-              <Input
-                id="edit_last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData({...formData, last_name: e.target.value})}
-                className="col-span-3"
-              />
-            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit_email" className="text-right">
                 Email
