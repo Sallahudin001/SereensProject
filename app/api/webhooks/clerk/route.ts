@@ -105,13 +105,43 @@ export async function POST(req: Request) {
       // Get role from metadata or default to 'user'
       const role = userData.public_metadata?.role || 'user';
       
-      // Check if user exists in our database
+      // Check if user exists in our database by clerk_id
       const existingUser = await executeQuery(
         `SELECT * FROM users WHERE clerk_id = $1`,
         [userId]
       );
       
-      if (existingUser.length > 0) {
+      // Check if another user with the same email exists
+      const existingEmail = await executeQuery(
+        `SELECT * FROM users WHERE email = $1 AND clerk_id != $2`,
+        [email, userId]
+      );
+      
+      if (existingEmail.length > 0) {
+        console.log(`Email ${email} already exists for another user. Updating clerk_id reference.`);
+        // Update the existing record with the new clerk_id
+        await executeQuery(
+          `
+          UPDATE users 
+          SET 
+            clerk_id = $1, 
+            name = $2,
+            role = $3,
+            metadata = $4,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE email = $5
+          `,
+          [
+            userId, 
+            name, 
+            role,
+            JSON.stringify(userData.public_metadata || {}),
+            email
+          ]
+        );
+        
+        console.log(`Updated existing user record with new clerk_id: ${userId}`);
+      } else if (existingUser.length > 0) {
         // Update existing user
         await executeQuery(
           `
@@ -146,6 +176,12 @@ export async function POST(req: Request) {
             $1, $2, $3, $4, $5, 
             CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
           )
+          ON CONFLICT (email) DO UPDATE SET
+            clerk_id = EXCLUDED.clerk_id,
+            name = EXCLUDED.name,
+            role = EXCLUDED.role,
+            metadata = EXCLUDED.metadata,
+            updated_at = CURRENT_TIMESTAMP
           `,
           [
             userId, 
@@ -181,13 +217,43 @@ export async function POST(req: Request) {
     const name = [first_name, last_name].filter(Boolean).join(' ');
     
     try {
-      // Check if user exists
+      // Check if user exists by clerk_id
       const existingUser = await executeQuery(
         `SELECT * FROM users WHERE clerk_id = $1`,
         [id]
       );
       
-      if (existingUser.length > 0) {
+      // Check if another user with the same email exists
+      const existingEmail = await executeQuery(
+        `SELECT * FROM users WHERE email = $1 AND clerk_id != $2`,
+        [email, id]
+      );
+      
+      if (existingEmail.length > 0) {
+        console.log(`Email ${email} already exists for another user. Updating clerk_id reference.`);
+        // Update the existing record with the new clerk_id
+        await executeQuery(
+          `
+          UPDATE users 
+          SET 
+            clerk_id = $1, 
+            name = $2,
+            role = $3,
+            metadata = $4,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE email = $5
+          `,
+          [
+            id, 
+            name, 
+            public_metadata?.role || null,
+            JSON.stringify(public_metadata || {}),
+            email
+          ]
+        );
+        
+        console.log(`Updated existing user record with new clerk_id: ${id}`);
+      } else if (existingUser.length > 0) {
         // Update existing user
         await executeQuery(
           `
@@ -216,6 +282,12 @@ export async function POST(req: Request) {
           `
           INSERT INTO users (clerk_id, email, name, role, metadata)
           VALUES ($1, $2, $3, $4, $5)
+          ON CONFLICT (email) DO UPDATE SET
+            clerk_id = EXCLUDED.clerk_id,
+            name = EXCLUDED.name,
+            role = EXCLUDED.role,
+            metadata = EXCLUDED.metadata,
+            updated_at = CURRENT_TIMESTAMP
           `,
           [
             id, 
@@ -313,7 +385,38 @@ export async function POST(req: Request) {
         console.warn('CLERK_SECRET_KEY not set, cannot fetch user data from Clerk API');
       }
       
-      if (existingUser.length === 0) {
+      // Check if another user with the same email exists
+      const existingEmail = await executeQuery(
+        `SELECT * FROM users WHERE email = $1 AND clerk_id != $2`,
+        [email, user_id]
+      );
+      
+      if (existingEmail.length > 0) {
+        console.log(`Email ${email} already exists for another user. Updating clerk_id reference.`);
+        // Update the existing record with the new clerk_id
+        await executeQuery(
+          `
+          UPDATE users 
+          SET 
+            clerk_id = $1,
+            name = $2,
+            role = $3,
+            metadata = $4,
+            last_login = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE email = $5
+          `,
+          [
+            user_id,
+            name,
+            role,
+            JSON.stringify(userMetadata),
+            email
+          ]
+        );
+        
+        console.log(`Updated existing user record with new clerk_id: ${user_id}`);
+      } else if (existingUser.length === 0) {
         // User doesn't exist in our database yet, create them
         console.log(`Creating new user record for ${user_id} with role: ${role}`);
         
@@ -328,6 +431,13 @@ export async function POST(req: Request) {
             $1, $2, $3, $4, $5, 
             CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
           )
+          ON CONFLICT (email) DO UPDATE SET
+            clerk_id = EXCLUDED.clerk_id,
+            name = EXCLUDED.name,
+            role = EXCLUDED.role,
+            metadata = EXCLUDED.metadata,
+            last_login = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
           `,
           [
             user_id, 

@@ -60,43 +60,83 @@ export async function ensureUserInDatabase() {
           console.log("Creating user record with full details...");
           console.log("User data:", { email, name, role });
           
-          try {
-            // Create record with full user details
+          // Check if email already exists in the database
+          const existingEmail = await executeQuery(
+            `SELECT * FROM users WHERE email = $1 AND clerk_id != $2`,
+            [email, userId]
+          );
+          
+          if (existingEmail.length > 0) {
+            console.log(`Email ${email} already exists in database. Updating clerk_id reference.`);
+            // Update the existing record with the new clerk_id
             await executeQuery(
               `
-              INSERT INTO users (
-                clerk_id, email, name, role, metadata, last_login, created_at, updated_at
-              )
-              VALUES (
-                $1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
-              )
-              ON CONFLICT (clerk_id) DO NOTHING
+              UPDATE users 
+              SET 
+                clerk_id = $1,
+                name = $2,
+                role = $3,
+                metadata = $4,
+                last_login = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+              WHERE email = $5
               `,
               [
-                userId, 
-                email, 
-                name, 
-                role || null, 
-                JSON.stringify(user.publicMetadata || {})
+                userId,
+                name,
+                role || null,
+                JSON.stringify(user.publicMetadata || {}),
+                email
               ]
             );
-            console.log("Full user record created successfully");
-          } catch (insertError) {
-            console.error("Error inserting user record:", insertError);
-            // Try with minimal data as fallback
-            console.log("Trying minimal insert as fallback...");
-            await executeQuery(
-              `
-              INSERT INTO users (clerk_id, email, last_login)
-              VALUES ($1, $2, CURRENT_TIMESTAMP)
-              ON CONFLICT (clerk_id) DO NOTHING
-              `,
-              [userId, email]
-            );
+            console.log(`Updated existing user record with new clerk_id: ${userId}`);
+          } else {
+            try {
+              // Create record with full user details
+              await executeQuery(
+                `
+                INSERT INTO users (
+                  clerk_id, email, name, role, metadata, last_login, created_at, updated_at
+                )
+                VALUES (
+                  $1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+                )
+                ON CONFLICT (clerk_id) DO UPDATE SET
+                  email = EXCLUDED.email,
+                  name = EXCLUDED.name,
+                  role = EXCLUDED.role,
+                  metadata = EXCLUDED.metadata,
+                  last_login = CURRENT_TIMESTAMP,
+                  updated_at = CURRENT_TIMESTAMP
+                `,
+                [
+                  userId, 
+                  email, 
+                  name, 
+                  role || null, 
+                  JSON.stringify(user.publicMetadata || {})
+                ]
+              );
+              console.log("Full user record created successfully");
+            } catch (insertError) {
+              console.error("Error inserting user record:", insertError);
+              // Try with minimal data as fallback
+              console.log("Trying minimal insert as fallback...");
+              await executeQuery(
+                `
+                INSERT INTO users (clerk_id, email, last_login)
+                VALUES ($1, $2, CURRENT_TIMESTAMP)
+                ON CONFLICT (clerk_id) DO UPDATE SET
+                  email = EXCLUDED.email,
+                  last_login = CURRENT_TIMESTAMP
+                `,
+                [userId, email]
+              );
+            }
           }
         }
         
-        console.log(`Created new user record for: ${userId}`);
+        console.log(`Created/updated user record for: ${userId}`);
       } else {
         // Update last_login timestamp
         console.log("Updating last_login for existing user...");
