@@ -34,6 +34,7 @@ interface AppointmentFormProps {
 export function AppointmentForm({ selectedDate, onClose, onSuccess }: AppointmentFormProps) {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(false)
+  const [customerMode, setCustomerMode] = useState<'existing' | 'custom'>('existing')
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -42,7 +43,10 @@ export function AppointmentForm({ selectedDate, onClose, onSuccess }: Appointmen
     end_time: "10:00",
     customer_id: "none",
     location: "",
-    appointment_type: "consultation"
+    appointment_type: "consultation",
+    custom_contact_name: "",
+    custom_contact_email: "",
+    custom_contact_phone: ""
   })
 
   useEffect(() => {
@@ -100,9 +104,12 @@ export function AppointmentForm({ selectedDate, onClose, onSuccess }: Appointmen
           description: formData.description,
           start_time: `${formData.start_date}T${formData.start_time}`,
           end_time: `${formData.start_date}T${formData.end_time}`,
-          customer_id: formData.customer_id !== "none" ? parseInt(formData.customer_id) : null,
+          customer_id: customerMode === 'existing' && formData.customer_id !== "none" ? parseInt(formData.customer_id) : null,
           location: formData.location,
-          appointment_type: formData.appointment_type
+          appointment_type: formData.appointment_type,
+          custom_contact_name: customerMode === 'custom' ? formData.custom_contact_name : null,
+          custom_contact_email: customerMode === 'custom' ? formData.custom_contact_email : null,
+          custom_contact_phone: customerMode === 'custom' ? formData.custom_contact_phone : null
         }),
       })
 
@@ -178,36 +185,100 @@ export function AppointmentForm({ selectedDate, onClose, onSuccess }: Appointmen
             />
           </div>
 
-          {/* Customer Selection */}
+          {/* Customer Input Mode Toggle */}
           <div className="grid gap-2">
-            <Label htmlFor="customer">Customer</Label>
-            <Select 
-              value={formData.customer_id} 
-              onValueChange={(value) => setFormData({...formData, customer_id: value})}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a customer (optional)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No customer selected</SelectItem>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id.toString()}>
-                    <div className="flex items-center space-x-2">
-                      <Avatar className="h-6 w-6">
-                        <AvatarFallback className="text-xs">
-                          {customer.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">{customer.name}</div>
-                        <div className="text-xs text-muted-foreground">{customer.email}</div>
-                      </div>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Contact Information</Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setCustomerMode('existing')}
+                className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  customerMode === 'existing' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                Select Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => setCustomerMode('custom')}
+                className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  customerMode === 'custom' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                }`}
+              >
+                Enter Manually
+              </button>
+            </div>
           </div>
+
+          {/* Customer Selection or Manual Input */}
+          {customerMode === 'existing' ? (
+            <div className="grid gap-2">
+              <Label htmlFor="customer">Customer</Label>
+              <Select 
+                value={formData.customer_id} 
+                onValueChange={(value) => setFormData({...formData, customer_id: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a customer (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No customer selected</SelectItem>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id.toString()}>
+                      <div className="flex items-center space-x-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs">
+                            {customer.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{customer.name}</div>
+                          <div className="text-xs text-muted-foreground">{customer.email}</div>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="custom-name">Contact Name</Label>
+                <Input
+                  id="custom-name"
+                  placeholder="First Last Name"
+                  value={formData.custom_contact_name}
+                  onChange={(e) => setFormData({...formData, custom_contact_name: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="custom-email">Email (Optional)</Label>
+                  <Input
+                    id="custom-email"
+                    type="email"
+                    placeholder="email@example.com"
+                    value={formData.custom_contact_email}
+                    onChange={(e) => setFormData({...formData, custom_contact_email: e.target.value})}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="custom-phone">Phone (Optional)</Label>
+                  <Input
+                    id="custom-phone"
+                    placeholder="(555) 123-4567"
+                    value={formData.custom_contact_phone}
+                    onChange={(e) => setFormData({...formData, custom_contact_phone: e.target.value})}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Date and Time */}
           <div className="grid grid-cols-3 gap-4">

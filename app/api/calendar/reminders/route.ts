@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
     let query = `
       SELECT 
         r.*,
-        c.name as customer_name,
-        c.email as customer_email,
-        c.phone as customer_phone,
+        COALESCE(c.name, r.custom_contact_name) as customer_name,
+        COALESCE(c.email, r.custom_contact_email) as customer_email,
+        COALESCE(c.phone, r.custom_contact_phone) as customer_phone,
         p.proposal_number,
         p.status as proposal_status,
         u.name as user_name,
@@ -122,7 +122,10 @@ export async function POST(request: NextRequest) {
       proposal_id,
       appointment_id,
       reminder_type = 'follow_up',
-      priority = 'medium'
+      priority = 'medium',
+      custom_contact_name,
+      custom_contact_email,
+      custom_contact_phone
     } = body
 
     // Validate required fields
@@ -145,12 +148,14 @@ export async function POST(request: NextRequest) {
     const result = await executeQuery(`
       INSERT INTO reminders (
         title, description, due_date, user_id, customer_id, proposal_id,
-        appointment_id, reminder_type, priority, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
+        appointment_id, reminder_type, priority, status,
+        custom_contact_name, custom_contact_email, custom_contact_phone
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10, $11, $12)
       RETURNING *
     `, [
       title, description, due_date, userId, customer_id, proposal_id,
-      appointment_id, reminder_type, priority
+      appointment_id, reminder_type, priority,
+      custom_contact_name, custom_contact_email, custom_contact_phone
     ])
 
     const reminder = result[0]
