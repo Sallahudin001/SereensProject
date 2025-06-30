@@ -134,8 +134,8 @@ export default function LandingPage() {
                   <Image 
                     src="/evergreenlogo.svg" 
                     alt="Evergreen Home Upgrades Logo" 
-                    width={100}
-                    height={40}
+                    width={200}
+                    height={150}
                   className="h-8 w-auto object-contain"
                 />
               </div>

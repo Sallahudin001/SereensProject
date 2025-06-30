@@ -497,21 +497,29 @@ export default function FinancingPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Financing Plans</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage financing options, payment factors, and merchant fees
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button className="flex items-center gap-2" onClick={handleAddPlan}>
-            <Plus className="h-4 w-4" />
-            <span>Add Plan</span>
-          </Button>
-        </div>
-      </div>
+    <div className="flex-1 space-y-6 p-6">
+      {/* Header Card */}
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-white border-0">
+        <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+            <div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight">Financing Plans</CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">
+                Manage financing options for proposals
+              </CardDescription>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button
+                onClick={handleAddPlan}
+                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-200 w-full sm:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Plan
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       <Tabs defaultValue="plans" className="space-y-4">
         <TabsList>
