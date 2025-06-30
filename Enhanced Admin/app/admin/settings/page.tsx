@@ -51,10 +51,10 @@ export default function SettingsPage() {
   // General settings
   const [generalSettings, setGeneralSettings] = useState({
     companyName: "Evergreen Home Upgrades",
-    email: "info@evergreenenergyupgrades.com",
-    phone: "(555) 123-4567",
-    address: "123 Green Street, Anytown, CA 12345",
-    website: "https://evergreenenergyupgrades.com",
+    email: "info@evergreenenergy.io",
+    phone: "(408) 333-9831",
+    address: "123 Main Street, San Jose, CA 95129",
+    website: "https://evergreenenergy.io",
     taxRate: 8.25,
     defaultCurrency: "USD",
     timezone: "America/Los_Angeles",

@@ -558,9 +558,9 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
           
           <div class="email-footer">
             <div class="contact-info">
-              <div><strong class="contact-icon">📧</strong> info@evergreenenergyupgrades.com</div>
-              <div><strong class="contact-icon">📞</strong> Cell: (408) 826-7377 | Office: (408) 333-9831</div>
-              <div><strong class="contact-icon">🌐</strong> www.evergreenenergyupgrades.com</div>
+              <div><strong class="contact-icon">📧</strong> info@evergreenenergy.io</div>
+              <div><strong class="contact-icon">📞</strong> (408) 333-9831</div>
+              <div><strong class="contact-icon">🌐</strong> www.evergreenenergy.io</div>
             </div>
             <div class="copyright">
               © ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.

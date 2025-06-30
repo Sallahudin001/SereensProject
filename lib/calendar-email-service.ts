@@ -561,7 +561,7 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
               <h3>👨‍💼 Your Representative</h3>
               <div class="rep-name">${data.repName}</div>
               <div class="rep-info">📧 Email: <a href="mailto:${data.repEmail}" class="rep-email">${data.repEmail}</a></div>
-              <div class="rep-info">📞 Phone: (408) 826-7377</div>
+              <div class="rep-info">📞 Phone: (408) 333-9831</div>
               <div class="rep-note">
                 💬 You can reply directly to this email to contact ${data.repName} with any questions.
               </div>
@@ -578,9 +578,9 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
           
           <div class="email-footer">
             <div class="contact-info">
-              <div><strong class="contact-icon">📧</strong> info@evergreenenergyupgrades.com</div>
-              <div><strong class="contact-icon">📞</strong> Cell: (408) 826-7377 | Office: (408) 333-9831</div>
-              <div><strong class="contact-icon">🌐</strong> www.evergreenenergyupgrades.com</div>
+              <div><strong class="contact-icon">📧</strong> info@evergreenenergy.io</div>
+              <div><strong class="contact-icon">📞</strong> (408) 333-9831</div>
+              <div><strong class="contact-icon">🌐</strong> www.evergreenenergy.io</div>
             </div>
             <div class="copyright">
               © ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.<br>

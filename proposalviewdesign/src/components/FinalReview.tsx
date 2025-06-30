@@ -86,21 +86,13 @@ const FinalReview: React.FC<FinalReviewProps> = ({ onContinueToSign, onRejectPro
           <div className="flex justify-center items-center space-x-6 mb-4">
             <div className="flex items-center space-x-2">
               <Phone className="w-4 h-4" />
-              <span className="text-sm">C: (408) 826-7377</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Phone className="w-4 h-4" />
-              <span className="text-sm">O: (408)333-9831</span>
+              <span className="text-sm">(408) 333-9831</span>
             </div>
           </div>
           <div className="flex justify-center items-center space-x-6 mb-4">
             <div className="flex items-center space-x-2">
               <Mail className="w-4 h-4" />
-              <span className="text-sm">sereen@evergreengreenergy.io</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Mail className="w-4 h-4" />
-              <span className="text-sm">info@evergreengreenergy.io</span>
+              <span className="text-sm">info@evergreenenergy.io</span>
             </div>
           </div>
           <div className="flex items-center justify-center space-x-2 mb-4">

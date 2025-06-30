@@ -1502,8 +1502,8 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                     </div>
                     <div className="sm:col-span-2 text-sm">
                         <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
-                        <p>C: (408) 826-7377 | O: (408)333-9831</p>
-                        <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
+                        <p>(408) 333-9831</p>
+                        <p>info@evergreenenergy.io</p>
                         <p>www.evergreenenergy.io</p>
                         <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
                     </div>

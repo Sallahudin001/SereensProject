@@ -45,9 +45,9 @@ export default function SettingsPage() {
   const [generalSettings, setGeneralSettings] = useState({
     companyName: "Evergreen Home Upgrades",
     companyAddress: "123 Main Street, San Jose, CA 95129",
-    companyPhone: "(408) 826-7377",
-    companyEmail: "info@evergreenenergyupgrades.com",
-    website: "www.evergreenenergyupgrades.com",
+    companyPhone: "(408) 333-9831",
+    companyEmail: "info@evergreenenergy.io",
+    website: "www.evergreenenergy.io",
     logoUrl: "/evergreen.png",
     defaultCurrency: "USD",
     timeZone: "America/Los_Angeles",
@@ -91,7 +91,7 @@ export default function SettingsPage() {
     sendEmailOnProposalCreation: true,
     sendEmailOnProposalSigned: true,
     notifyAdminOnLargeDiscounts: true,
-    emailNotifications: ["admin@evergreenenergyupgrades.com"],
+    emailNotifications: ["admin@evergreenenergy.io"],
   })
   
   const handleSaveSettings = () => {

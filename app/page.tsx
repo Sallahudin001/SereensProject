@@ -894,8 +894,8 @@ export default function LandingPage() {
 
               <div className="space-y-4">
                 {[
-                  { icon: Phone, text: "C: (408) 826-7377 | O: (408) 333-9831", href: "tel:+14088267377" },
-                  { icon: Mail, text: "sereen@evergreenenergy.io", href: "mailto:sereen@evergreenenergy.io" },
+                  { icon: Phone, text: "(408) 333-9831", href: "tel:+14083339831" },
+                  { icon: Mail, text: "info@evergreenenergy.io", href: "mailto:info@evergreenenergy.io" },
                   { icon: Globe, text: "www.evergreenenergy.io", href: "https://www.evergreenenergy.io" },
                 ].map((item, i) => (
                   <motion.a
