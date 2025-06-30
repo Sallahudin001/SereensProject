@@ -863,7 +863,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Contract Header */}
         <View style={styles.contractHeader}>
           <View style={styles.logoContainer}>
-            <Image style={styles.logo} src="public\newlogo.png" />
+              {/* Logo removed - react-pdf doesn't support SVG files */}
+              <Image style={styles.logo} src="public\sereenh-04.png" />
           </View>
           <Text style={styles.contractTitle}>Evergreen Home Upgrades Services Agreement</Text>
         

@@ -161,7 +161,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-2">
                 <div className="relative h-10 w-40 sm:w-48">
                   <Image 
-                    src="/images/evergreen-logo.png" 
+                    src="/evergreenlogo.svg" 
                     alt="Evergreen Energy Upgrades" 
                     fill
                     className="object-contain"
@@ -886,7 +886,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center md:items-start">
               <div className="mb-4 relative h-12 w-48">
                 <Image 
-                  src="/images/evergreen-logo.png" 
+                  src="/evergreenlogo.svg" 
                   alt="Evergreen Energy Upgrades" 
                   fill
                   className="object-contain"

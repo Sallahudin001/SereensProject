@@ -132,7 +132,7 @@ export default function LandingPage() {
                 className="p-3 rounded-xl bg-white shadow-lg"
               >
                   <Image 
-                    src="/newlogo.png" 
+                    src="/evergreenlogo.svg" 
                     alt="Evergreen Home Upgrades Logo" 
                     width={100}
                     height={40}
@@ -863,7 +863,7 @@ export default function LandingPage() {
                   className="p-3 rounded-xl bg-white shadow-lg"
                 >
                 <Image 
-                  src="/newlogo.png" 
+                  src="/evergreenlogo.svg" 
                   alt="Evergreen Home Upgrades Logo" 
                     width={100}
                     height={40}
@@ -906,13 +906,13 @@ export default function LandingPage() {
                   >
                     <div className="bg-emerald-600/20 p-3 rounded-xl group-hover:bg-emerald-600/30 transition-colors duration-300">
                       <item.icon className="w-5 h-5 text-emerald-400" />
-            </div>
+                    </div>
                     <span className="font-medium">{item.text}</span>
                   </motion.a>
                 ))}
               </div>
             </motion.div>
-            </div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -924,9 +924,7 @@ export default function LandingPage() {
               <p className="text-gray-400 text-sm">
                 &copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.
               </p>
-
-             
-          </div>
+            </div>
           </motion.div>
         </div>
       </footer>

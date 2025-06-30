@@ -65,8 +65,8 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
-          <Image src="/evergreen.png" alt="Evergreen Energy" width={180} height={60} />
+        <div className="flex justify-center mb-8">
+          {/* Logo removed */}
         </div>
         
         <Card>

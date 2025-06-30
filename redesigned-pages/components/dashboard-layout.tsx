@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
         <div className="flex flex-col flex-grow border-r border-border bg-card pt-5 overflow-y-auto">
           <div className="flex items-center flex-shrink-0 px-4 mb-5">
-            <img className="h-8 w-auto" src="/newlogo.png" alt="Evergreen Home Upgrades" />
+            <img className="h-8 w-auto" src="/evergreenlogo.svg" alt="Evergreen Home Upgrades" />
             <h1 className="ml-3 text-xl font-semibold">HomeImprovePro</h1>
           </div>
 
@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <SheetContent side="left" className="w-[280px] sm:w-[300px] p-0">
           <div className="flex flex-col h-full">
             <div className="flex items-center flex-shrink-0 px-4 h-14 border-b border-border">
-              <img className="h-8 w-auto" src="/newlogo.png" alt="Evergreen Home Upgrades" />
+              <img className="h-8 w-auto" src="/evergreenlogo.svg" alt="Evergreen Home Upgrades" />
               <h1 className="ml-3 text-xl font-semibold">HomeImprovePro</h1>
             </div>
 

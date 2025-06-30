@@ -818,7 +818,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-4">
                 <div className="bg-slate-100 p-2 rounded-lg shadow-sm">
-                  <Image src="/newlogo.png" alt="Evergreen Home Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
+                  <Image src="/evergreenlogo.svg" alt="Evergreen Home Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
                 </div>
                 <div>
                     <CardTitle className="text-3xl sm:text-4xl font-bold">Home Improvement Proposal</CardTitle>
@@ -1498,7 +1498,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
             <CardFooter className="bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left rounded-b-xl">
                 <div className="container mx-auto max-w-5xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
                     <div className="sm:col-span-1">
-                        <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
+                        <Image src="/evergreenlogo.svg" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
                     </div>
                     <div className="sm:col-span-2 text-sm">
                         <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>

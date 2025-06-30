@@ -75,7 +75,7 @@ export default function SettingsPage() {
     theme: "light",
     primaryColor: "#10b981",
     accentColor: "#3b82f6",
-    logoUrl: "/logo.png",
+    logoUrl: "",
     showBranding: true,
     compactMode: false,
   })

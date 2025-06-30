@@ -509,8 +509,8 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
       <div class="email-wrapper">
         <div class="email-container">
           <div class="email-header">
-            <div class="logo-container">
-              <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" class="logo" />
+                      <div class="logo-container">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" class="logo" />
             </div>
             <h1 class="header-title">Appointment Scheduled</h1>
             <p class="header-subtitle">Your appointment has been confirmed</p>
@@ -802,9 +802,8 @@ function generateCustomEmailHtml(data: {
           border-bottom: 3px solid #059669;
         }
         .logo {
-          color: #059669;
-          font-size: 24px;
-          font-weight: bold;
+          text-align: center;
+          margin-bottom: 15px;
         }
         .content {
           padding: 20px 0;
@@ -829,7 +828,7 @@ function generateCustomEmailHtml(data: {
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo">Evergreen Home Upgrades</div>
+          <div class="logo"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" style="height: 60px;" /></div>
           <h2 style="margin: 10px 0; color: #333;">Message from ${data.repName}</h2>
         </div>
         

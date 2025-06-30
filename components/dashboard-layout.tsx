@@ -32,7 +32,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isMounted, setIsMounted] = useState(false)
   const { user } = useUser();
   const { isAdmin } = useIsAdmin();
-  const [logoSrc, setLogoSrc] = useState("/newlogo.png");
+  const [logoSrc, setLogoSrc] = useState("/evergreenlogo.svg");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   
@@ -74,10 +74,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Handle logo loading error
   const handleLogoError = () => {
-    // Fallback to logo.jpeg if evergreen.png fails to load
-    setLogoSrc("/logo.jpeg");
+    // Fallback to a different logo if needed
+    setLogoSrc("/evergreenlogo.svg");
   };
-
+  
   // Prevent hydration mismatch by not rendering animations until mounted
   if (!isMounted) {
     return (
@@ -274,16 +274,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </Sheet>
             <Link href="/dashboard" className="flex items-center">
               <div className="flex items-center">
-                <div className="p-3 rounded-xl bg-white shadow-lg">
-                <Image 
-                  src={logoSrc}
-                  alt="Evergreen Energy Upgrades Logo" 
-                  width={180}
-                  height={72}
-                  className="h-16 w-auto object-contain"
-                  priority
-                  onError={handleLogoError}
-                />
+                <div className="bg-white/95 p-3 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
+                  <Image 
+                    src={logoSrc}
+                    alt="Evergreen Energy Upgrades Logo" 
+                    width={180}
+                    height={72}
+                    className="h-16 w-auto object-contain"
+                    priority
+                    onError={handleLogoError}
+                  />
                 </div>
                 <span className="text-xl font-semibold text-white ml-3 hidden sm:inline-block drop-shadow-sm">Evergreen Home Upgrades</span>
               </div>

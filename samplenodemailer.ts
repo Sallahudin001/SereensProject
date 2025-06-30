@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; padding: 20px; background-color: #f8f9fa; margin-bottom: 20px;">
-            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/evergreen.png" alt="Evergreen Home Upgrades Logo" style="height: 80px; width: auto; margin-bottom: 10px;">
+            <img src="/evergreenlogo.svg" alt="Evergreen Home Upgrades Logo" style="height: 80px; width: auto; margin-bottom: 10px;">
             <h2 style="margin: 0; color: #333;">Your Proposal is Ready</h2>
           </div>
           

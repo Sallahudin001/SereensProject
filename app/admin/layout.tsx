@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils"
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
-  const [logoSrc, setLogoSrc] = useState("/newlogo.png")
+  const [logoSrc, setLogoSrc] = useState("/evergreenlogo.svg")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null)
   const { user } = useUser();
@@ -81,7 +81,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Handle logo loading error
   const handleLogoError = () => {
-    setLogoSrc("/logo.jpeg")
+    setLogoSrc("/evergreenlogo.svg")
   }
 
   return (
