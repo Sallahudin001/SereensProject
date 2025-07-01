@@ -25,6 +25,9 @@ interface CustomerInfo {
   address: string;
   email: string;
   phone: string;
+  repFirstName: string;
+  repLastName: string;
+  repPhone: string;
 }
 
 interface PricingData {
@@ -84,6 +87,9 @@ export default function NewProposalPage() {
       address: "",
       email: "",
       phone: "",
+      repFirstName: "",
+      repLastName: "",
+      repPhone: "",
     },
     services: [],
     products: {},
@@ -126,7 +132,15 @@ export default function NewProposalPage() {
         const proposal = await getProposalById(proposalId)
         if (proposal) {
           setFormData({
-            customer: proposal.customer,
+            customer: {
+              name: proposal.customer?.name || "",
+              email: proposal.customer?.email || "",
+              phone: proposal.customer?.phone || "",
+              address: proposal.customer?.address || "",
+              repFirstName: (proposal as any).rep_first_name || "",
+              repLastName: (proposal as any).rep_last_name || "",
+              repPhone: (proposal as any).rep_phone || "",
+            },
             services: proposal.services,
             products: proposal.products,
             pricing: proposal.pricing,

@@ -103,7 +103,10 @@ export async function getProposalById(id: string) {
         c.name as customer_name,
         c.email as customer_email,
         c.phone as customer_phone,
-        c.address as customer_address
+        c.address as customer_address,
+        p.rep_first_name,
+        p.rep_last_name,
+        p.rep_phone
       FROM 
         proposals p
       JOIN 
@@ -217,6 +220,9 @@ export async function getProposalById(id: string) {
         phone: proposal.customer_phone,
         address: proposal.customer_address,
       },
+      rep_first_name: proposal.rep_first_name,
+      rep_last_name: proposal.rep_last_name,
+      rep_phone: proposal.rep_phone,
       services: servicesResult.map((s) => s.name),
       serviceNames: servicesResult.map((s) => s.display_name),
       products: productsResult.reduce((acc, product) => {
@@ -370,8 +376,11 @@ export async function createProposal(data: any) {
               status = COALESCE($12, status),
               pricing_breakdown = $13,
               pricing_override = $14,
+              rep_first_name = $15,
+              rep_last_name = $16,
+              rep_phone = $17,
               updated_at = CURRENT_TIMESTAMP
-          WHERE id = $15
+          WHERE id = $18
           `,
           [
             customerId,
@@ -392,6 +401,9 @@ export async function createProposal(data: any) {
               discountLog: data.pricing.discountLog || []
             }),
             data.pricing.pricingOverride || false,
+            data.customer.repFirstName || null,
+            data.customer.repLastName || null,
+            data.customer.repPhone || null,
             data.id
           ]
         )
@@ -666,9 +678,9 @@ export async function createProposal(data: any) {
         proposal_number, customer_id, status, subtotal, discount, total, 
         monthly_payment, financing_term, interest_rate, created_by, user_id,
         financing_plan_id, financing_plan_name, merchant_fee, financing_notes,
-        pricing_breakdown, pricing_override
+        pricing_breakdown, pricing_override, rep_first_name, rep_last_name, rep_phone
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       RETURNING id
     `,
       [
@@ -692,7 +704,10 @@ export async function createProposal(data: any) {
           pricingBreakdown: data.pricing.pricingBreakdown || {},
           discountLog: data.pricing.discountLog || []
         }),
-        data.pricing.pricingOverride || false
+        data.pricing.pricingOverride || false,
+        data.customer.repFirstName || null,
+        data.customer.repLastName || null,
+        data.customer.repPhone || null
       ],
     )
 

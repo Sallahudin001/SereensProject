@@ -815,8 +815,12 @@ export default function EnhancedProposalView({ proposal: initialProposal, readOn
                           <p className="text-lg">{formatDate(proposal?.createdAt)}</p>
                         </div>
                         <div>
-                          <span className="font-semibold text-gray-700">Project Manager:</span>
-                          <p className="text-lg">Jaime Sanchez (XXX-XXX-XXXX)</p>
+                          <span className="font-semibold text-gray-700">Sales Representative:</span>
+                          <p className="text-lg">
+                            {proposal?.rep_first_name && proposal?.rep_last_name ? 
+                              `${proposal.rep_first_name} ${proposal.rep_last_name}` : 'N/A'}
+                            {proposal?.rep_phone && ` (${proposal.rep_phone})`}
+                          </p>
                         </div>
                       </div>
                     </div>

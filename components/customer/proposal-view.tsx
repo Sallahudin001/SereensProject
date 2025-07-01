@@ -952,6 +952,9 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             <div><strong>Homeowner:</strong> {proposal?.customer?.name || 'N/A'}</div>
                             <div><strong>Address:</strong> {proposal?.customer?.address || 'N/A'}</div>
                             <div><strong>Proposal Date:</strong> {formatDate(proposal?.createdAt)}</div>
+                            <div><strong>Sales Representative:</strong> {proposal?.rep_first_name && proposal?.rep_last_name ? 
+                              `${proposal.rep_first_name} ${proposal.rep_last_name}` : 'N/A'}</div>
+                            <div><strong>Rep Phone:</strong> {proposal?.rep_phone || 'N/A'}</div>
                         </div>
                     </motion.div>
 

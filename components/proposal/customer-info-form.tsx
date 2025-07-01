@@ -12,10 +12,13 @@ interface CustomerData {
   address: string
   email: string
   phone: string
+  repFirstName: string
+  repLastName: string
+  repPhone: string
 }
 
 interface CustomerInfoFormProps {
-  data: CustomerData
+  data: Partial<CustomerData>
   updateData: (data: Partial<CustomerData>) => void
   onValidationChange?: (isValid: boolean) => void
 }
@@ -30,6 +33,9 @@ export default function CustomerInfoForm({ data, updateData, onValidationChange 
     address: data.address || "",
     email: data.email || "",
     phone: data.phone || "",
+    repFirstName: data.repFirstName || "",
+    repLastName: data.repLastName || "",
+    repPhone: data.repPhone || "",
   }))
 
   // Validation states
@@ -75,6 +81,23 @@ export default function CustomerInfoForm({ data, updateData, onValidationChange 
       newErrors.address = "Property address is required"
     }
 
+    // Rep first name validation
+    if (!formData.repFirstName.trim()) {
+      newErrors.repFirstName = "Rep first name is required"
+    }
+
+    // Rep last name validation
+    if (!formData.repLastName.trim()) {
+      newErrors.repLastName = "Rep last name is required"
+    }
+
+    // Rep phone validation
+    if (!formData.repPhone.trim()) {
+      newErrors.repPhone = "Rep phone number is required"
+    } else if (!validatePhone(formData.repPhone)) {
+      newErrors.repPhone = "Please enter a valid rep phone number (10-15 digits)"
+    }
+
     const isValid = Object.keys(newErrors).length === 0
     return { isValid, errors: newErrors }
   }, [])
@@ -98,9 +121,9 @@ export default function CustomerInfoForm({ data, updateData, onValidationChange 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     
-    // Special handling for phone number - only allow digits and format
+    // Special handling for phone numbers - only allow digits and format
     let processedValue = value
-    if (name === 'phone') {
+    if (name === 'phone' || name === 'repPhone') {
       // Only allow digits and common phone number characters
       const digitsOnly = value.replace(/\D/g, '')
       // Limit to 10 digits for US phone numbers
@@ -314,15 +337,124 @@ export default function CustomerInfoForm({ data, updateData, onValidationChange 
         </div>
       </div>
 
+      {/* Rep Information Section */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+        <div className="px-6 py-4 border-b border-gray-100 bg-blue-50 rounded-t-xl">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            Sales Representative Information
+          </h3>
+        </div>
+        
+        <div className="p-6 space-y-6">
+          {/* Rep Information Row */}
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="repFirstName" className="text-sm font-medium text-gray-700 flex items-center">
+                <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Rep First Name *
+              </Label>
+              <Input
+                id="repFirstName"
+                name="repFirstName"
+                placeholder="e.g. Jane"
+                value={formData.repFirstName}
+                onChange={handleChange}
+                required
+                className={`transition-all duration-200 focus:ring-2 ${
+                  errors.repFirstName 
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                    : 'focus:ring-blue-500 focus:border-blue-500'
+                }`}
+              />
+              {errors.repFirstName && (
+                <p className="text-sm text-red-600 mt-1 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {errors.repFirstName}
+                </p>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="repLastName" className="text-sm font-medium text-gray-700 flex items-center">
+                <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                Rep Last Name *
+              </Label>
+              <Input
+                id="repLastName"
+                name="repLastName"
+                placeholder="e.g. Smith"
+                value={formData.repLastName}
+                onChange={handleChange}
+                required
+                className={`transition-all duration-200 focus:ring-2 ${
+                  errors.repLastName 
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                    : 'focus:ring-blue-500 focus:border-blue-500'
+                }`}
+              />
+              {errors.repLastName && (
+                <p className="text-sm text-red-600 mt-1 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {errors.repLastName}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="repPhone" className="text-sm font-medium text-gray-700 flex items-center">
+                <svg className="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                Rep Phone Number *
+              </Label>
+              <Input
+                id="repPhone"
+                name="repPhone"
+                placeholder="e.g. (555) 987-6543"
+                value={formData.repPhone}
+                onChange={handleChange}
+                required
+                className={`transition-all duration-200 focus:ring-2 ${
+                  errors.repPhone 
+                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500' 
+                    : 'focus:ring-blue-500 focus:border-blue-500'
+                }`}
+              />
+              {errors.repPhone && (
+                <p className="text-sm text-red-600 mt-1 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {errors.repPhone}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Form Completion Indicator */}
       <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg p-4">
         <div className="flex items-center space-x-3">
           <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-            formData.name && formData.email && formData.phone && formData.address
+            formData.name && formData.email && formData.phone && formData.address && 
+            formData.repFirstName && formData.repLastName && formData.repPhone
               ? 'bg-emerald-500 text-white'
               : 'bg-gray-300 text-gray-600'
           }`}>
-            {formData.name && formData.email && formData.phone && formData.address ? (
+            {formData.name && formData.email && formData.phone && formData.address && 
+             formData.repFirstName && formData.repLastName && formData.repPhone ? (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
@@ -334,14 +466,15 @@ export default function CustomerInfoForm({ data, updateData, onValidationChange 
           </div>
           
           <div className="flex-1">
-            {formData.name && formData.email && formData.phone && formData.address ? (
+            {formData.name && formData.email && formData.phone && formData.address && 
+             formData.repFirstName && formData.repLastName && formData.repPhone ? (
               <div>
-                <p className="text-emerald-800 font-medium">Customer information complete!</p>
+                <p className="text-emerald-800 font-medium">Customer and rep information complete!</p>
                 <p className="text-emerald-700 text-sm">Ready to proceed to service selection</p>
               </div>
             ) : (
               <div>
-                <p className="text-gray-700 font-medium">Complete customer information</p>
+                <p className="text-gray-700 font-medium">Complete customer and rep information</p>
                 <p className="text-gray-600 text-sm">Fill in all required fields to continue</p>
               </div>
             )}
@@ -351,7 +484,8 @@ export default function CustomerInfoForm({ data, updateData, onValidationChange 
           <div className="flex-shrink-0">
             <div className="text-right">
               <p className="text-sm font-medium text-gray-700">
-                {[formData.name, formData.email, formData.phone, formData.address].filter(Boolean).length}/4
+                {[formData.name, formData.email, formData.phone, formData.address, 
+                  formData.repFirstName, formData.repLastName, formData.repPhone].filter(Boolean).length}/7
               </p>
               <p className="text-xs text-gray-500">fields completed</p>
             </div>

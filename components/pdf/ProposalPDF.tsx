@@ -903,6 +903,17 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
               <Text style={styles.partyDetail}>Phone: {proposal?.customer?.phone || "N/A"}</Text>
               <Text style={styles.partyDetail}>Email: {proposal?.customer?.email || "N/A"}</Text>
             </View>
+            <View style={styles.partyColumn}>
+              <Text style={styles.partyTitle}>SALES REPRESENTATIVE:</Text>
+              <Text style={styles.partyDetail}>
+                {proposal?.rep_first_name && proposal?.rep_last_name 
+                  ? `${proposal.rep_first_name} ${proposal.rep_last_name}` 
+                  : "N/A"}
+              </Text>
+              <Text style={styles.partyDetail}>Phone: {proposal?.rep_phone || "N/A"}</Text>
+              <Text style={styles.partyDetail}>{/* Additional rep info can go here */}</Text>
+              <Text style={styles.partyDetail}>{/* Space for alignment */}</Text>
+            </View>
           </View>
         </View>
 
