@@ -112,7 +112,8 @@ export default function LandingPage() {
   
   useEffect(() => {
     if (isSignedIn) {
-      router.push("/dashboard")
+      // Use replace instead of push for faster navigation
+      router.replace("/dashboard")
     }
   }, [isSignedIn, router])
 
@@ -123,16 +124,16 @@ export default function LandingPage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="border-b border-emerald-100/50 sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-lg shadow-emerald-500/5"
+        className="border-b border-green-200/50 sticky top-0 z-50 bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-xl shadow-lg shadow-emerald-500/5"
       >
         <div className="flex justify-between items-center px-6 py-5 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center group">
               <div className="flex items-center">
           <div
-                className="p-3 rounded-xl bg-white shadow-lg"
+                className="p-3 rounded-xl bg-transparent shadow-lg"
               >
                   <Image 
-                    src="/evergreenlogo.svg" 
+                    src="/sereenh-04.png" 
                     alt="Evergreen Home Upgrades Logo" 
                     width={200}
                     height={150}
@@ -863,7 +864,7 @@ export default function LandingPage() {
                   className="p-3 rounded-xl bg-white shadow-lg"
                 >
                 <Image 
-                  src="/evergreenlogo.svg" 
+                  src="/sereenh-04.png" 
                   alt="Evergreen Home Upgrades Logo" 
                     width={100}
                     height={40}

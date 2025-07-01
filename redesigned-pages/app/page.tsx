@@ -125,7 +125,8 @@ export default function LandingPage() {
 
   useEffect(() => {
     if (isSignedIn) {
-      router.push("/dashboard")
+      // Use replace instead of push for faster navigation
+      router.replace("/dashboard")
     }
     
     const handleScroll = () => {
@@ -148,7 +149,7 @@ export default function LandingPage() {
     <div className="flex flex-col min-h-screen overflow-hidden bg-gradient-to-b from-white via-slate-50/30 to-white dark:from-slate-900 dark:via-slate-800/30 dark:to-slate-900">
       <header className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 border-b border-transparent",
-        isHeaderScrolled && "bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-slate-200/20 dark:border-slate-700/20 shadow-sm"
+        isHeaderScrolled && "bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-md border-green-200/50 shadow-sm"
       )}>
         <div className="container mx-auto px-4 sm:px-6 py-4 md:py-5 flex justify-between items-center">
           <motion.div
@@ -161,7 +162,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-2">
                 <div className="relative h-10 w-40 sm:w-48">
                   <Image 
-                    src="/evergreenlogo.svg" 
+                    src="/sereenh-04.png" 
                     alt="Evergreen Energy Upgrades" 
                     fill
                     className="object-contain"
@@ -886,7 +887,7 @@ export default function LandingPage() {
             <div className="flex flex-col items-center md:items-start">
               <div className="mb-4 relative h-12 w-48">
                 <Image 
-                  src="/evergreenlogo.svg" 
+                  src="/sereenh-04.png" 
                   alt="Evergreen Energy Upgrades" 
                   fill
                   className="object-contain"

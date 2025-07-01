@@ -56,7 +56,7 @@ export function AdminSidebar() {
         <div className="flex items-center flex-shrink-0 px-4 mb-5">
           <div className="relative h-8 w-40">
             <Image
-              src="/evergreenlogo.svg"
+              src="/sereenh-04.png"
               alt="Evergreen Home Upgrades"
               fill
               className="object-contain"

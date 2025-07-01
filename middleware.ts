@@ -4,6 +4,10 @@ import { NextResponse } from 'next/server';
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 const isApiAdminRoute = createRouteMatcher(['/api/admin(.*)']);
 
+// Simple in-memory cache for user roles (cleared periodically)
+const roleCache = new Map<string, { role: string; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export default clerkMiddleware(async (auth, req) => {
   // Check if this is an admin route (either UI or API)
   if (isAdminRoute(req) || isApiAdminRoute(req)) {
@@ -16,11 +20,32 @@ export default clerkMiddleware(async (auth, req) => {
     }
 
     try {
-      // Get user from Clerk to check role
-      const { clerkClient } = await import('@clerk/nextjs/server');
-      const clerk = await clerkClient();
-      const user = await clerk.users.getUser(userId);
-      const userRole = user.publicMetadata?.role || 'user';
+      let userRole = 'user';
+      
+      // Check cache first
+      const cached = roleCache.get(userId);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        userRole = cached.role;
+      } else {
+        // Get user from Clerk to check role
+        const { clerkClient } = await import('@clerk/nextjs/server');
+        const clerk = await clerkClient();
+        const user = await clerk.users.getUser(userId);
+        userRole = (user.publicMetadata?.role as string) || 'user';
+        
+        // Cache the result
+        roleCache.set(userId, { role: userRole, timestamp: Date.now() });
+        
+        // Clean old cache entries periodically
+        if (roleCache.size > 1000) {
+          const now = Date.now();
+          for (const [key, value] of roleCache.entries()) {
+            if (now - value.timestamp > CACHE_DURATION) {
+              roleCache.delete(key);
+            }
+          }
+        }
+      }
       
       // Only allow admin role to access admin routes
       if (userRole !== 'admin') {

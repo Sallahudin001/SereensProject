@@ -96,7 +96,7 @@ export default function UserSyncProvider({ children }: { children: React.ReactNo
     const runSync = async () => {
       // Only run when auth is loaded, user is signed in, and we're in idle state
       if (isLoaded && isSignedIn && userId && syncStatus === 'idle') {
-        // Start sync
+        // Start sync but don't block the UI
         setSyncStatus('syncing');
         setErrorMessage(null);
         
@@ -106,23 +106,25 @@ export default function UserSyncProvider({ children }: { children: React.ReactNo
           name: user?.fullName,
         });
 
-        // Call the sync function
-        const result = await syncUserToDatabase();
-        
-        if (result.success) {
-          console.log('USER SYNC: User was successfully synced');
-          setSyncStatus('success');
-          setErrorMessage(null);
-          setResponseDetails(JSON.stringify(result.data, null, 2));
-        } else {
-          console.error('USER SYNC: Failed to sync user:', result.error);
-          setSyncStatus('error');
-          setErrorMessage(result.error || 'Unknown error');
-          setResponseDetails(JSON.stringify(result, null, 2));
+        // Run sync in background without blocking navigation
+        setTimeout(async () => {
+          const result = await syncUserToDatabase();
           
-          // Auto-retry with backoff
-          retryWithBackoff();
-        }
+          if (result.success) {
+            console.log('USER SYNC: User was successfully synced');
+            setSyncStatus('success');
+            setErrorMessage(null);
+            setResponseDetails(JSON.stringify(result.data, null, 2));
+          } else {
+            console.error('USER SYNC: Failed to sync user:', result.error);
+            setSyncStatus('error');
+            setErrorMessage(result.error || 'Unknown error');
+            setResponseDetails(JSON.stringify(result, null, 2));
+            
+            // Auto-retry with backoff
+            retryWithBackoff();
+          }
+        }, 100); // Small delay to allow navigation to proceed first
       }
     };
 

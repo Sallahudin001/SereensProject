@@ -48,7 +48,7 @@ export default function SettingsPage() {
     companyPhone: "(408) 333-9831",
     companyEmail: "info@evergreenenergy.io",
     website: "www.evergreenenergy.io",
-    logoUrl: "/evergreenlogo.svg",
+    logoUrl: "/sereenh-04.png",
     defaultCurrency: "USD",
     timeZone: "America/Los_Angeles",
     defaultProposalValidityDays: 30,

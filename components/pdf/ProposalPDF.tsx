@@ -23,13 +23,13 @@ const styles = StyleSheet.create({
 
   logoContainer: {
     alignItems: "flex-start",
-    marginBottom: 8,
+    marginBottom: 12,
 
   },
 
   logo: {
-    width: 250,
-    height: 150,
+    width: 160,
+    height: 60,
     objectFit: "contain",
    
   },

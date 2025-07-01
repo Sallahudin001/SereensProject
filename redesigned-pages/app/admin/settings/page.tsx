@@ -110,7 +110,7 @@ export default function SystemSettings() {
       companyAddress: "123 Green Street, Eco City, EC 12345",
       timezone: "America/New_York",
       dateFormat: "MM/DD/YYYY",
-      logo: "/evergreenlogo.svg",
+      logo: "/sereenh-04.png",
     },
     notifications: {
       emailNotifications: true,

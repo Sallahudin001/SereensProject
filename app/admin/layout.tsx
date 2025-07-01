@@ -14,13 +14,16 @@ import {
   BarChart3,
   Settings,
   User,
-  HelpCircle,
   LogOut,
   Menu,
   X,
-  Gift
+  Gift,
+  Search,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -39,34 +42,17 @@ import { cn } from "@/lib/utils"
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true)
-  const [logoSrc, setLogoSrc] = useState("/evergreenlogo.svg")
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [logoSrc, setLogoSrc] = useState("/sereenh-04.png")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
   const { user } = useUser();
   const { isAdmin } = useIsAdmin();
 
-  // Load sidebar state from localStorage on mount - but default to collapsed for hover behavior
-  useEffect(() => {
-    setSidebarCollapsed(true) // Always start collapsed for hover behavior
-  }, [])
-
-  // Handle hover enter - expand immediately
-  const handleMouseEnter = () => {
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout)
-      setHoverTimeout(null)
-    }
-    setSidebarCollapsed(false)
-  }
-
-  // Handle hover leave - collapse with delay
-  const handleMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setSidebarCollapsed(true)
-    }, 300) // 300ms delay before collapsing
-    setHoverTimeout(timeout)
-  }
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   const menuItems = [
     { href: "/admin", label: "Dashboard", icon: Home },
@@ -81,195 +67,261 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Handle logo loading error
   const handleLogoError = () => {
-    setLogoSrc("/evergreenlogo.svg")
+    setLogoSrc("/sereenh-04.png")
   }
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      {/* Top Navigation with Glassmorphism - Without User Profile */}
-      <header className="border-b bg-gradient-to-r from-green-600/95 to-emerald-600/95 backdrop-blur-md shadow-lg sticky top-0 z-40">
-        <div className="flex items-center justify-between px-4 py-3 max-w-full">
-          {/* Logo and title section - left side */}
-          <div className="flex items-center gap-2">
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/20" onClick={() => setIsMobileMenuOpen(true)}>
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-white/95 backdrop-blur-md w-80 sm:w-[400px]">
-                <div className="p-6 h-full flex flex-col">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center">
-                      <div className="p-2 rounded-xl bg-white shadow-lg">
-                        <Image 
-                          src={logoSrc}
-                          alt="Evergreen Home Upgrades Logo" 
-                          width={150}
-                          height={60}
-                          className="h-14 w-auto object-contain"
-                          priority
-                          onError={handleLogoError}
-                        />
-                      </div>
-                    </div>
-                    <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
-                      <X className="h-5 w-5" />
-                    </Button>
-                  </div>
-                  
-                  <nav className="space-y-2 flex-1 overflow-y-auto">
-                    {menuItems.map((item, index) => {
-                      const isActive = pathname === item.href;
-                      return (
-                      <Link
-                        key={index}
-                        href={item.href}
-                          className={cn(
-                            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300",
-                            isActive 
-                              ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg" 
-                              : "hover:bg-emerald-50 text-gray-700 hover:text-emerald-700"
-                          )}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                          <item.icon className={cn(
-                            "h-5 w-5",
-                            isActive ? "text-white" : "text-emerald-600"
-                          )} />
-                        <span className="text-sm font-medium">{item.label}</span>
-                      </Link>
-                      );
-                    })}
-                  </nav>
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log("🔍 Admin searching for:", searchQuery);
+      
+      // Simulate admin search results
+      const mockResults = [
+        { type: "user", title: `User: ${searchQuery}`, href: "/admin/users" },
+        { type: "proposal", title: `Admin Proposal: ${searchQuery}`, href: "/admin/proposals" },
+        { type: "customer", title: `Admin Customer: ${searchQuery}`, href: "/admin/customers" },
+        { type: "report", title: `Report: ${searchQuery}`, href: "/admin" }
+      ].filter(item => 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      
+      if (mockResults.length > 0) {
+        const resultsList = mockResults.map(r => `• ${r.title}`).join('\n');
+        alert(`Admin Search Results for "${searchQuery}":\n\n${resultsList}`);
+        
+        // Navigate to first result
+        window.location.href = mockResults[0].href;
+      } else {
+        alert(`No admin results found for "${searchQuery}"`);
+      }
+    } else {
+      alert("Please enter a search term");
+    }
+  };
 
-                  {/* Mobile User Profile */}
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
-                      <Avatar className="h-10 w-10 border-2 border-emerald-200">
-                        <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
-                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white">
-                          {user?.firstName && user?.lastName
-                            ? `${user.firstName[0]}${user.lastName[0]}`
-                            : 'A'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{user?.fullName || "User"}</div>
-                        <div className="text-xs text-gray-500">{isAdmin ? "Administrator" : "User"}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-            <Link href="/admin" className="flex items-center">
+  return (
+    <div className="min-h-screen flex">
+      {/* Mobile Menu Button - Fixed position */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-50 bg-white/90 hover:bg-white text-gray-900 shadow-lg">
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0 bg-gradient-to-b from-green-50/95 to-emerald-50/95 backdrop-blur-md w-80 sm:w-[400px]">
+          <div className="p-6 h-full flex flex-col">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <div className="p-2 sm:p-3 rounded-xl bg-white shadow-lg">
+                <div className="bg-transparent p-2 rounded-xl shadow-lg">
                   <Image 
                     src={logoSrc}
                     alt="Evergreen Home Upgrades Logo" 
-                    width={180}
-                    height={72}
-                    className="h-12 sm:h-16 w-auto object-contain"
+                    width={150}
+                    height={60}
+                    className="h-12 w-auto object-contain"
                     priority
                     onError={handleLogoError}
                   />
                 </div>
-                <span className="text-lg sm:text-xl font-semibold text-white ml-3 hidden sm:inline-block drop-shadow-sm">Admin Dashboard</span>
+                <div className="ml-3">
+                  <span className="text-lg font-semibold text-gray-900">Admin Dashboard</span>
+                </div>
               </div>
-            </Link>
-          </div>
-        </div>
-      </header>
+              <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            
+            <nav className="space-y-2 flex-1 overflow-y-auto">
+              {menuItems.map((item, index) => {
+                const isActive = pathname === item.href;
+                return (
+                <Link
+                  key={index}
+                  href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300",
+                      isActive 
+                        ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg" 
+                        : "hover:bg-emerald-100/50 text-gray-700 hover:text-emerald-700"
+                    )}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                >
+                    <item.icon className={cn(
+                      "h-5 w-5",
+                      isActive ? "text-white" : "text-emerald-600"
+                    )} />
+                  <span className="text-sm font-medium">{item.label}</span>
+                </Link>
+                );
+              })}
+            </nav>
 
-      {/* Main Content */}
-      <div className="flex flex-1 min-h-0">
-        {/* Sidebar (desktop only) */}
-        <motion.aside 
-          className={cn(
-            "hidden md:block flex-shrink-0 relative",
-            sidebarCollapsed ? "w-20" : "w-72"
-          )}
-          animate={{ width: sidebarCollapsed ? 80 : 288 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
-        >
-          {/* Sidebar Container - Fixed positioning that fills available space */}
-          <div className={cn(
-            "fixed inset-y-0 left-0 top-[73px] bottom-0 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 shadow-lg z-30 transition-all duration-300 flex flex-col overflow-x-hidden",
-            sidebarCollapsed ? "w-20" : "w-72"
-          )}>
-            
-            {/* Hover indicator for collapsed sidebar */}
-            {sidebarCollapsed && (
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-400 rounded-l-full opacity-50 animate-pulse"></div>
-            )}
-            
-            {/* Navigation - Flex grow to fill available space */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden relative">
-              
-              <div className="p-4 space-y-2 pt-16 overflow-x-hidden">
-                {menuItems.map((item, index) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <motion.div
-                      key={index}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <Link
-                        href={item.href}
-                        className={cn(
-                          "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden w-full",
-                          isActive 
-                            ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25" 
-                            : "hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 text-gray-600 hover:text-emerald-700",
-                          sidebarCollapsed && "justify-center px-2"
-                        )}
-                        title={item.label}
-                      >
-                        <div className={cn(
-                          "flex items-center justify-center p-2 rounded-lg transition-all duration-300 flex-shrink-0",
-                          isActive 
-                            ? "bg-white/20 text-white" 
-                            : "text-emerald-600 group-hover:text-emerald-700 group-hover:bg-emerald-100/50"
-                        )}>
-                          <item.icon className="h-5 w-5" />
-                        </div>
-                        <AnimatePresence>
-                          {!sidebarCollapsed && (
-                            <motion.span 
-                              className={cn(
-                                "text-sm font-medium transition-colors flex-1 truncate",
-                                isActive ? "text-white" : "text-gray-700 group-hover:text-emerald-800"
-                              )}
-                              initial={{ opacity: 0, width: 0 }}
-                              animate={{ opacity: 1, width: "auto" }}
-                              exit={{ opacity: 0, width: 0 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              {item.label}
-                            </motion.span>
-                          )}
-                        </AnimatePresence>
-                        </Link>
-                    </motion.div>
-                  );
-                })}
+            {/* Mobile User Profile */}
+            <div className="mt-6 pt-6 border-t border-emerald-200">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-green-100/50">
+                <Avatar className="h-10 w-10 border-2 border-emerald-200">
+                  <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
+                  <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white">
+                    {user?.firstName && user?.lastName
+                      ? `${user.firstName[0]}${user.lastName[0]}`
+                      : 'A'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900">{user?.fullName || "User"}</div>
+                  <div className="text-xs text-gray-500">{isAdmin ? "Administrator" : "User"}</div>
+                </div>
               </div>
             </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
-            {/* User Profile - Fixed at bottom */}
-            <div className="flex-shrink-0 p-4 border-t border-emerald-100/50 bg-white/50 overflow-x-hidden">
+      {/* Desktop Sidebar */}
+      <motion.aside 
+        className={cn(
+          "hidden md:block flex-shrink-0 relative",
+          sidebarCollapsed ? "w-20" : "w-72"
+        )}
+        animate={{ width: sidebarCollapsed ? 80 : 288 }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
+      >
+        {/* Sidebar Container - Fixed positioning that fills available space */}
+        <div className={cn(
+          "fixed inset-y-0 left-0 top-0 bottom-0 bg-gradient-to-b from-green-50/95 to-emerald-50/95 backdrop-blur-xl border-r border-green-200/50 shadow-lg z-30 transition-all duration-300 flex flex-col overflow-x-hidden",
+          sidebarCollapsed ? "w-20" : "w-72"
+        )}>
+          {/* Logo and Title Section */}
+          <div className={cn(
+            "border-b border-emerald-200/50 transition-all duration-300",
+            sidebarCollapsed ? "p-2" : "p-4"
+          )}>
+            <Link href="/admin" className="flex items-center gap-3">
+              <div className={cn(
+                "bg-transparent rounded-xl shadow-lg flex-shrink-0 transition-all duration-300",
+                sidebarCollapsed ? "p-1" : "p-2"
+              )}>
+                <Image 
+                  src={logoSrc}
+                  alt="Evergreen Home Upgrades Logo" 
+                  width={120}
+                  height={48}
+                  className={cn(
+                    "w-auto object-contain transition-all duration-300",
+                    sidebarCollapsed ? "h-8" : "h-10"
+                  )}
+                  priority
+                  onError={handleLogoError}
+                />
+              </div>
+              {!sidebarCollapsed && (
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-bold text-gray-900 truncate">Admin Dashboard</span>
+                  <span className="text-xs text-emerald-600 font-medium truncate">Evergreen Home Upgrades</span>
+                </div>
+              )}
+            </Link>
+          </div>
+          
+          {/* Hover indicator for collapsed sidebar */}
+          {sidebarCollapsed && (
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-400 rounded-l-full opacity-50 animate-pulse"></div>
+          )}
+
+          {/* Navigation - Flex grow to fill available space */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <div className="p-4 space-y-2 overflow-x-hidden">
+              {menuItems.map((item, index) => {
+                const isActive = pathname === item.href;
+                return (
+                  <motion.div
+                    key={index}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative overflow-hidden w-full",
+                        isActive 
+                          ? "bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/25" 
+                          : "hover:bg-gradient-to-r hover:from-emerald-50 hover:to-green-50 text-gray-600 hover:text-emerald-700",
+                        sidebarCollapsed && "justify-center px-2"
+                      )}
+                      title={item.label}
+                    >
+                      <div className={cn(
+                        "flex items-center justify-center p-2 rounded-lg transition-all duration-300 flex-shrink-0",
+                        isActive 
+                          ? "bg-white/20 text-white" 
+                          : "text-emerald-600 group-hover:text-emerald-700 group-hover:bg-emerald-100/50"
+                      )}>
+                        <item.icon className="h-5 w-5" />
+                      </div>
+                      <AnimatePresence>
+                        {!sidebarCollapsed && (
+                          <motion.span 
+                            className={cn(
+                              "text-sm font-medium transition-colors flex-1 truncate",
+                              isActive ? "text-white" : "text-gray-700 group-hover:text-emerald-800"
+                            )}
+                            initial={{ opacity: 0, width: 0 }}
+                            animate={{ opacity: 1, width: "auto" }}
+                            exit={{ opacity: 0, width: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {item.label}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </Link>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+
+        </div>
+      </motion.aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Top Navbar */}
+        <header className="sticky top-0 z-40 bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-md border-b border-green-200/50 shadow-sm">
+          <div className="flex items-center justify-between px-4 py-3 h-16">
+            {/* Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="hidden md:flex"
+            >
+              {sidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+            </Button>
+            
+            {/* Center Search Bar */}
+            <div className="flex-1 max-w-2xl mx-4">
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Search users, proposals, or reports..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white/80 border-green-200 focus:border-emerald-400 focus:ring-emerald-300 shadow-sm"
+                />
+              </form>
+            </div>
+
+            {/* Right Profile Section */}
+            <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className={cn(
-                    "w-full justify-start p-3 rounded-xl hover:bg-emerald-50 transition-all duration-200 overflow-hidden",
-                    sidebarCollapsed && "justify-center px-2"
-                  )}>
-                    <Avatar className="h-8 w-8 border-2 border-emerald-200 flex-shrink-0">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
                       <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white">
                         {user?.firstName && user?.lastName
@@ -277,37 +329,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                           : 'A'}
                       </AvatarFallback>
                     </Avatar>
-                    <AnimatePresence>
-                      {!sidebarCollapsed && (
-                        <motion.div
-                          className="ml-3 text-left flex-1 min-w-0"
-                          initial={{ opacity: 0, width: 0 }}
-                          animate={{ opacity: 1, width: "auto" }}
-                          exit={{ opacity: 0, width: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <div className="text-sm font-medium text-gray-900 truncate">{user?.fullName || "User"}</div>
-                          <div className="text-xs text-gray-500 truncate">
-                            {isAdmin ? "Administrator" : "User"}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    <AnimatePresence>
-                      {!sidebarCollapsed && (
-                        <motion.div
-                          className="flex-shrink-0"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                        >
-                          <Settings className="h-4 w-4 text-gray-400" />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 mt-1 bg-white/95 backdrop-blur-md border-emerald-200 shadow-xl">
+                <DropdownMenuContent align="end" className="w-56 mt-1 bg-white/95 backdrop-blur-md border-gray-200 shadow-xl">
                   <DropdownMenuLabel className="flex items-center gap-3 p-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
@@ -326,12 +350,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <Link href="/dashboard">
-                    <DropdownMenuItem>
-                      <Home className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
-                    </DropdownMenuItem>
-                  </Link>
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
@@ -340,29 +358,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    <span>Help</span>
-                  </DropdownMenuItem>
+                  <Link href="/admin">
+                    <DropdownMenuItem>
+                      <Home className="mr-2 h-4 w-4" />
+                      <span>Dashboard</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuSeparator />
                   <SignOutButton>
-                  <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
                   </SignOutButton>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
-        </motion.aside>
+        </header>
 
-        {/* Main Content Area */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <main className="flex-1 overflow-x-hidden bg-gradient-to-br from-gray-50/50 to-slate-100/50 min-w-0">
-            <div className="w-full h-full">{children}</div>
-          </main>
-        </div>
+        {/* Main Content */}
+        <main className="flex-1 overflow-x-hidden bg-gradient-to-br from-gray-50/50 to-slate-100/50 min-w-0">
+          <div className="w-full h-full">{children}</div>
+        </main>
       </div>
     </div>
   )

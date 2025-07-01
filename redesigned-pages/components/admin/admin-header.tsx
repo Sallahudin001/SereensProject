@@ -23,7 +23,7 @@ export function AdminHeader() {
   const [showSearch, setShowSearch] = useState(false)
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-md border-green-200/50 shadow-sm px-4 sm:px-6">
       <Button variant="outline" size="icon" className="md:hidden" onClick={() => setShowMobileMenu(true)}>
         <Menu className="h-5 w-5" />
         <span className="sr-only">Toggle Menu</span>

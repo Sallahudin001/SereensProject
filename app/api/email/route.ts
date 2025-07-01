@@ -299,7 +299,7 @@ export async function POST(request: NextRequest) {
             <div class="email-container">
               <div class="email-header">
                 <div class="logo-container">
-                  <img src="/evergreenlogo.svg" alt="Evergreen Home Upgrades" class="logo" />
+                  <img src="/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
                 </div>
                 <h1 class="header-title">Your Proposal is Ready</h1>
                 <p class="header-subtitle">Professional Home Improvement Proposal</p>

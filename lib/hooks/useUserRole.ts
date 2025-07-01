@@ -5,6 +5,10 @@ import { useAuth, useUser } from '@clerk/nextjs';
 
 export type UserRole = 'admin' | 'user' | null;
 
+// Simple cache for user roles
+const roleCache = new Map<string, { role: UserRole; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export function useUserRole() {
   const { isLoaded, isSignedIn, userId } = useAuth();
   const { user } = useUser();
@@ -14,10 +18,19 @@ export function useUserRole() {
   
   useEffect(() => {
     if (isLoaded && isSignedIn && userId) {
+      // Check cache first
+      const cached = roleCache.get(userId);
+      if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+        setRole(cached.role);
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
       setError(null);
       
-      const fetchUserRole = async () => {
+      // Use a timeout to avoid blocking the UI
+      setTimeout(async () => {
         try {
           const response = await fetch('/api/direct-user-sync', {
             method: 'POST',
@@ -33,26 +46,24 @@ export function useUserRole() {
           
           if (response.ok) {
             const data = await response.json();
-            if (data.success && data.user?.role) {
-              setRole(data.user.role);
-            } else {
-              setRole('user'); // Default to user if no role found
-            }
+            const userRole = data.success && data.user?.role ? data.user.role : 'user';
+            setRole(userRole);
+            
+            // Cache the result
+            roleCache.set(userId, { role: userRole, timestamp: Date.now() });
           } else {
             console.error('Failed to fetch user role:', response.statusText);
             setError('Failed to fetch user role');
-            setRole(null);
+            setRole('user'); // Default to user role instead of null
           }
         } catch (err) {
           console.error('Error fetching user role:', err);
           setError('Error fetching user role');
-          setRole(null);
+          setRole('user'); // Default to user role instead of null
         } finally {
           setIsLoading(false);
         }
-      };
-      
-      fetchUserRole();
+      }, 50); // Small delay to allow UI to render first
     } else if (isLoaded && !isSignedIn) {
       setRole(null);
       setIsLoading(false);

@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { type ReactNode, useState, useEffect } from "react"
-import { BarChart3, FileText, Home, LogOut, Settings, Users, Shield, ChevronLeft, ChevronRight, Menu, X, Calendar } from "lucide-react"
+import { BarChart3, FileText, Home, LogOut, Settings, Users, Shield, PanelLeftClose, PanelLeftOpen, Menu, X, Calendar, Search, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -21,43 +21,26 @@ import { useIsAdmin } from "./admin-check"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
 import { usePathname } from "next/navigation"
+import { Input } from "@/components/ui/input"
 
 interface DashboardLayoutProps {
   children: ReactNode
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true) // Start collapsed for hover behavior
-  const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Start expanded by default
   const [isMounted, setIsMounted] = useState(false)
   const { user } = useUser();
   const { isAdmin } = useIsAdmin();
-  const [logoSrc, setLogoSrc] = useState("/evergreenlogo.svg");
+  const [logoSrc, setLogoSrc] = useState("/sereenh-04.png");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const pathname = usePathname();
   
-  // Handle client-side mounting and set initial collapsed state
+  // Handle client-side mounting
   useEffect(() => {
     setIsMounted(true)
-    setSidebarCollapsed(true) // Always start collapsed for hover behavior
   }, [])
-
-  // Handle hover enter - expand immediately
-  const handleMouseEnter = () => {
-    if (hoverTimeout) {
-      clearTimeout(hoverTimeout)
-      setHoverTimeout(null)
-    }
-    setSidebarCollapsed(false)
-  }
-
-  // Handle hover leave - collapse with delay
-  const handleMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setSidebarCollapsed(true)
-    }, 300) // 300ms delay before collapsing
-    setHoverTimeout(timeout)
-  }
   
   const navItems = [
     { icon: Home, label: "Dashboard", href: "/dashboard" },
@@ -74,38 +57,71 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   // Handle logo loading error
   const handleLogoError = () => {
-    // Fallback to a different logo if needed
-    setLogoSrc("/evergreenlogo.svg");
+    setLogoSrc("/sereenh-04.png");
   };
   
-  // Prevent hydration mismatch by not rendering animations until mounted
+  // Handle search
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      console.log("🔍 Searching for:", searchQuery);
+      
+      // Simulate search results
+      const mockResults = [
+        { type: "proposal", title: `Proposal for ${searchQuery}`, href: "/proposals" },
+        { type: "customer", title: `Customer: ${searchQuery}`, href: "/customers" },
+        { type: "product", title: `Product: ${searchQuery}`, href: "/dashboard" }
+      ].filter(item => 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      
+      if (mockResults.length > 0) {
+        const resultsList = mockResults.map(r => `• ${r.title}`).join('\n');
+        alert(`Search Results for "${searchQuery}":\n\n${resultsList}`);
+        
+        // Navigate to first result
+        window.location.href = mockResults[0].href;
+      } else {
+        alert(`No results found for "${searchQuery}"`);
+      }
+    } else {
+      alert("Please enter a search term");
+    }
+  };
+
+  // Toggle sidebar function
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+  
+    // Show a loading state instead of preventing render for faster initial load
   if (!isMounted) {
     return (
-      <div className="min-h-screen flex flex-col">
-        {/* Top Navigation */}
-        <header className="border-b bg-gradient-to-r from-green-600/95 to-emerald-600/95 backdrop-blur-md shadow-lg sticky top-0 z-40">
-          <div className="flex items-center justify-between px-4 py-3 max-w-full">
-            <div className="flex items-center gap-2">
+      <div className="min-h-screen flex">
+        {/* Mobile Menu Button - Fixed position */}
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/20">
+            <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-50 bg-white/90 hover:bg-white text-gray-900 shadow-lg">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 bg-white/95 backdrop-blur-md">
+          <SheetContent side="left" className="p-0 bg-gradient-to-b from-green-50/95 to-emerald-50/95 backdrop-blur-md">
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center">
-                        <div className="p-2 rounded-xl bg-white shadow-lg">
+                  <div className="bg-transparent p-2 rounded-xl shadow-lg">
                           <Image 
                             src={logoSrc}
                             alt="Evergreen Energy Upgrades Logo" 
                             width={150}
                             height={60}
-                            className="h-14 w-auto object-contain"
+                      className="h-12 w-auto object-contain"
                             priority
                             onError={handleLogoError}
                           />
+                        </div>
+                  <div className="ml-3">
+                    <span className="text-lg font-semibold text-gray-900">Evergreen Home Upgrades</span>
                         </div>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
@@ -118,7 +134,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         <Link
                           key={index}
                           href={item.href}
-                          className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-emerald-50 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-emerald-100/50 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
                         >
                           <item.icon className="h-4 w-4 text-emerald-600" />
                           <span className="text-sm font-medium">{item.label}</span>
@@ -128,49 +145,46 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                 </SheetContent>
               </Sheet>
-              <Link href="/dashboard" className="flex items-center">
-                <div className="flex items-center">
-                  <div className="bg-white/95 p-3 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
+
+        {/* Static Sidebar for SSR */}
+        <aside className={cn(
+          "hidden md:block flex-shrink-0 relative",
+          sidebarCollapsed ? "w-20" : "w-72"
+        )}>
+          <div className={cn(
+            "fixed inset-y-0 left-0 top-0 bottom-0 bg-gradient-to-b from-green-50/95 to-emerald-50/95 backdrop-blur-xl border-r border-green-200/50 shadow-lg overflow-hidden z-30",
+            sidebarCollapsed ? "w-20" : "w-72"
+          )}>
+            {/* Logo and Title Section */}
+            <div className={cn(
+              "border-b border-emerald-200/50",
+              sidebarCollapsed ? "p-2" : "p-4"
+            )}>
+              <Link href="/dashboard" className="flex items-center gap-3">
+                <div className={cn(
+                  "bg-transparent rounded-xl shadow-lg flex-shrink-0 transition-all duration-300",
+                  sidebarCollapsed ? "p-1" : "p-2"
+                )}>
                   <Image 
                     src={logoSrc}
                     alt="Evergreen Energy Upgrades Logo" 
-                    width={180}
-                    height={72}
-                    className="h-16 w-auto object-contain"
+                    width={120}
+                    height={48}
+                    className={cn(
+                      "w-auto object-contain transition-all duration-300",
+                      sidebarCollapsed ? "h-8" : "h-10"
+                    )}
                     priority
                     onError={handleLogoError}
                   />
                   </div>
-                  <span className="text-xl font-semibold text-white ml-3 hidden sm:inline-block drop-shadow-sm">Evergreen Home Upgrades</span>
+                {!sidebarCollapsed && (
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-bold text-gray-900 truncate">Evergreen Home Upgrades</span>
+                    <span className="text-xs text-emerald-600 font-medium truncate">Sales Dashboard</span>
                 </div>
+                )}
               </Link>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <div className="flex flex-1 min-h-0">
-          {/* Static Sidebar for SSR */}
-          <aside className={cn(
-            "hidden md:block flex-shrink-0 relative",
-            sidebarCollapsed ? "w-20" : "w-72"
-          )}>
-            <div className={cn(
-              "fixed inset-y-0 left-0 top-[73px] bottom-0 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 shadow-lg overflow-hidden z-30",
-              sidebarCollapsed ? "w-20" : "w-72"
-            )}>
-              <div className="p-6 border-b border-emerald-100/50">
-                <div className="flex items-center gap-3">
-                  <div className="bg-gradient-to-br from-emerald-500 to-green-600 p-2 rounded-xl shadow-lg">
-                    <span className="text-white font-bold text-lg">E</span>
-                  </div>
-                  {!sidebarCollapsed && (
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-900">Evergreen</span>
-                      <span className="text-xs text-emerald-600 font-medium">Energy Upgrades</span>
-                    </div>
-                  )}
-                </div>
               </div>
             
               <div className="flex-1 p-4 space-y-2">
@@ -215,6 +229,96 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </aside>
 
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col min-h-screen">
+          {/* Top Navbar */}
+          <header className="sticky top-0 z-40 bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-md border-b border-green-200/50 shadow-sm">
+            <div className="flex items-center justify-between px-4 py-3 h-16">
+              {/* Toggle Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleSidebar}
+                className="hidden md:flex"
+              >
+                {sidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+              </Button>
+              
+              {/* Center Search Bar */}
+              <div className="flex-1 max-w-2xl mx-4">
+                <form onSubmit={handleSearch} className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="search"
+                    placeholder="Search proposals, customers, or products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-white/80 border-green-200 focus:border-emerald-400 focus:ring-emerald-300 shadow-sm"
+                  />
+                </form>
+              </div>
+
+              {/* Right Profile Section */}
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
+                        <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white">
+                          {user?.firstName && user?.lastName
+                            ? `${user.firstName[0]}${user.lastName[0]}`
+                            : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 mt-1 bg-white/95 backdrop-blur-md border-gray-200 shadow-xl">
+                    <DropdownMenuLabel className="flex items-center gap-3 p-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
+                        <AvatarFallback className="bg-emerald-100 text-emerald-800">
+                          {user?.firstName && user?.lastName
+                            ? `${user.firstName[0]}${user.lastName[0]}`
+                            : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-sm">{user?.fullName || "User"}</span>
+                        <span className="text-xs text-gray-500">{user?.primaryEmailAddress?.emailAddress || ""}</span>
+                        {isAdmin && (
+                          <Badge className="mt-1 bg-emerald-600 text-xs">Administrator</Badge>
+                        )}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <Link href="/dashboard">
+                      <DropdownMenuItem>
+                        <Home className="mr-2 h-4 w-4" />
+                        <span>Dashboard</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <DropdownMenuSeparator />
+                    <SignOutButton>
+                      <DropdownMenuItem>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Logout</span>
+                      </DropdownMenuItem>
+                    </SignOutButton>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </header>
+
           {/* Main Content */}
           <main className="flex-1 overflow-x-hidden bg-gradient-to-br from-gray-50/50 to-slate-100/50 min-w-0">
             <div className="w-full h-full">{children}</div>
@@ -225,31 +329,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Top Navigation */}
-      <header className="border-b bg-gradient-to-r from-green-600/95 to-emerald-600/95 backdrop-blur-md shadow-lg sticky top-0 z-40">
-        <div className="flex items-center justify-between px-4 py-3 max-w-full">
-          <div className="flex items-center gap-2">
+    <div className="min-h-screen flex">
+      {/* Mobile Menu Button - Fixed position */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden text-white hover:bg-white/20">
+          <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-50 bg-white/90 hover:bg-white text-gray-900 shadow-lg">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 bg-white/95 backdrop-blur-md">
+        <SheetContent side="left" className="p-0 bg-gradient-to-b from-green-50/95 to-emerald-50/95 backdrop-blur-md">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center">
-                      <div className="p-2 rounded-xl bg-white shadow-lg">
+                <div className="bg-transparent p-2 rounded-xl shadow-lg">
                         <Image 
                           src={logoSrc}
                           alt="Evergreen Energy Upgrades Logo" 
                           width={150}
                           height={60}
-                          className="h-14 w-auto object-contain"
+                    className="h-12 w-auto object-contain"
                           priority
                           onError={handleLogoError}
                         />
+                      </div>
+                <div className="ml-3">
+                  <span className="text-lg font-semibold text-gray-900">Evergreen Home Upgrades</span>
                       </div>
                     </div>
                     <Button variant="ghost" size="icon" onClick={() => setIsMobileMenuOpen(false)}>
@@ -262,7 +366,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       <Link
                         key={index}
                         href={item.href}
-                        className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-emerald-50 transition-colors"
+                  className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-emerald-100/50 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
                       >
                         <item.icon className="h-4 w-4 text-emerald-600" />
                         <span className="text-sm font-medium">{item.label}</span>
@@ -272,29 +377,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
               </SheetContent>
             </Sheet>
-            <Link href="/dashboard" className="flex items-center">
-              <div className="flex items-center">
-                <div className="bg-white/95 p-3 rounded-lg shadow-lg backdrop-blur-sm border border-white/20">
-                  <Image 
-                    src={logoSrc}
-                    alt="Evergreen Energy Upgrades Logo" 
-                    width={180}
-                    height={72}
-                    className="h-16 w-auto object-contain"
-                    priority
-                    onError={handleLogoError}
-                  />
-                </div>
-                <span className="text-xl font-semibold text-white ml-3 hidden sm:inline-block drop-shadow-sm">Evergreen Home Upgrades</span>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </header>
 
-      {/* Main Content */}
-      <div className="flex flex-1 min-h-0">
-        {/* Improved Sidebar (desktop only) with hover functionality */}
+      {/* Desktop Sidebar without hover functionality */}
         <motion.aside 
           className={cn(
             "hidden md:block flex-shrink-0 relative",
@@ -302,23 +386,47 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
           animate={{ width: sidebarCollapsed ? 80 : 288 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
-          onMouseEnter={handleMouseEnter}
-          onMouseLeave={handleMouseLeave}
         >
           {/* Sidebar Container - Fixed positioning that fills available space */}
+        <div className={cn(
+          "fixed inset-y-0 left-0 top-0 bottom-0 bg-gradient-to-b from-green-50/95 to-emerald-50/95 backdrop-blur-xl border-r border-green-200/50 shadow-lg z-30 transition-all duration-300 flex flex-col overflow-x-hidden",
+          sidebarCollapsed ? "w-20" : "w-72"
+        )}>
+          {/* Logo and Title Section */}
           <div className={cn(
-            "fixed inset-y-0 left-0 top-[73px] bottom-0 bg-white/95 backdrop-blur-xl border-r border-gray-200/50 shadow-lg z-30 transition-all duration-300 flex flex-col overflow-x-hidden",
-            sidebarCollapsed ? "w-20" : "w-72"
+            "border-b border-emerald-200/50 transition-all duration-300",
+            sidebarCollapsed ? "p-2" : "p-4"
           )}>
-            
-            {/* Hover indicator for collapsed sidebar */}
-            {sidebarCollapsed && (
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-emerald-400 rounded-l-full opacity-50 animate-pulse"></div>
-            )}
+            <Link href="/dashboard" className="flex items-center gap-3">
+              <div className={cn(
+                "bg-transparent rounded-xl shadow-lg flex-shrink-0 transition-all duration-300",
+                sidebarCollapsed ? "p-1" : "p-2"
+              )}>
+                <Image 
+                  src={logoSrc}
+                  alt="Evergreen Energy Upgrades Logo" 
+                  width={120}
+                  height={48}
+                  className={cn(
+                    "w-auto object-contain transition-all duration-300",
+                    sidebarCollapsed ? "h-8" : "h-10"
+                  )}
+                  priority
+                  onError={handleLogoError}
+                />
+              </div>
+              {!sidebarCollapsed && (
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-bold text-gray-900 truncate">Evergreen Home Upgrades</span>
+                  <span className="text-xs text-emerald-600 font-medium truncate">Sales Dashboard</span>
+                </div>
+              )}
+            </Link>
+          </div>
           
             {/* Navigation - Flex grow to fill available space */}
             <div className="flex-1 overflow-y-auto overflow-x-hidden">
-              <div className="p-4 space-y-2 pt-16 overflow-x-hidden">
+            <div className="p-4 space-y-2 overflow-x-hidden">
                 {displayNavItems.map((item, index) => {
                   const isActive = pathname === item.href;
                   return (
@@ -368,16 +476,44 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 })}
               </div>
             </div>
+        </div>
+      </motion.aside>
 
-            {/* User Profile - Fixed at bottom */}
-            <div className="flex-shrink-0 p-4 border-t border-emerald-100/50 bg-white/50 overflow-x-hidden">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Top Navbar */}
+        <header className="sticky top-0 z-40 bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-md border-b border-green-200/50 shadow-sm">
+          <div className="flex items-center justify-between px-4 py-3 h-16">
+            {/* Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="hidden md:flex"
+            >
+              {sidebarCollapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+            </Button>
+            
+            {/* Center Search Bar */}
+            <div className="flex-1 max-w-2xl mx-4">
+              <form onSubmit={handleSearch} className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  type="search"
+                  placeholder="Search proposals, customers, or products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-white/80 border-green-200 focus:border-emerald-400 focus:ring-emerald-300 shadow-sm"
+                />
+              </form>
+            </div>
+
+            {/* Right Profile Section */}
+            <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className={cn(
-                      "w-full justify-start p-3 rounded-xl hover:bg-emerald-50 transition-all duration-200 overflow-hidden",
-                      sidebarCollapsed && "justify-center px-2"
-                    )}>
-                      <Avatar className="h-8 w-8 border-2 border-emerald-200 flex-shrink-0">
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
                         <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-green-600 text-white">
                         {user?.firstName && user?.lastName
@@ -385,37 +521,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           : 'U'}
                       </AvatarFallback>
                     </Avatar>
-                      <AnimatePresence>
-                        {!sidebarCollapsed && (
-                          <motion.div
-                            className="ml-3 text-left flex-1 min-w-0"
-                            initial={{ opacity: 0, width: 0 }}
-                            animate={{ opacity: 1, width: "auto" }}
-                            exit={{ opacity: 0, width: 0 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <div className="text-sm font-medium text-gray-900 truncate">{user?.fullName || "User"}</div>
-                            <div className="text-xs text-gray-500 truncate">
-                              {isAdmin ? "Administrator" : "User"}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                      <AnimatePresence>
-                        {!sidebarCollapsed && (
-                          <motion.div
-                            className="flex-shrink-0"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                          >
-                            <Settings className="h-4 w-4 text-gray-400" />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                   </Button>
                 </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-1 bg-white/95 backdrop-blur-md border-emerald-200 shadow-xl">
+                <DropdownMenuContent align="end" className="w-56 mt-1 bg-white/95 backdrop-blur-md border-gray-200 shadow-xl">
                   <DropdownMenuLabel className="flex items-center gap-3 p-3">
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user?.imageUrl || "/placeholder-user.jpg"} alt={user?.fullName || "User"} />
@@ -434,12 +542,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
                   <Link href="/dashboard">
                     <DropdownMenuItem>
                       <Home className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </DropdownMenuItem>
                   </Link>
+                  <DropdownMenuSeparator />
                   <SignOutButton>
                     <DropdownMenuItem>
                       <LogOut className="mr-2 h-4 w-4" />
@@ -450,9 +567,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </DropdownMenu>
             </div>
           </div>
-        </motion.aside>
+        </header>
 
-        {/* Main Content - Properly positioned to align with sidebar */}
+        {/* Main Content */}
         <main className="flex-1 overflow-x-hidden bg-gradient-to-br from-gray-50/50 to-slate-100/50 min-w-0">
           <div className="w-full h-full">{children}</div>
         </main>
