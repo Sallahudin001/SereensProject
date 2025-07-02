@@ -64,13 +64,13 @@ interface ProposalFormData {
   proposalNumber?: string;
 }
 
-// Storage keys for localStorage
-const STORAGE_KEYS = {
-  FORM_DATA: 'proposal_form_draft',
-  CURRENT_STEP: 'proposal_current_step', 
-  DRAFT_ID: 'proposal_draft_id',
-  TIMESTAMP: 'proposal_draft_timestamp'
-}
+// Storage keys for localStorage - make them user-specific to prevent data sharing
+const getStorageKeys = (userId: string | null) => ({
+  FORM_DATA: `proposal_form_draft_${userId || 'anonymous'}`,
+  CURRENT_STEP: `proposal_current_step_${userId || 'anonymous'}`, 
+  DRAFT_ID: `proposal_draft_id_${userId || 'anonymous'}`,
+  TIMESTAMP: `proposal_draft_timestamp_${userId || 'anonymous'}`
+})
 
 // Draft storage interface
 interface DraftData {
@@ -100,13 +100,15 @@ const isValidForDraft = (formData: ProposalFormData): boolean => {
 }
 
 // Helper functions for localStorage management
-const saveDraftToStorage = (formData: ProposalFormData, currentStep: number, draftProposalId: string | null) => {
+const saveDraftToStorage = (formData: ProposalFormData, currentStep: number, draftProposalId: string | null, userId: string | null) => {
   const draftData: DraftData = {
     formData,
     currentStep,
     draftProposalId,
     timestamp: Date.now()
   }
+  
+  const STORAGE_KEYS = getStorageKeys(userId)
   
   try {
     localStorage.setItem(STORAGE_KEYS.FORM_DATA, JSON.stringify(draftData))
@@ -115,7 +117,7 @@ const saveDraftToStorage = (formData: ProposalFormData, currentStep: number, dra
     // If quota exceeded, try to clear old data and retry
     if (error instanceof DOMException && error.code === 22) {
       console.warn('localStorage quota exceeded, clearing old drafts...')
-      clearDraftFromStorage()
+      clearDraftFromStorage(userId)
       try {
         localStorage.setItem(STORAGE_KEYS.FORM_DATA, JSON.stringify(draftData))
       } catch (retryError) {
@@ -125,8 +127,9 @@ const saveDraftToStorage = (formData: ProposalFormData, currentStep: number, dra
   }
 }
 
-const loadDraftFromStorage = (): DraftData | null => {
+const loadDraftFromStorage = (userId: string | null): DraftData | null => {
   try {
+    const STORAGE_KEYS = getStorageKeys(userId)
     const saved = localStorage.getItem(STORAGE_KEYS.FORM_DATA)
     if (!saved) return null
     
@@ -142,17 +145,25 @@ const loadDraftFromStorage = (): DraftData | null => {
     return draftData
   } catch (error) {
     console.error('Error loading draft from localStorage:', error)
+    const STORAGE_KEYS = getStorageKeys(userId)
     localStorage.removeItem(STORAGE_KEYS.FORM_DATA)
     return null
   }
 }
 
-const clearDraftFromStorage = () => {
+const clearDraftFromStorage = (userId: string | null) => {
   try {
+    const STORAGE_KEYS = getStorageKeys(userId)
     localStorage.removeItem(STORAGE_KEYS.FORM_DATA)
     localStorage.removeItem(STORAGE_KEYS.CURRENT_STEP)
     localStorage.removeItem(STORAGE_KEYS.DRAFT_ID)
     localStorage.removeItem(STORAGE_KEYS.TIMESTAMP)
+    
+    // Also clear any old non-user-specific keys for backward compatibility
+    localStorage.removeItem('proposal_form_draft')
+    localStorage.removeItem('proposal_current_step')
+    localStorage.removeItem('proposal_draft_id')
+    localStorage.removeItem('proposal_draft_timestamp')
   } catch (error) {
     console.error('Error clearing draft from localStorage:', error)
   }
@@ -169,13 +180,14 @@ export default function NewProposalPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const proposalId = searchParams ? searchParams.get("id") : null
+  const freshStart = searchParams ? searchParams.get("fresh") === "true" : false
   const [currentStep, setCurrentStep] = useState(0)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const [currentUser, setCurrentUser] = useState<any>(null)
   const [draftProposalId, setDraftProposalId] = useState<string | null>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isCustomerInfoValid, setIsCustomerInfoValid] = useState(false)
-  const [isDraftRestored, setIsDraftRestored] = useState(false)
+  const [isDraftRestored, setIsDraftRestored] = useState(freshStart)
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null)
   const [draftState, setDraftState] = useState({
     proposalId: null as string | null,
@@ -184,6 +196,9 @@ export default function NewProposalPage() {
     lastChecked: null as Date | null
   })
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Get current user ID for storage isolation
+  const currentUserId = currentUser?.clerk_id || currentUser?.id || null
   const [formData, setFormData] = useState<ProposalFormData>({
     customer: {
       name: "",
@@ -209,6 +224,32 @@ export default function NewProposalPage() {
     selectedOffers: [],
     customizedOffers: [],
   })
+
+  // Handle fresh start parameter - clear everything and show message
+  useEffect(() => {
+    if (freshStart && currentUserId) {
+      clearDraftFromStorage(currentUserId)
+      setDraftState({
+        proposalId: null,
+        proposalNumber: null,
+        isExistingDraft: false,
+        lastChecked: null
+      })
+      setDraftProposalId(null)
+      setLastSavedTime(null)
+      setCurrentStep(0)
+      
+      // Remove the fresh parameter from URL to prevent confusion
+      const newUrl = window.location.pathname
+      window.history.replaceState({}, '', newUrl)
+      
+      toast({
+        title: "Fresh Start",
+        description: "Ready to create a new proposal with a fresh form.",
+        className: "bg-emerald-50 border-emerald-200"
+      })
+    }
+  }, [freshStart, currentUserId])
 
   // Check for existing draft when customer email changes
   useEffect(() => {
@@ -301,7 +342,7 @@ export default function NewProposalPage() {
         }
       }
       // Always save to localStorage as backup
-      saveDraftToStorage(formData, currentStep, draftState.proposalId)
+      saveDraftToStorage(formData, currentStep, draftState.proposalId, currentUserId)
       setLastSavedTime(new Date())
     }, 2000),
     [draftState.proposalId]
@@ -316,8 +357,8 @@ export default function NewProposalPage() {
 
   // Restore draft data on page load (only if not editing an existing proposal)
   useEffect(() => {
-    if (!proposalId && !isDraftRestored) {
-      const savedDraft = loadDraftFromStorage()
+    if (!proposalId && !isDraftRestored && currentUserId) {
+      const savedDraft = loadDraftFromStorage(currentUserId)
       
       if (savedDraft) {
         // Only restore if we don't already have data (prevents overwriting URL-loaded proposals)
@@ -340,14 +381,14 @@ export default function NewProposalPage() {
       
       setIsDraftRestored(true)
     }
-  }, [proposalId, isDraftRestored, formData.customer.name, formData.customer.email, formData.services.length])
+  }, [proposalId, isDraftRestored, formData.customer.name, formData.customer.email, formData.services.length, currentUserId])
 
   // Save draft before user leaves the page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       // Save any pending changes before the page unloads
       if (formData.customer.name || formData.customer.email || formData.services.length > 0 || currentStep > 0) {
-        saveDraftToStorage(formData, currentStep, draftProposalId)
+        saveDraftToStorage(formData, currentStep, draftProposalId, currentUserId)
       }
     }
 
@@ -404,7 +445,7 @@ export default function NewProposalPage() {
           setDraftProposalId(proposal.id)
           
           // Clear any localStorage draft when loading an existing proposal
-          clearDraftFromStorage()
+          clearDraftFromStorage(currentUserId)
         }
       }
     }
@@ -484,94 +525,7 @@ export default function NewProposalPage() {
   }
 
   const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
-
-  // Update the handleSubmit function to handle the case where we're sending a proposal directly
-  const handleSubmit = async () => {
-    try {
-      // Immediately disable the button to prevent double clicks
-      setIsSubmitting(true)
-
-      // If we have a draft proposal ID, check its current status
-      if (draftState.proposalId) {
-        try {
-          const response = await fetch(`/api/proposals/${draftState.proposalId}`)
-          if (response.ok) {
-            const proposalData = await response.json()
-            if (proposalData.status === 'sent' || proposalData.status === 'signed' || proposalData.status === 'completed') {
-              toast({
-                title: "Proposal already sent",
-                description: `This proposal has already been sent to the customer.`,
-              })
-              router.push("/dashboard")
-              return
-            }
-          }
-        } catch (error) {
-          console.error("Error checking proposal status:", error)
-        }
-      }
-
-      // Validate required fields
-      if (!formData.customer.name || !formData.customer.email) {
-        toast({
-          title: "Missing information",
-          description: "Please provide customer name and email",
-          variant: "destructive",
-        })
-        setIsSubmitting(false)
-        return
-      }
-
-      if (formData.services.length === 0) {
-        toast({
-          title: "No services selected",
-          description: "Please select at least one service",
-          variant: "destructive",
-        })
-        setIsSubmitting(false)
-        return
-      }
-
-      // Create or update the proposal with completed status
-      const result = await createOrUpdateDraftProposal(true)
-
-      if (result && result.success) {
-        // Clear localStorage draft on successful submission
-        clearDraftFromStorage()
-        
-        // Message varies if it was a duplicate prevention
-        const message = result.isDuplicate 
-          ? "Using existing proposal to prevent duplication"
-          : `Proposal ${result.proposalNumber} has been created successfully`
-        
-        toast({
-          title: "Proposal created",
-          description: message,
-        })
-
-        // Always redirect immediately after creation to prevent repeated submissions
-        router.push("/dashboard")
-      } else {
-        toast({
-          title: "Error",
-          description: result?.error || "Failed to create proposal",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      console.error("Error submitting proposal:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
+    setCurrentStep((prevStep) => Math.max(0, prevStep - 1))
   }
 
   // Use useCallback with stable references to prevent unnecessary re-renders
@@ -629,7 +583,7 @@ export default function NewProposalPage() {
 
   // Function to clear draft and start fresh
   const clearDraftAndStartFresh = useCallback(() => {
-    clearDraftFromStorage()
+    clearDraftFromStorage(currentUserId)
     setFormData({
       customer: {
         name: "",
@@ -702,12 +656,12 @@ export default function NewProposalPage() {
                     )}
                   </div>
                 )}
-                {lastSavedTime && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span>Auto-saved {lastSavedTime.toLocaleTimeString()}</span>
-                  </div>
-                )}
+              {lastSavedTime && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Auto-saved {lastSavedTime.toLocaleTimeString()}</span>
+                </div>
+              )}
               </div>
             </div>
           </CardHeader>
@@ -779,7 +733,7 @@ export default function NewProposalPage() {
                   <ArrowLeft className="mr-2 h-4 w-4" /> Previous
                 </Button>
 
-                {currentStep < steps.length - 1 ? (
+{currentStep < steps.length - 1 && (
                   <Button 
                     onClick={handleNext} 
                     className={`px-6 ${
@@ -801,24 +755,6 @@ export default function NewProposalPage() {
                     ) : (
                       <>
                         Next <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={handleSubmit} 
-                    disabled={isSubmitting}
-                    className="bg-emerald-600 hover:bg-emerald-700 px-6"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                        Creating Proposal
-                      </>
-                    ) : (
-                      <>
-                        <Check className="mr-2 h-4 w-4" />
-                        Create Proposal
                       </>
                     )}
                   </Button>

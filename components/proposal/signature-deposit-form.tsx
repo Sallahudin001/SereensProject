@@ -10,6 +10,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mail, Check, DollarSign, AlertTriangle, Info, FileText, Loader2 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { createProposal, markProposalAsSent } from "@/app/actions/proposal-actions"
+import { useRouter } from "next/navigation"
+import { useUser } from "@clerk/nextjs"
 
 interface SignatureDepositFormProps {
   formData: any
@@ -21,14 +23,12 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
   const [isComplete, setIsComplete] = useState(false)
   const [proposalId, setProposalId] = useState("")
   const [createdDate, setCreatedDate] = useState("")
+  const router = useRouter()
+  const { user } = useUser()
 
-  // Generate proposal ID and date on client side to prevent hydration mismatch
+  // Set proposal ID and date on client side to prevent hydration mismatch
   useEffect(() => {
-    if (!formData.proposalNumber) {
-      setProposalId(`PRO-${Math.floor(10000 + Math.random() * 90000)}`)
-    } else {
-      setProposalId(formData.proposalNumber)
-    }
+    setProposalId(formData.proposalNumber || "")
     setCreatedDate(new Date().toLocaleDateString())
   }, [formData.proposalNumber])
 
@@ -106,7 +106,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
             email: formData.customer.email,
             name: formData.customer.name,
             proposalId: proposalId.toString(),
-            proposalNumber: formData.proposalNumber || `PRO-${Math.floor(10000 + Math.random() * 90000)}`,
+            proposalNumber: formData.proposalNumber || proposalId,
             message: 'Your proposal is ready for review. Please click the button below to view and sign your proposal.',
             phone: formData.customer.phone || undefined,
           }),
@@ -149,6 +149,48 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
     }
   }
 
+  const handleSendAnotherProposal = () => {
+    // Clear localStorage for the current user - using the same keys as in the new proposal page
+    const userId = user?.id || null
+    
+    const getStorageKeys = (userId: string | null) => ({
+      FORM_DATA: `proposal_form_draft_${userId || 'anonymous'}`,
+      CURRENT_STEP: `proposal_current_step_${userId || 'anonymous'}`, 
+      DRAFT_ID: `proposal_draft_id_${userId || 'anonymous'}`,
+      TIMESTAMP: `proposal_draft_timestamp_${userId || 'anonymous'}`
+    })
+    
+    const STORAGE_KEYS = getStorageKeys(userId)
+    
+    // Clear all draft-related localStorage
+    try {
+      localStorage.removeItem(STORAGE_KEYS.FORM_DATA)
+      localStorage.removeItem(STORAGE_KEYS.CURRENT_STEP)
+      localStorage.removeItem(STORAGE_KEYS.DRAFT_ID)
+      localStorage.removeItem(STORAGE_KEYS.TIMESTAMP)
+      
+      // Also clear any old non-user-specific keys for backward compatibility
+      localStorage.removeItem('proposal_form_draft')
+      localStorage.removeItem('proposal_current_step')
+      localStorage.removeItem('proposal_draft_id')
+      localStorage.removeItem('proposal_draft_timestamp')
+    } catch (error) {
+      console.error('Error clearing draft from localStorage:', error)
+    }
+    
+    // Show success message
+    toast({
+      title: "Starting Fresh",
+      description: "Creating a new proposal with a fresh form.",
+      className: "bg-green-50 border-green-200"
+    })
+    
+    // Use window.location.href for a hard redirect with fresh parameter to ensure complete state reset
+    setTimeout(() => {
+      window.location.href = "/proposals/new?fresh=true"
+    }, 500) // Small delay to show the toast message
+  }
+
   if (isComplete) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -162,7 +204,7 @@ export default function SignatureDepositForm({ formData }: SignatureDepositFormP
               Your proposal has been delivered to {formData.customer.email}
             </p>
             <Button 
-              onClick={() => setIsComplete(false)} 
+              onClick={handleSendAnotherProposal} 
               variant="outline"
               className="border-green-300 text-green-700 hover:bg-green-50"
             >

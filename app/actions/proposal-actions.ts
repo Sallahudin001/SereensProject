@@ -334,7 +334,28 @@ export async function findExistingDraftProposal(customerEmail: string, userId: s
     return result.length > 0 ? result[0] : null;
   } catch (error) {
     console.error('Error finding existing draft:', error);
-    return null;
+    // If function has issues, fall back to direct query
+    try {
+      const fallbackResult = await executeQuery(
+        `
+        SELECT p.id as proposal_id, p.proposal_number
+        FROM proposals p
+        JOIN customers c ON p.customer_id = c.id
+        WHERE c.email = $1 
+        AND p.user_id = $2
+        AND p.status IN ('draft', 'draft_in_progress', 'draft_complete')
+        AND p.updated_at > NOW() - INTERVAL '2 hours'
+        ORDER BY p.updated_at DESC
+        LIMIT 1
+        `,
+        [customerEmail, userId]
+      );
+      
+      return fallbackResult.length > 0 ? fallbackResult[0] : null;
+    } catch (fallbackError) {
+      console.error("Fallback query also failed:", fallbackError);
+      return null;
+    }
   }
 }
 
@@ -460,6 +481,16 @@ export async function createProposal(data: any) {
           
           if (serviceResult.length > 0) {
             const serviceId = serviceResult[0].id
+            
+            // Verify proposal exists before inserting into proposal_services
+            const proposalExists = await executeQuery(
+              `SELECT id FROM proposals WHERE id = $1`,
+              [data.id]
+            )
+            
+            if (proposalExists.length === 0) {
+              throw new Error(`Proposal ID ${data.id} does not exist in proposals table`)
+            }
             
             await executeQuery(
               `INSERT INTO proposal_services (proposal_id, service_id) VALUES ($1, $2)`,
