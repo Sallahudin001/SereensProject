@@ -510,7 +510,7 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
         <div class="email-container">
           <div class="email-header">
                       <div class="logo-container">
-            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" class="logo" />
+            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
             </div>
             <h1 class="header-title">Appointment Scheduled</h1>
             <p class="header-subtitle">Your appointment has been confirmed</p>

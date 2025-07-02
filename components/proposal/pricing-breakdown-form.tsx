@@ -21,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -1645,11 +1646,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                                                   >
                                                     Reset to Default
                                                   </Button>
-                                                  <Button 
-                                                    onClick={() => document.querySelector<HTMLButtonElement>('[data-state="open"] button[data-state="closed"]')?.click()}
-                                                  >
-                                                    Apply
-                                                  </Button>
+                                                  <DialogClose asChild>
+                                                    <Button>
+                                                      Apply
+                                                    </Button>
+                                                  </DialogClose>
                                                 </div>
                                               </TabsContent>
                                               
@@ -1682,11 +1683,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                                                   >
                                                     Reset to Default
                                                   </Button>
-                                                  <Button 
-                                                    onClick={() => document.querySelector<HTMLButtonElement>('[data-state="open"] button[data-state="closed"]')?.click()}
-                                                  >
-                                                    Apply
-                                                  </Button>
+                                                  <DialogClose asChild>
+                                                    <Button>
+                                                      Apply
+                                                    </Button>
+                                                  </DialogClose>
                                                 </div>
                                               </TabsContent>
                                             </Tabs>

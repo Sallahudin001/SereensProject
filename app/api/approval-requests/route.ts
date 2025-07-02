@@ -155,72 +155,11 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Verify if the requestor exists in admin_users table
-      const requestorCheck = await executeQuery(`
-        SELECT id FROM admin_users WHERE id = $1
-      `, [requestorId]);
-
-      // If requestor doesn't exist, create a demo user with this ID
-      if (requestorCheck.length === 0) {
-        console.log(`Creating demo user for requestor ID ${requestorId}`);
-        // Create email separately to avoid parameter type confusion
-        const testEmail = `testrep${requestorId}@test.com`;
-        await executeQuery(`
-          INSERT INTO admin_users (
-            id, first_name, last_name, email, 
-            role, max_discount_percent, can_approve_discounts, is_active
-          ) VALUES (
-            $1, 'Sales', 'Rep', $2,
-            'rep', 10.0, false, true
-          ) ON CONFLICT (id) DO NOTHING
-        `, [requestorId, testEmail]);
-      }
+      // We'll use admin role users from the users table for approval,
+      // so we don't need a specific approver_id for the request creation
+      // The approval can be handled by any admin user
       
-      // Find available managers who can approve discounts
-      const managers = await executeQuery(`
-        SELECT id, first_name, last_name, email 
-        FROM admin_users 
-        WHERE role = 'manager' 
-        AND can_approve_discounts = true 
-        AND is_active = true
-        ORDER BY id
-        LIMIT 1
-      `)
-      
-      // If no managers exist, create a demo manager
-      if (managers.length === 0) {
-        console.log('Creating demo manager user');
-        await executeQuery(`
-          INSERT INTO admin_users (
-            id, first_name, last_name, email, 
-            role, max_discount_percent, can_approve_discounts, is_active
-          ) VALUES (
-            2, 'Demo', 'Manager', 'manager@evergreenenergy.com',
-            'manager', 25.0, true, true
-          ) ON CONFLICT (id) DO NOTHING
-        `);
-        
-        // Query again to get the manager
-        const newManagers = await executeQuery(`
-          SELECT id, first_name, last_name, email 
-          FROM admin_users 
-          WHERE role = 'manager' 
-          AND can_approve_discounts = true
-          LIMIT 1
-        `);
-        
-        if (newManagers.length === 0) {
-          return NextResponse.json({ error: 'Could not create or find a manager for approval' }, { status: 500 })
-        }
-        
-        var approverId = newManagers[0].id;
-        var manager = newManagers[0];
-      } else {
-        var approverId = managers[0].id;
-        var manager = managers[0];
-      }
-      
-      // Create approval request
+      // Create approval request (approver_id will be set when an admin approves it)
       const result = await executeQuery(`
         INSERT INTO approval_requests (
           proposal_id, requestor_id, approver_id, request_type, 
@@ -228,7 +167,7 @@ export async function POST(request: NextRequest) {
         ) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')
         RETURNING id, created_at
-      `, [safeProposalId, requestorId, approverId, requestType, originalValue, requestedValue, notes || ''])
+      `, [safeProposalId, requestorId, null, requestType, originalValue, requestedValue, notes || ''])
       
       // Update the proposal to reference this pending approval request
       await executeQuery(`
@@ -238,22 +177,31 @@ export async function POST(request: NextRequest) {
         WHERE id = $2
       `, [result[0].id, safeProposalId])
       
-      // Get requestor details for notification
-      const requestor = await executeQuery(`
-        SELECT first_name, last_name, email FROM admin_users WHERE id = $1
-      `, [requestorId])
+      // Get requestor details from the users table (current authenticated user)
+      const requestorUser = await executeQuery(`
+        SELECT name, email FROM users WHERE clerk_id = $1
+      `, [context.userId])
       
-      // Send notification to manager
+      let requestorName = `User #${requestorId}`;
+      let requestorEmail = '';
+      
+      if (requestorUser.length > 0) {
+        requestorName = requestorUser[0].name || requestorName;
+        requestorEmail = requestorUser[0].email || '';
+      }
+      
+      // Send notification to admins (not managers from admin_users table)
       const notificationData = {
         requestId: result[0].id,
-        requestorName: requestor.length > 0 ? `${requestor[0].first_name} ${requestor[0].last_name}` : `User #${requestorId}`,
+        requestorName: requestorName,
+        requestorEmail: requestorEmail,
         proposalId: safeProposalId,
         requestType,
         requestedValue,
         discountPercent,
         userMaxPercent,
-        managerEmail: manager.email,
-        managerName: `${manager.first_name} ${manager.last_name}`
+        managerEmail: '', // Will be populated with admin emails in notification service
+        managerName: 'Admin'
       }
       
       // Send notification using the notification service
@@ -274,8 +222,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         success: true, 
         requestId: result[0].id,
-        message: 'Approval request sent to manager',
-        approverName: `${manager.first_name} ${manager.last_name}`
+        message: 'Approval request sent to admins',
+        approverName: 'Admin Team'
       })
     } catch (dbError) {
       console.error('Database error creating approval request:', dbError);

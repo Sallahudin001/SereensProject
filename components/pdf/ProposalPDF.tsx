@@ -23,8 +23,8 @@ const styles = StyleSheet.create({
 
   logoContainer: {
     alignItems: "flex-start",
-    marginBottom: 12,
-
+    marginBottom: 20,
+    
   },
 
   logo: {

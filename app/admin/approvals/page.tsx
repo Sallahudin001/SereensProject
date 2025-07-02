@@ -267,8 +267,7 @@ export default function ApprovalsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           action: approvalAction, 
-          notes: approvalNotes,
-          approverId: currentUserDbId
+          notes: approvalNotes
         })
       })
 

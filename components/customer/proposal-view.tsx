@@ -872,28 +872,24 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
       >
         <Card className="shadow-2xl rounded-xl overflow-hidden bg-white">
           <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-slate-100 p-2 rounded-lg shadow-sm">
-                  <Image src="/sereenh-04.png" alt="Evergreen Home Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
-                </div>
-                <div>
-                    <CardTitle className="text-3xl sm:text-4xl font-bold">Home Improvement Proposal</CardTitle>
-                    <CardDescription className="text-green-100 text-sm sm:text-base">Prepared for: {proposal?.customer?.name || 'Valued Customer'}</CardDescription>
-                </div>
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="">
+                {/* <Image src="/sereenh-04.png" alt="Evergreen Home Upgrades Logo" width={120} height={150} className="rounded-sm mx-auto" />  */}
               </div>
-              <div className="text-right mt-4 sm:mt-0 self-start sm:self-center">
+
+              <CardTitle className="text-3xl sm:text-3xl font-bold mt-2">Home Improvement Proposal</CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">Prepared for: {proposal?.customer?.name || 'Valued Customer'}</CardDescription>
+              <div className="mt-2">
                 <p className="text-sm font-medium">Proposal #{proposal?.proposalNumber}</p>
                 <p className="text-xs">Date: {formatDate(proposal?.createdAt)}</p>
                 {isRejected && (
                   <p className="text-xs font-semibold text-red-200 bg-red-700 px-2 py-1 rounded mt-1 inline-block">Status: Rejected</p>
                 )}
-                 {proposal?.status === 'signed' && (
+                {proposal?.status === 'signed' && (
                   <p className="text-xs font-semibold text-emerald-200 bg-emerald-700 px-2 py-1 rounded mt-1 inline-block">Status: Signed</p>
                 )}
               </div>
             </div>
-            
             {/* PDF Actions Section */}
             <div className="mt-6 pt-4 border-t border-green-400/30">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1927,20 +1923,72 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
               </AnimatePresence>
             </CardContent>
              {/* Footer with company info */}
-            <CardFooter className="bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left rounded-b-xl">
-                <div className="container mx-auto max-w-5xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
-                    <div className="sm:col-span-1">
-                        <Image src="/sereenh-04.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
-                    </div>
-                    <div className="sm:col-span-2 text-sm">
-                        <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
-                        <p>(408) 333-9831</p>
-                        <p>info@evergreenenergy.io</p>
-                        <p>www.evergreenenergy.io</p>
-                        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
-                    </div>
+             <CardFooter className="bg-gray-900 text-gray-300 py-12 relative overflow-hidden rounded-b-xl">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none select-none">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                    }}
+                  />
                 </div>
-            </CardFooter>
+                <div className="container mx-auto max-w-6xl px-6 relative z-10">
+                  <div className="grid md:grid-cols-2 gap-12 items-center">
+                    {/* Logo & Company Info */}
+                    <div className="flex items-center gap-4 justify-center md:justify-start">
+                      <div className="p-2 rounded-xl bg-white shadow-lg">
+                        <Image
+                          src="/sereenh-04.png"
+                          alt="Evergreen Logo"
+                          width={320}
+                          height={120}
+                          className="h-16 w-auto object-contain"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-xl text-white mb-1">Evergreen Home Upgrades</h3>
+                        <p className="text-emerald-400 text-sm font-medium">Powering home improvement sales</p>
+                      </div>
+                    </div>
+                    {/* Contact Info */}
+                    <div className="space-y-2 text-center md:text-right">
+                      <h4 className="text-lg font-bold text-white mb-2">Get In Touch</h4>
+                      <div className="space-y-1 text-gray-300">
+                        <p className="flex items-center gap-2 justify-center md:justify-end">
+                          <span className="text-green-400">📞</span>
+                          <a href="tel:4083339831" className="hover:text-white transition-colors duration-200">
+                            (408) 333-9831
+                          </a>
+                        </p>
+                        <p className="flex items-center gap-2 justify-center md:justify-end">
+                          <span className="text-green-400">✉️</span>
+                          <a href="mailto:info@evergreenenergy.io" className="hover:text-white transition-colors duration-200">
+                            info@evergreenenergy.io
+                          </a>
+                        </p>
+                        <p className="flex items-center gap-2 justify-center md:justify-end">
+                          <span className="text-green-400">🌐</span>
+                          <a href="https://www.evergreenenergy.io" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-200">
+                            www.evergreenenergy.io
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Divider */}
+                  <div className="border-t border-gray-800 my-8"></div>
+                  {/* Copyright */}
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">
+                      &copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.
+                    </p>
+                  </div>
+                </div>
+              </CardFooter>
+
+
+         
           </Tabs>
         </Card>
       </motion.div>
