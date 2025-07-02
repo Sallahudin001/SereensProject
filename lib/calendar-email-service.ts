@@ -509,8 +509,8 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
       <div class="email-wrapper">
         <div class="email-container">
           <div class="email-header">
-            <div class="logo-container">
-              <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" class="logo" />
+                      <div class="logo-container">
+            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
             </div>
             <h1 class="header-title">Appointment Scheduled</h1>
             <p class="header-subtitle">Your appointment has been confirmed</p>
@@ -561,7 +561,7 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
               <h3>👨‍💼 Your Representative</h3>
               <div class="rep-name">${data.repName}</div>
               <div class="rep-info">📧 Email: <a href="mailto:${data.repEmail}" class="rep-email">${data.repEmail}</a></div>
-              <div class="rep-info">📞 Phone: (408) 826-7377</div>
+              <div class="rep-info">📞 Phone: (408) 333-9831</div>
               <div class="rep-note">
                 💬 You can reply directly to this email to contact ${data.repName} with any questions.
               </div>
@@ -578,9 +578,9 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
           
           <div class="email-footer">
             <div class="contact-info">
-              <div><strong class="contact-icon">📧</strong> info@evergreenenergyupgrades.com</div>
-              <div><strong class="contact-icon">📞</strong> Cell: (408) 826-7377 | Office: (408) 333-9831</div>
-              <div><strong class="contact-icon">🌐</strong> www.evergreenenergyupgrades.com</div>
+              <div><strong class="contact-icon">📧</strong> info@evergreenenergy.io</div>
+              <div><strong class="contact-icon">📞</strong> (408) 333-9831</div>
+              <div><strong class="contact-icon">🌐</strong> www.evergreenenergy.io</div>
             </div>
             <div class="copyright">
               © ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.<br>
@@ -746,7 +746,7 @@ function generateReminderEmailHtml(data: ReminderEmailData): string {
           <p>Please log into your calendar dashboard to mark this reminder as complete or take the necessary action.</p>
           
           <div style="text-align: center; margin: 20px 0;">
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/calendar" 
+            <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/calendar" 
                style="display: inline-block; background-color: #059669; color: white; padding: 12px 25px; 
                       text-decoration: none; border-radius: 5px; font-weight: bold;">
               Open Calendar Dashboard
@@ -802,9 +802,8 @@ function generateCustomEmailHtml(data: {
           border-bottom: 3px solid #059669;
         }
         .logo {
-          color: #059669;
-          font-size: 24px;
-          font-weight: bold;
+          text-align: center;
+          margin-bottom: 15px;
         }
         .content {
           padding: 20px 0;
@@ -829,7 +828,7 @@ function generateCustomEmailHtml(data: {
     <body>
       <div class="container">
         <div class="header">
-          <div class="logo">Evergreen Home Upgrades</div>
+          <div class="logo"><img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" style="height: 60px;" /></div>
           <h2 style="margin: 10px 0; color: #333;">Message from ${data.repName}</h2>
         </div>
         

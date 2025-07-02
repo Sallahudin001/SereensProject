@@ -872,28 +872,24 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
       >
         <Card className="shadow-2xl rounded-xl overflow-hidden bg-white">
           <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-slate-100 p-2 rounded-lg shadow-sm">
-                  <Image src="/newlogo.png" alt="Evergreen Home Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
-                </div>
-                <div>
-                    <CardTitle className="text-3xl sm:text-4xl font-bold">Home Improvement Proposal</CardTitle>
-                    <CardDescription className="text-green-100 text-sm sm:text-base">Prepared for: {proposal?.customer?.name || 'Valued Customer'}</CardDescription>
-                </div>
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="">
+                {/* <Image src="/sereenh-04.png" alt="Evergreen Home Upgrades Logo" width={120} height={150} className="rounded-sm mx-auto" />  */}
               </div>
-              <div className="text-right mt-4 sm:mt-0 self-start sm:self-center">
+
+              <CardTitle className="text-3xl sm:text-3xl font-bold mt-2">Home Improvement Proposal</CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">Prepared for: {proposal?.customer?.name || 'Valued Customer'}</CardDescription>
+              <div className="mt-2">
                 <p className="text-sm font-medium">Proposal #{proposal?.proposalNumber}</p>
                 <p className="text-xs">Date: {formatDate(proposal?.createdAt)}</p>
                 {isRejected && (
                   <p className="text-xs font-semibold text-red-200 bg-red-700 px-2 py-1 rounded mt-1 inline-block">Status: Rejected</p>
                 )}
-                 {proposal?.status === 'signed' && (
+                {proposal?.status === 'signed' && (
                   <p className="text-xs font-semibold text-emerald-200 bg-emerald-700 px-2 py-1 rounded mt-1 inline-block">Status: Signed</p>
                 )}
               </div>
             </div>
-            
             {/* PDF Actions Section */}
             <div className="mt-6 pt-4 border-t border-green-400/30">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -952,6 +948,9 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             <div><strong>Homeowner:</strong> {proposal?.customer?.name || 'N/A'}</div>
                             <div><strong>Address:</strong> {proposal?.customer?.address || 'N/A'}</div>
                             <div><strong>Proposal Date:</strong> {formatDate(proposal?.createdAt)}</div>
+                            <div><strong>Sales Representative:</strong> {proposal?.rep_first_name && proposal?.rep_last_name ? 
+                              `${proposal.rep_first_name} ${proposal.rep_last_name}` : 'N/A'}</div>
+                            <div><strong>Rep Phone:</strong> {proposal?.rep_phone || 'N/A'}</div>
                         </div>
                     </motion.div>
 
@@ -1069,7 +1068,6 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                 {service === 'hvac' && (
                                   <div className="space-y-2">
                                     <p><span className="font-medium">System Type:</span> {productData.systemType?.replace(/-/g, " ")?.replace(/\b\w/g, (c: string) => c.toUpperCase()) || 'N/A'}</p>
-                                    <p><span className="font-medium">SEER Rating:</span> {productData.seerRating || 'N/A'}</p>
                                     {productData.tonnage && <p><span className="font-medium">System Size:</span> {productData.tonnage} Tons</p>}
                                     
                                     {/* HVAC Costs Section - Show only if showPricing is enabled */}
@@ -1271,6 +1269,153 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                         })}
                       </div>
                     </motion.div>
+
+                    {/* EXCLUSIVE BONUS OFFERS SECTION - Positive and welcoming */}
+                    {specialOffers && specialOffers.length > 0 && (
+                      <motion.div 
+                        variants={fadeIn}
+                        className="pt-8 border-t border-gray-200 mb-8"
+                      >
+                        <motion.div 
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5 }}
+                          className="relative"
+                        >
+                          <div className="border-2 border-emerald-300 rounded-xl shadow-lg bg-white overflow-hidden">
+                            {/* Header with welcoming styling */}
+                            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 p-6 text-white">
+                              <div className="text-center">
+                                <div className="flex items-center justify-center gap-3 mb-2">
+                                  <span className="text-2xl">🎁</span>
+                                  <h3 className="text-2xl sm:text-3xl font-bold tracking-wide">
+                                    Exclusive Bonus Offers
+                                  </h3>
+                                  <span className="text-2xl">🌟</span>
+                                </div>
+                                <p className="text-emerald-100 text-lg font-medium">
+                                  We're excited to include these special benefits just for you!
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Offers content */}
+                            <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50">
+                              <div className="space-y-6">
+                                {specialOffers.map((offer: any, index: number) => {
+                                  const timer = offerTimers.get(offer.id)
+                                  
+                                  return (
+                                    <motion.div 
+                                      key={index}
+                                      initial={{ opacity: 0, x: -10 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                                      className="bg-white border-2 border-emerald-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow"
+                                    >
+                                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-3 mb-2">
+                                            <span className="text-xl">🎉</span>
+                                            <h4 className="text-xl font-semibold text-emerald-900">
+                                              {offer.name}
+                                            </h4>
+                                            <span className="text-xl">💝</span>
+                                          </div>
+                                          <p className="text-emerald-800 font-medium mb-3">{offer.description}</p>
+                                          
+                                          <div className="flex flex-wrap gap-2">
+                                            <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm font-medium">
+                                              {offer.category.charAt(0).toUpperCase() + offer.category.slice(1)}
+                                            </span>
+                                            <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-full text-sm font-semibold shadow-sm">
+                                              {offer.discount_amount ? `$${offer.discount_amount} Value` : 
+                                               offer.discount_percentage ? `${offer.discount_percentage}% Savings` :
+                                               offer.free_product_service ? `Complimentary: ${offer.free_product_service}` : "Special Bonus"}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Gentle availability indicator */}
+                                        <div className="text-center lg:text-right">
+                                          <div className="bg-gradient-to-br from-amber-400 to-orange-400 text-white p-4 rounded-lg shadow-sm">
+                                            <div className="text-amber-50 text-sm font-medium mb-1">
+                                              {timer ? "🕐 Available until:" : "⭐ Special Offer"}
+                                            </div>
+                                            <div className="text-lg lg:text-xl font-semibold">
+                                              {timer ? `${timer.hours}h ${timer.minutes}m ${timer.seconds}s remaining` : "Today Only"}
+                                            </div>
+                                            {timer && (
+                                              <div className="text-amber-100 text-xs font-medium mt-1">
+                                                Reserve your savings
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </motion.div>
+                                  )
+                                })}
+                              </div>
+                              
+                              {/* Positive call to action */}
+                              <div className="mt-6 text-center p-4 bg-gradient-to-r from-emerald-100 to-teal-100 rounded-lg border border-emerald-200">
+                                <p className="text-lg font-semibold text-emerald-900 mb-2">
+                                  🎊 Good news! These bonuses are already included in your proposal
+                                </p>
+                                <p className="text-emerald-700 font-medium">
+                                  Moving forward today ensures you'll receive all these valuable extras
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    )}
+
+                    {/* Bundle Discounts - Now separated and less prominent */}
+                    {bundleRules && bundleRules.length > 0 && (
+                      <motion.div 
+                        variants={fadeIn}
+                        className="mb-8"
+                      >
+                        <div className="border border-green-300 rounded-lg overflow-hidden shadow-md">
+                          <div className="bg-green-100 border-b border-green-300 p-4">
+                            <div className="flex items-center gap-2">
+                              <Award className="h-5 w-5 text-green-600" />
+                              <h4 className="text-green-900 text-xl font-bold">🎉 Bundle Savings Applied!</h4>
+                            </div>
+                            <p className="text-green-700 mt-1 text-sm">You're already saving money by combining multiple services.</p>
+                          </div>
+                          <div className="bg-green-50/60">
+                            {/* Use Set to deduplicate bundle names */}
+                            {Array.from(new Set(bundleRules.map(bundle => bundle.name))).map((uniqueBundleName: string) => {
+                              const bundle = bundleRules.find(b => b.name === uniqueBundleName);
+                              if (!bundle) return null;
+                              
+                              return (
+                                <div key={uniqueBundleName} className="p-4 border-b border-green-200 last:border-b-0">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <h5 className="text-green-900 font-semibold text-lg">{bundle.name}</h5>
+                                      <p className="text-green-800">{bundle.bonus_message}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
+                                        Bundle Discount
+                                      </span>
+                                      <span className="px-2 py-1 bg-green-200 text-green-900 rounded-md text-xs font-medium font-bold">
+                                        ${bundle.discount_value} Saved
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
 
                     {/* Pricing Section */}
                     <motion.div
@@ -1513,103 +1658,6 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             )}
                         </CardContent>
                       </Card>
-
-                       {/* Combined Offers Section - Bundle Discounts and Time-Sensitive Offers */} 
-                       {((bundleRules && bundleRules.length > 0) || (specialOffers && specialOffers.length > 0)) && (
-                            <motion.div 
-                                variants={fadeIn}
-                                className="mt-6 space-y-4"
-                            >
-                                {/* Bundle Discounts - Always show if they exist, but deduplicate */}
-                                {bundleRules && bundleRules.length > 0 && (
-                                    <div className="border border-green-300 rounded-lg overflow-hidden">
-                                        <div className="bg-green-100 border-b border-green-300 p-4">
-                                            <div className="flex items-center gap-2">
-                                                <Award className="h-5 w-5 text-green-600" />
-                                                <h4 className="text-green-900 text-xl font-bold">🎉 Bundle Savings Applied!</h4>
-                                            </div>
-                                            <p className="text-green-700 mt-1 text-sm">You're already saving money by combining multiple services.</p>
-                                        </div>
-                                        <div className="bg-green-50/60">
-                                            {/* Use Set to deduplicate bundle names */}
-                                            {Array.from(new Set(bundleRules.map(bundle => bundle.name))).map((uniqueBundleName: string) => {
-                                                const bundle = bundleRules.find(b => b.name === uniqueBundleName);
-                                                if (!bundle) return null;
-                                                
-                                                return (
-                                                    <div key={uniqueBundleName} className="p-4 border-b border-green-200 last:border-b-0">
-                                                    <div className="flex items-center justify-between">
-                                                        <div>
-                                                            <h5 className="text-green-900 font-semibold text-lg">{bundle.name}</h5>
-                                                            <p className="text-green-800">{bundle.bonus_message}</p>
-                                                        </div>
-                                                        <div className="flex gap-2">
-                                                            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
-                                                                Bundle Discount
-                                                            </span>
-                                                            <span className="px-2 py-1 bg-green-200 text-green-900 rounded-md text-xs font-medium font-bold">
-                                                                ${bundle.discount_value} Saved
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Time-Sensitive Offers - Only show if rep selected them */}
-                                {specialOffers && specialOffers.length > 0 && (
-                                    <div className="border border-amber-300 rounded-lg overflow-hidden">
-                                        <div className="bg-amber-100 border-b border-amber-300 p-4">
-                                            <div className="flex items-center gap-2">
-                                                <Clock className="h-5 w-5 text-amber-600" />
-                                                <h4 className="text-amber-900 text-xl font-bold">⏰ Limited Time Offers</h4>
-                                            </div>
-                                            <p className="text-amber-700 mt-1 text-sm">Act fast! These exclusive offers won't last long.</p>
-                                        </div>
-                                        <div className="bg-amber-50/60">
-                                            {specialOffers.map((offer: any, index: number) => {
-                                                const timer = offerTimers.get(offer.id)
-                                                
-                                                return (
-                                                    <div key={index} className="p-4 border-b border-amber-200 last:border-b-0">
-                                                        <div className="mb-2">
-                                                            <h5 className="text-amber-900 font-semibold text-lg">{offer.name}</h5>
-                                                            <p className="text-amber-800">{offer.description}</p>
-                                                        </div>
-                                                        
-                                                        <div className="flex justify-between items-center mt-3">
-                                                            <div className="flex gap-2">
-                                                                <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded-md text-xs font-medium">
-                                                                    {offer.category}
-                                                                </span>
-                                                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-xs font-medium">
-                                                                    {offer.discount_amount ? `$${offer.discount_amount} off` : 
-                                                                     offer.discount_percentage ? `${offer.discount_percentage}% off` :
-                                                                     offer.free_product_service ? `FREE: ${offer.free_product_service}` : "Special Offer"}
-                                                                </span>
-                                                            </div>
-                                                            
-                                                            <div className="text-right">
-                                                                <div className="text-xs text-amber-700">
-                                                                    {timer ? "Expires in:" : "Limited Time"}
-                                                                </div>
-                                                                <div className="text-amber-900 font-mono font-bold">
-                                                                    {timer ? `${timer.hours}h ${timer.minutes}m ${timer.seconds}s` : "Act Now"}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
-
                     </motion.div>
 
                     {!readOnly && !isRejected && proposal?.status !== 'signed' && (
@@ -1875,20 +1923,72 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
               </AnimatePresence>
             </CardContent>
              {/* Footer with company info */}
-            <CardFooter className="bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left rounded-b-xl">
-                <div className="container mx-auto max-w-5xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
-                    <div className="sm:col-span-1">
-                        <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
-                    </div>
-                    <div className="sm:col-span-2 text-sm">
-                        <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
-                        <p>C: (408) 826-7377 | O: (408)333-9831</p>
-                        <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
-                        <p>www.evergreenenergy.io</p>
-                        <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
-                    </div>
+             <CardFooter className="bg-gray-900 text-gray-300 py-12 relative overflow-hidden rounded-b-xl">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none select-none">
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23ffffff' fillOpacity='0.1'%3E%3Ccircle cx='30' cy='30' r='1'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                    }}
+                  />
                 </div>
-            </CardFooter>
+                <div className="container mx-auto max-w-6xl px-6 relative z-10">
+                  <div className="grid md:grid-cols-2 gap-12 items-center">
+                    {/* Logo & Company Info */}
+                    <div className="flex items-center gap-4 justify-center md:justify-start">
+                      <div className="p-2 rounded-xl bg-white shadow-lg">
+                        <Image
+                          src="/sereenh-04.png"
+                          alt="Evergreen Logo"
+                          width={320}
+                          height={120}
+                          className="h-16 w-auto object-contain"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-xl text-white mb-1">Evergreen Home Upgrades</h3>
+                        <p className="text-emerald-400 text-sm font-medium">Powering home improvement sales</p>
+                      </div>
+                    </div>
+                    {/* Contact Info */}
+                    <div className="space-y-2 text-center md:text-right">
+                      <h4 className="text-lg font-bold text-white mb-2">Get In Touch</h4>
+                      <div className="space-y-1 text-gray-300">
+                        <p className="flex items-center gap-2 justify-center md:justify-end">
+                          <span className="text-green-400">📞</span>
+                          <a href="tel:4083339831" className="hover:text-white transition-colors duration-200">
+                            (408) 333-9831
+                          </a>
+                        </p>
+                        <p className="flex items-center gap-2 justify-center md:justify-end">
+                          <span className="text-green-400">✉️</span>
+                          <a href="mailto:info@evergreenenergy.io" className="hover:text-white transition-colors duration-200">
+                            info@evergreenenergy.io
+                          </a>
+                        </p>
+                        <p className="flex items-center gap-2 justify-center md:justify-end">
+                          <span className="text-green-400">🌐</span>
+                          <a href="https://www.evergreenenergy.io" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors duration-200">
+                            www.evergreenenergy.io
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Divider */}
+                  <div className="border-t border-gray-800 my-8"></div>
+                  {/* Copyright */}
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">
+                      &copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.
+                    </p>
+                  </div>
+                </div>
+              </CardFooter>
+
+
+         
           </Tabs>
         </Card>
       </motion.div>

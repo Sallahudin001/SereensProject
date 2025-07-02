@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -267,8 +267,7 @@ export default function ApprovalsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           action: approvalAction, 
-          notes: approvalNotes,
-          approverId: currentUserDbId
+          notes: approvalNotes
         })
       })
 
@@ -382,30 +381,34 @@ export default function ApprovalsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Discount Approvals</h1>
-          <p className="text-muted-foreground">Review and approve discount requests from team members</p>
-        </div>
-        
-        {/* Quick Stats */}
-        <div className="flex gap-2">
-          <Badge variant="outline" className="text-lg p-2 bg-yellow-50 border-yellow-200">
-            <Clock className="w-4 h-4 mr-1" />
-            {pendingCount} Pending
-          </Badge>
-          <Badge variant="outline" className="text-lg p-2 bg-green-50 border-green-200">
-            <CheckCircle className="w-4 h-4 mr-1" />
-            {approvedCount} Approved
-          </Badge>
-          <Badge variant="outline" className="text-lg p-2 bg-red-50 border-red-200">
-            <XCircle className="w-4 h-4 mr-1" />
-            {rejectedCount} Rejected
-          </Badge>
-        </div>
-      </div>
+    <div className="flex-1 space-y-6 p-6">
+      {/* Header Card */}
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-white border-0">
+        <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+            <div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight">Discount Approvals</CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">
+                Review and approve discount requests from team members
+              </CardDescription>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Badge variant="outline" className="text-lg p-2 bg-white/10 border-white/20 text-white">
+                <Clock className="w-4 h-4 mr-1" />
+                {pendingCount} Pending
+              </Badge>
+              <Badge variant="outline" className="text-lg p-2 bg-white/10 border-white/20 text-white">
+                <CheckCircle className="w-4 h-4 mr-1" />
+                {approvedCount} Approved
+              </Badge>
+              <Badge variant="outline" className="text-lg p-2 bg-white/10 border-white/20 text-white">
+                <XCircle className="w-4 h-4 mr-1" />
+                {rejectedCount} Rejected
+              </Badge>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       {/* Filters */}
       <Card>

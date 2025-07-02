@@ -22,9 +22,9 @@ export async function GET(request: NextRequest) {
     let query = `
       SELECT 
         a.*,
-        c.name as customer_name,
-        c.email as customer_email,
-        c.phone as customer_phone,
+        COALESCE(c.name, a.custom_contact_name) as customer_name,
+        COALESCE(c.email, a.custom_contact_email) as customer_email,
+        COALESCE(c.phone, a.custom_contact_phone) as customer_phone,
         u.name as user_name
       FROM appointments a
       LEFT JOIN customers c ON a.customer_id = c.id
@@ -98,7 +98,10 @@ export async function POST(request: NextRequest) {
       customer_id,
       location,
       appointment_type = 'consultation',
-      meeting_notes
+      meeting_notes,
+      custom_contact_name,
+      custom_contact_email,
+      custom_contact_phone
     } = body
 
     // Validate required fields
@@ -143,18 +146,20 @@ export async function POST(request: NextRequest) {
     const result = await executeQuery(`
       INSERT INTO appointments (
         title, description, start_time, end_time, customer_id, user_id, 
-        location, appointment_type, meeting_notes, status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'scheduled')
+        location, appointment_type, meeting_notes, status,
+        custom_contact_name, custom_contact_email, custom_contact_phone
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'scheduled', $10, $11, $12)
       RETURNING *
     `, [
       title, description, start_time, end_time, customer_id, userId,
-      location, appointment_type, meeting_notes
+      location, appointment_type, meeting_notes,
+      custom_contact_name, custom_contact_email, custom_contact_phone
     ])
 
     const appointment = result[0]
 
-    // If customer_id is provided, log activity and send email notification
-    if (customer_id) {
+    // If customer_id is provided OR custom contact email exists, log activity and send email notification
+    if (customer_id || custom_contact_email) {
       try {
         await executeQuery(`
           INSERT INTO activity_log (
@@ -176,13 +181,26 @@ export async function POST(request: NextRequest) {
 
       // Send email notification to customer
       try {
-        // Get customer details
-        const customerResult = await executeQuery(`
-          SELECT name, email FROM customers WHERE id = $1
-        `, [customer_id])
+        let customerName, customerEmail
+        
+        if (customer_id) {
+          // Get customer details from database
+          const customerResult = await executeQuery(`
+            SELECT name, email FROM customers WHERE id = $1
+          `, [customer_id])
 
-        if (customerResult.length > 0 && customerResult[0].email) {
-          const customer = customerResult[0]
+          if (customerResult.length > 0 && customerResult[0].email) {
+            const customer = customerResult[0]
+            customerName = customer.name
+            customerEmail = customer.email
+          }
+        } else if (custom_contact_email) {
+          // Use custom contact details
+          customerName = custom_contact_name || 'Customer'
+          customerEmail = custom_contact_email
+        }
+
+        if (customerEmail) {
           
           // Get rep details from Clerk
           const repDetails = await getUserDetailsFromClerk([userId])
@@ -201,8 +219,8 @@ export async function POST(request: NextRequest) {
 
           // Send customer notification email
           const emailResult = await sendAppointmentNotificationToCustomer({
-            customerEmail: customer.email,
-            customerName: customer.name,
+            customerEmail: customerEmail,
+            customerName: customerName,
             repName,
             repEmail,
             appointmentTitle: title,

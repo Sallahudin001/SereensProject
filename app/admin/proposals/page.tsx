@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -194,7 +194,7 @@ export default function AllProposalsPage() {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="flex-1 space-y-6 p-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-48 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -209,31 +209,24 @@ export default function AllProposalsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="flex items-center justify-between">
+    <div className="flex-1 space-y-6 p-6">
+      {/* Header Card */}
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-white border-0">
+        <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">All Proposals</h1>
-            <p className="text-gray-600 mt-1">
+              <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight">All Proposals</CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">
               Comprehensive view of all proposals created by sales representatives
-            </p>
+              </CardDescription>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </CardHeader>
+      </Card>
 
       {/* Stats Cards */}
       {stats && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -291,7 +284,7 @@ export default function AllProposalsPage() {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       )}
 
       {/* Filters and Search */}

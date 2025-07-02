@@ -56,12 +56,24 @@ export function AdminSidebar() {
         <div className="flex items-center flex-shrink-0 px-4 mb-5">
           <div className="relative h-8 w-40">
             <Image
-              src="/images/evergreen-logo.png"
+              src="/sereenh-04.png"
               alt="Evergreen Home Upgrades"
               fill
               className="object-contain"
               priority
             />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              {/* Logo removed */}
+            </div>
+            <div>
+              <h2 className="font-semibold text-lg">Admin Panel</h2>
+              <p className="text-sm text-muted-foreground">Evergreen Home Upgrades</p>
+            </div>
           </div>
         </div>
 

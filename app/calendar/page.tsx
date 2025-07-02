@@ -4,7 +4,9 @@ import DashboardLayout from "@/components/dashboard-layout"
 export default function CalendarPage() {
   return (
     <DashboardLayout>
-      <CalendarDashboard />
+      <div className="flex-1 space-y-6 p-6">
+        <CalendarDashboard />
+      </div>
     </DashboardLayout>
   )
 } 

@@ -161,30 +161,39 @@ export function CalendarDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Calendar & Reminders</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage appointments, follow-ups, and pipeline notes for your customers.
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button 
-            onClick={() => setShowReminderForm(true)}
-            variant="outline"
-          >
-            <Bell className="mr-2 h-4 w-4" />
-            Add Reminder
-          </Button>
-          <Button onClick={() => setShowAppointmentForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Schedule Appointment
-          </Button>
-        </div>
-      </div>
+    <div>
+      {/* Header Card */}
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-white border-0 mb-6">
+        <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+            <div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight flex items-center">
+                <CalendarClock className="w-8 h-8 mr-3" />
+                Calendar & Reminders
+              </CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">
+                Manage appointments, follow-ups, and pipeline notes for your customers
+              </CardDescription>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button 
+                onClick={() => setShowReminderForm(true)}
+                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-200 w-full sm:w-auto"
+              >
+                <Bell className="mr-2 h-4 w-4" />
+                Add Reminder
+              </Button>
+              <Button 
+                onClick={() => setShowAppointmentForm(true)}
+                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-200 w-full sm:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Schedule Appointment
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       {/* Due Reminders Alert */}
       {dueReminders.length > 0 && (

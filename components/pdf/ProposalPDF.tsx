@@ -23,13 +23,13 @@ const styles = StyleSheet.create({
 
   logoContainer: {
     alignItems: "flex-start",
-    marginBottom: 8,
-
+    marginBottom: 20,
+    
   },
 
   logo: {
-    width: 250,
-    height: 150,
+    width: 160,
+    height: 60,
     objectFit: "contain",
    
   },
@@ -863,7 +863,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Contract Header */}
         <View style={styles.contractHeader}>
           <View style={styles.logoContainer}>
-            <Image style={styles.logo} src="public\newlogo.png" />
+              {/* Logo removed - react-pdf doesn't support SVG files */}
+              <Image style={styles.logo} src="public\sereenh-04.png" />
           </View>
           <Text style={styles.contractTitle}>Evergreen Home Upgrades Services Agreement</Text>
         
@@ -892,8 +893,8 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
               <Text style={styles.partyTitle}>CONTRACTOR:</Text>
               <Text style={styles.partyDetail}>Evergreen Home Upgrades</Text>
               <Text style={styles.partyDetail}>License #: 1116631</Text>
-              <Text style={styles.partyDetail}>Phone: (408) 828-7377</Text>
-              <Text style={styles.partyDetail}>Email: info@evergreenergy.io</Text>
+              <Text style={styles.partyDetail}>Phone: (408) 333-9831</Text>
+              <Text style={styles.partyDetail}>Email: info@evergreenenergy.io</Text>
             </View>
             <View style={styles.partyColumn}>
               <Text style={styles.partyTitle}>HOMEOWNER:</Text>
@@ -901,6 +902,17 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
               <Text style={styles.partyDetail}>{proposal?.customer?.address || "N/A"}</Text>
               <Text style={styles.partyDetail}>Phone: {proposal?.customer?.phone || "N/A"}</Text>
               <Text style={styles.partyDetail}>Email: {proposal?.customer?.email || "N/A"}</Text>
+            </View>
+            <View style={styles.partyColumn}>
+              <Text style={styles.partyTitle}>SALES REPRESENTATIVE:</Text>
+              <Text style={styles.partyDetail}>
+                {proposal?.rep_first_name && proposal?.rep_last_name 
+                  ? `${proposal.rep_first_name} ${proposal.rep_last_name}` 
+                  : "N/A"}
+              </Text>
+              <Text style={styles.partyDetail}>Phone: {proposal?.rep_phone || "N/A"}</Text>
+              <Text style={styles.partyDetail}>{/* Additional rep info can go here */}</Text>
+              <Text style={styles.partyDetail}>{/* Space for alignment */}</Text>
             </View>
           </View>
         </View>
@@ -910,7 +922,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
 
@@ -1477,7 +1489,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
 
@@ -1664,7 +1676,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
 
@@ -1957,7 +1969,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
 
@@ -2175,7 +2187,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer for terms page */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
 
@@ -2285,7 +2297,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
         <Text style={styles.pageNumber}>Page 6 of 10</Text>
@@ -2391,7 +2403,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
         <Text style={styles.pageNumber}>Page 7 of 10</Text>
@@ -2483,7 +2495,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
         <Text style={styles.pageNumber}>Page 8 of 10</Text>
@@ -2602,7 +2614,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
         
@@ -2735,7 +2747,7 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
 
         <View style={styles.footer}>
           <Text>
-            Evergreen Home Upgrades | License #1116631 | (408) 828-7377 | info@evergreenergy.io | www.evergreenenergy.io
+            Evergreen Home Upgrades | License #1116631 | (408) 333-9831 | info@evergreenenergy.io | www.evergreenenergy.io
           </Text>
         </View>
         <Text style={styles.pageNumber}>Page 10 of 10</Text>

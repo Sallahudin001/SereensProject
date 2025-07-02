@@ -9,6 +9,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import { Info } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from "@/components/ui/tooltip"
 
 interface HVACData {
   systemType: string
@@ -48,7 +55,7 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
   ]
 
   const tonnageOptions = ["2", "2.5", "3", "3.5", "4", "5"]
-  const seerOptions = ["14", "16", "18", "20", "22"]
+  const seerOptions = ["14", "18", "20"]
 
   const addonOptions = [
     { value: "attic-install", label: "Attic Installation", description: "Installation in attic space" },
@@ -266,7 +273,19 @@ export default function HVACProductForm({ data, updateData }: HVACProductFormPro
             {/* SEER Rating Selection */}
             <Card className="border border-gray-200 shadow-sm">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                <Label className="text-sm font-semibold text-gray-900">SEER Rating</Label>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-semibold text-gray-900">SEER Rating</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-gray-500 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>This will not be visible on the customer-facing proposal.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <p className="text-xs text-gray-600 mt-1">Energy efficiency rating</p>
               </div>
               <CardContent className="p-4">

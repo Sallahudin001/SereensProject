@@ -13,6 +13,7 @@ interface SpecialOffer {
   expiration_value?: number
   is_active: boolean
   expiration_date?: Date
+  isCustomized?: boolean
 }
 
 interface BundleRule {
@@ -91,13 +92,14 @@ export function useProposalOffers(proposalId: number, services: string[] = []): 
                 name: offer.name,
                 description: offer.description,
                 category: offer.category,
-                discount_amount: Number(offer.discount_amount) || 0,
+                discount_amount: Number(offer.effective_discount_amount) || 0,
                 discount_percentage: Number(offer.discount_percentage) || 0,
                 free_product_service: offer.free_item,
                 expiration_date: offer.expiration_date ? new Date(offer.expiration_date) : undefined,
                 expiration_type: 'hours', // Default value for timer calculation
                 expiration_value: 72, // Default value for timer calculation
-                is_active: true
+                is_active: true,
+                isCustomized: !!(offer.custom_name || offer.custom_description || offer.custom_discount_amount || offer.custom_discount_percentage || offer.custom_free_service)
               }))
             
             setSpecialOffers(specialOffersList)

@@ -24,7 +24,10 @@ export async function GET(
         c.name as customer_name,
         c.email as customer_email,
         c.phone as customer_phone,
-        c.address as customer_address
+        c.address as customer_address,
+        p.rep_first_name,
+        p.rep_last_name,
+        p.rep_phone
       FROM 
         proposals p
       JOIN 
@@ -96,6 +99,9 @@ export async function GET(
         phone: proposal.customer_phone,
         address: proposal.customer_address,
       },
+      rep_first_name: proposal.rep_first_name,
+      rep_last_name: proposal.rep_last_name,
+      rep_phone: proposal.rep_phone,
       services: servicesResult.map((s) => s.name),
       products: productsResult.reduce((acc, product) => {
         acc[product.service_name] = {

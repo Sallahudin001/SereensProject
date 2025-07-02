@@ -130,7 +130,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Only administrators can modify users.' }, { status: 403 })
     }
 
-    const { clerk_id, role, first_name, last_name } = await request.json()
+    const { clerk_id, role } = await request.json()
 
     if (!clerk_id || !role) {
       return NextResponse.json({ 
@@ -154,19 +154,11 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    // Also update basic info if provided
-    if (first_name || last_name) {
-      await clerk.users.updateUser(clerk_id, {
-        firstName: first_name,
-        lastName: last_name
-      })
-    }
-
     // Log the permission change with clerk_id tracking
     await logPermissionChangeWithClerkId(
       userId, // Admin clerk_id
       clerk_id, // Target user's clerk_id
-      `${first_name || targetUser.firstName || ''} ${last_name || targetUser.lastName || ''}`.trim(),
+      targetUser.emailAddresses[0]?.emailAddress || 'unknown',
       targetUser.publicMetadata?.role?.toString() || 'user',
       role
     );
@@ -202,11 +194,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Access denied. Only administrators can create user invitations.' }, { status: 403 })
     }
 
-    const { email, first_name, last_name, role = 'user' } = await request.json()
+    const { email, role = 'user' } = await request.json()
 
-    if (!email || !first_name || !last_name) {
+    if (!email) {
       return NextResponse.json({ 
-        error: 'Missing required fields: email, first_name, last_name' 
+        error: 'Missing required field: email' 
       }, { status: 400 })
     }
 
@@ -241,7 +233,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Remove user (demote to user role)
+// Remove user (demote to user role OR permanently delete)
 export async function DELETE(request: NextRequest) {
   try {
     const { userId } = await auth()
@@ -260,6 +252,7 @@ export async function DELETE(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const userIdToUpdate = searchParams.get('id')
+    const action = searchParams.get('action') || 'demote' // 'demote' or 'delete'
 
     if (!userIdToUpdate) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 })
@@ -270,24 +263,45 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot modify your own account' }, { status: 400 })
     }
 
-    // Demote user to regular user role
     const targetUser = await clerk.users.getUser(userIdToUpdate)
-    await clerk.users.updateUserMetadata(userIdToUpdate, {
-      publicMetadata: {
-        ...targetUser.publicMetadata,
-        role: 'user'
-      }
-    })
 
-    return NextResponse.json({
-      success: true,
-      message: 'User demoted to regular user role'
-    })
+    if (action === 'delete') {
+      // Permanently delete user from Clerk
+      try {
+        await clerk.users.deleteUser(userIdToUpdate)
+        
+        // Note: The webhook will handle removing from our database when Clerk sends the user.deleted event
+        
+        return NextResponse.json({
+          success: true,
+          message: 'User permanently deleted from the system'
+        })
+      } catch (error) {
+        console.error('Error permanently deleting user:', error)
+        return NextResponse.json({ 
+          error: 'Failed to permanently delete user',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 })
+      }
+    } else {
+      // Default action: demote user to regular user role
+      await clerk.users.updateUserMetadata(userIdToUpdate, {
+        publicMetadata: {
+          ...targetUser.publicMetadata,
+          role: 'user'
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        message: 'User demoted to regular user role'
+      })
+    }
 
   } catch (error) {
-    console.error('Error demoting user:', error)
+    console.error('Error in user deletion/demotion:', error)
     return NextResponse.json({ 
-      error: 'Failed to demote user',
+      error: 'Failed to process user action',
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }

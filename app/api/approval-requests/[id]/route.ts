@@ -106,37 +106,32 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
     
-    // Validate approver exists in admin_users table
-    if (!approverId) {
-      return NextResponse.json({ error: 'Approver ID is required' }, { status: 400 })
+    // Get current user from authentication context
+    const session = await auth()
+    if (!session?.userId) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
-    
-    const approverCheck = await executeQuery(
-      `SELECT id FROM admin_users WHERE id = $1`,
-      [approverId]
+
+    // Check if the current user has admin role in users table
+    const currentUser = await executeQuery(
+      `SELECT id, role, name, email FROM users WHERE clerk_id = $1`,
+      [session.userId]
     )
     
-    if (approverCheck.length === 0) {
-      // Get the first available admin or manager who can approve
-      const availableApprovers = await executeQuery(`
-        SELECT id FROM admin_users 
-        WHERE (role = 'admin' OR role = 'manager') 
-        AND can_approve_discounts = true 
-        AND is_active = true
-        LIMIT 1
-      `)
-      
-      if (availableApprovers.length === 0) {
-        return NextResponse.json({ 
-          error: 'No valid approver found. Please contact your administrator.'
-        }, { status: 400 })
-      }
-      
-      // Use this approver instead
-      var validApproverId = availableApprovers[0].id
-    } else {
-      var validApproverId = approverId
+    if (currentUser.length === 0) {
+      return NextResponse.json({ 
+        error: 'User not found in system' 
+      }, { status: 400 })
     }
+
+    if (currentUser[0].role !== 'admin') {
+      return NextResponse.json({ 
+        error: 'Only admin users can approve discount requests' 
+      }, { status: 403 })
+    }
+
+    // Use the current user's ID as the approver
+    const validApproverId = currentUser[0].id
     
     // Get the approval request details first
     const requestDetails = await executeQuery(

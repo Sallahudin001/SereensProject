@@ -103,7 +103,10 @@ export async function getProposalById(id: string) {
         c.name as customer_name,
         c.email as customer_email,
         c.phone as customer_phone,
-        c.address as customer_address
+        c.address as customer_address,
+        p.rep_first_name,
+        p.rep_last_name,
+        p.rep_phone
       FROM 
         proposals p
       JOIN 
@@ -159,13 +162,22 @@ export async function getProposalById(id: string) {
       `
       SELECT
         po.offer_type,
+        po.offer_id,
         po.discount_amount,
+        po.custom_name,
+        po.custom_description,
+        po.custom_discount_amount,
+        po.custom_discount_percentage,
+        po.custom_free_service,
+        po.created_by_user,
         CASE 
+          WHEN po.custom_name IS NOT NULL THEN po.custom_name
           WHEN po.offer_type = 'special_offer' THEN so.name
           WHEN po.offer_type = 'bundle_rule' THEN br.name
           ELSE 'Custom Discount'
         END as name,
         CASE
+          WHEN po.custom_description IS NOT NULL THEN po.custom_description
           WHEN po.offer_type = 'special_offer' THEN so.description
           WHEN po.offer_type = 'bundle_rule' THEN br.description
           ELSE NULL
@@ -208,6 +220,9 @@ export async function getProposalById(id: string) {
         phone: proposal.customer_phone,
         address: proposal.customer_address,
       },
+      rep_first_name: proposal.rep_first_name,
+      rep_last_name: proposal.rep_last_name,
+      rep_phone: proposal.rep_phone,
       services: servicesResult.map((s) => s.name),
       serviceNames: servicesResult.map((s) => s.display_name),
       products: productsResult.reduce((acc, product) => {
@@ -239,6 +254,22 @@ export async function getProposalById(id: string) {
         amount: Number.parseFloat(discount.discount_amount) || 0,
         category: discount.category
       })),
+      // Extract selected offers and customized offers
+      selectedOffers: discountsResult
+        .filter(discount => discount.offer_type === 'special_offer')
+        .map(discount => discount.offer_id),
+      customizedOffers: discountsResult
+        .filter(discount => discount.offer_type === 'special_offer' && discount.custom_name)
+        .map(discount => ({
+          originalOfferId: discount.offer_id,
+          name: discount.custom_name,
+          description: discount.custom_description,
+          discount_amount: discount.custom_discount_amount,
+          discount_percentage: discount.custom_discount_percentage,
+          free_product_service: discount.custom_free_service,
+          expiration_type: 'hours', // Default for now
+          expiration_value: 72 // Default for now
+        })),
       // Add custom adders to the response
       customAdders: customAddersResult.map(adder => ({
         id: adder.id,
@@ -278,6 +309,53 @@ async function getCurrentUserId() {
   } catch (error) {
     console.error("Error getting current user ID:", error);
     return null;
+  }
+}
+
+// Helper function to check if form data is valid for creating a draft
+function isValidForDraft(data: any): boolean {
+  return !!(
+    data.customer &&
+    data.customer.name &&
+    data.customer.email &&
+    data.customer.name.trim() !== "" &&
+    data.customer.email.trim() !== ""
+  );
+}
+
+// Helper function to find existing draft proposal
+export async function findExistingDraftProposal(customerEmail: string, userId: string) {
+  try {
+    const result = await executeQuery(
+      `SELECT * FROM find_existing_draft($1, $2, INTERVAL '2 hours')`,
+      [customerEmail, userId]
+    );
+    
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error('Error finding existing draft:', error);
+    // If function has issues, fall back to direct query
+    try {
+      const fallbackResult = await executeQuery(
+        `
+        SELECT p.id as proposal_id, p.proposal_number
+        FROM proposals p
+        JOIN customers c ON p.customer_id = c.id
+        WHERE c.email = $1 
+        AND p.user_id = $2
+        AND p.status IN ('draft', 'draft_in_progress', 'draft_complete')
+        AND p.updated_at > NOW() - INTERVAL '2 hours'
+        ORDER BY p.updated_at DESC
+        LIMIT 1
+        `,
+        [customerEmail, userId]
+      );
+      
+      return fallbackResult.length > 0 ? fallbackResult[0] : null;
+    } catch (fallbackError) {
+      console.error("Fallback query also failed:", fallbackError);
+      return null;
+    }
   }
 }
 
@@ -345,8 +423,11 @@ export async function createProposal(data: any) {
               status = COALESCE($12, status),
               pricing_breakdown = $13,
               pricing_override = $14,
+              rep_first_name = $15,
+              rep_last_name = $16,
+              rep_phone = $17,
               updated_at = CURRENT_TIMESTAMP
-          WHERE id = $15
+          WHERE id = $18
           `,
           [
             customerId,
@@ -367,6 +448,9 @@ export async function createProposal(data: any) {
               discountLog: data.pricing.discountLog || []
             }),
             data.pricing.pricingOverride || false,
+            data.customer.repFirstName || null,
+            data.customer.repLastName || null,
+            data.customer.repPhone || null,
             data.id
           ]
         )
@@ -397,6 +481,16 @@ export async function createProposal(data: any) {
           
           if (serviceResult.length > 0) {
             const serviceId = serviceResult[0].id
+            
+            // Verify proposal exists before inserting into proposal_services
+            const proposalExists = await executeQuery(
+              `SELECT id FROM proposals WHERE id = $1`,
+              [data.id]
+            )
+            
+            if (proposalExists.length === 0) {
+              throw new Error(`Proposal ID ${data.id} does not exist in proposals table`)
+            }
             
             await executeQuery(
               `INSERT INTO proposal_services (proposal_id, service_id) VALUES ($1, $2)`,
@@ -430,35 +524,79 @@ export async function createProposal(data: any) {
           // Apply rep-selected special offers if any
           if (data.selectedOffers && data.selectedOffers.length > 0) {
             for (const offerId of data.selectedOffers) {
-              const offerQuery = `
-                SELECT id, name, category, discount_amount, discount_percentage, 
-                       expiration_type, expiration_value, is_active
-                FROM special_offers 
-                WHERE id = $1 AND is_active = true
-              `
+              // Check if this offer has customizations
+              const customization = data.customizedOffers?.find((co: any) => co.originalOfferId === offerId)
               
-              const offerResult = await executeQuery(offerQuery, [offerId])
-              
-              if (offerResult.length > 0) {
-                const offer = offerResult[0]
-                const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+              if (customization) {
+                // Use custom offer data
+                const expirationDate = calculateOfferExpirationDate(
+                  customization.expiration_type, 
+                  customization.expiration_value || 72 // Default 72 hours
+                )
                 
                 await executeQuery(
                   `
                   INSERT INTO proposal_offers (
-                    proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
-                  ) VALUES ($1, $2, $3, $4, $5, $6)
-                  ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+                    proposal_id, offer_type, offer_id, discount_amount, expiration_date, status,
+                    custom_name, custom_description, custom_discount_amount, 
+                    custom_discount_percentage, custom_free_service, created_by_user
+                  ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                  ON CONFLICT (proposal_id, offer_type, offer_id) DO UPDATE SET
+                    custom_name = EXCLUDED.custom_name,
+                    custom_description = EXCLUDED.custom_description,
+                    custom_discount_amount = EXCLUDED.custom_discount_amount,
+                    custom_discount_percentage = EXCLUDED.custom_discount_percentage,
+                    custom_free_service = EXCLUDED.custom_free_service,
+                    created_by_user = EXCLUDED.created_by_user,
+                    updated_at = CURRENT_TIMESTAMP
                 `,
                   [
                     data.id,
                     'special_offer',
-                    offer.id,
-                    offer.discount_amount || 0,
+                    offerId,
+                    customization.discount_amount || customization.discount_percentage || 0,
                     expirationDate,
-                    'active'
+                    'active',
+                    customization.name,
+                    customization.description,
+                    customization.discount_amount || null,
+                    customization.discount_percentage || null,
+                    customization.free_product_service || null,
+                    userId
                   ]
                 )
+              } else {
+                // Use original offer data
+                const offerQuery = `
+                  SELECT id, name, category, discount_amount, discount_percentage, 
+                         expiration_type, expiration_value, is_active
+                  FROM special_offers 
+                  WHERE id = $1 AND is_active = true
+                `
+                
+                const offerResult = await executeQuery(offerQuery, [offerId])
+                
+                if (offerResult.length > 0) {
+                  const offer = offerResult[0]
+                  const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+                  
+                  await executeQuery(
+                    `
+                    INSERT INTO proposal_offers (
+                      proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
+                    ) VALUES ($1, $2, $3, $4, $5, $6)
+                    ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+                  `,
+                    [
+                      data.id,
+                      'special_offer',
+                      offer.id,
+                      offer.discount_amount || 0,
+                      expirationDate,
+                      'active'
+                    ]
+                  )
+                }
               }
             }
           }
@@ -545,25 +683,23 @@ export async function createProposal(data: any) {
       }
     }
     
-    // Enhanced duplicate check for new proposals - look for drafts created recently
-    const recentProposalCheck = await executeQuery(
-      `
-      SELECT p.id, p.proposal_number FROM proposals p
-      JOIN customers c ON p.customer_id = c.id
-      WHERE c.email = $1 
-      AND p.created_at > NOW() - INTERVAL '24 hours'
-      AND p.status IN ('draft', 'draft_in_progress', 'draft_complete')
-      ORDER BY p.created_at DESC
-      LIMIT 1
-      `,
-      [data.customer.email]
+    // Validate that we have minimum required data for creating a proposal
+    if (!isValidForDraft(data)) {
+      throw new Error("Invalid proposal data: customer name and email are required");
+    }
+
+    // Enhanced duplicate check using database function
+    const existingDraftResult = await executeQuery(
+      `SELECT * FROM find_existing_draft($1, $2, INTERVAL '2 hours')`,
+      [data.customer.email, userId]
     );
     
-    if (recentProposalCheck.length > 0) {
-      console.log("Using existing draft proposal instead of creating duplicate:", recentProposalCheck[0].id);
+    if (existingDraftResult.length > 0) {
+      const existingDraft = existingDraftResult[0];
+      console.log(`Found existing draft ${existingDraft.proposal_number} (ID: ${existingDraft.proposal_id}), updating instead of creating new`);
       
       // Update the existing draft instead of creating a new one
-      const updateData = { ...data, id: recentProposalCheck[0].id };
+      const updateData = { ...data, id: existingDraft.proposal_id };
       return await createProposal(updateData);
     }
 
@@ -587,8 +723,9 @@ export async function createProposal(data: any) {
 
     const customerId = customerResult[0].id
 
-    // 2. Generate a proposal number
-    const proposalNumber = `PRO-${Math.floor(10000 + Math.random() * 90000)}`
+    // 2. Generate a sequential proposal number
+    const proposalNumberResult = await executeQuery(`SELECT generate_proposal_number() as proposal_number`);
+    const proposalNumber = proposalNumberResult[0].proposal_number;
 
     // 3. Create the proposal
     const proposalResult = await executeQuery(
@@ -597,9 +734,9 @@ export async function createProposal(data: any) {
         proposal_number, customer_id, status, subtotal, discount, total, 
         monthly_payment, financing_term, interest_rate, created_by, user_id,
         financing_plan_id, financing_plan_name, merchant_fee, financing_notes,
-        pricing_breakdown, pricing_override
+        pricing_breakdown, pricing_override, rep_first_name, rep_last_name, rep_phone
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       RETURNING id
     `,
       [
@@ -623,7 +760,10 @@ export async function createProposal(data: any) {
           pricingBreakdown: data.pricing.pricingBreakdown || {},
           discountLog: data.pricing.discountLog || []
         }),
-        data.pricing.pricingOverride || false
+        data.pricing.pricingOverride || false,
+        data.customer.repFirstName || null,
+        data.customer.repLastName || null,
+        data.customer.repPhone || null
       ],
     )
 
@@ -689,36 +829,72 @@ export async function createProposal(data: any) {
       // Apply rep-selected special offers if any
       if (data.selectedOffers && data.selectedOffers.length > 0) {
         for (const offerId of data.selectedOffers) {
-          // Fetch offer details
-          const offerQuery = `
-            SELECT id, name, category, discount_amount, discount_percentage, 
-                   expiration_type, expiration_value, is_active
-            FROM special_offers 
-            WHERE id = $1 AND is_active = true
-          `
+          // Check if this offer has customizations
+          const customization = data.customizedOffers?.find((co: any) => co.originalOfferId === offerId)
           
-          const offerResult = await executeQuery(offerQuery, [offerId])
-          
-          if (offerResult.length > 0) {
-            const offer = offerResult[0]
-            const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+          if (customization) {
+            // Use custom offer data
+            const expirationDate = calculateOfferExpirationDate(
+              customization.expiration_type, 
+              customization.expiration_value || 72 // Default 72 hours
+            )
             
             await executeQuery(
               `
               INSERT INTO proposal_offers (
-                proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
-              ) VALUES ($1, $2, $3, $4, $5, $6)
+                proposal_id, offer_type, offer_id, discount_amount, expiration_date, status,
+                custom_name, custom_description, custom_discount_amount, 
+                custom_discount_percentage, custom_free_service, created_by_user
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
               ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
             `,
               [
                 proposalId,
                 'special_offer',
-                offer.id,
-                offer.discount_amount || 0,
+                offerId,
+                customization.discount_amount || customization.discount_percentage || 0,
                 expirationDate,
-                'active'
+                'active',
+                customization.name,
+                customization.description,
+                customization.discount_amount || null,
+                customization.discount_percentage || null,
+                customization.free_product_service || null,
+                userId
               ]
             )
+          } else {
+            // Use original offer data
+            const offerQuery = `
+              SELECT id, name, category, discount_amount, discount_percentage, 
+                     expiration_type, expiration_value, is_active
+              FROM special_offers 
+              WHERE id = $1 AND is_active = true
+            `
+            
+            const offerResult = await executeQuery(offerQuery, [offerId])
+            
+            if (offerResult.length > 0) {
+              const offer = offerResult[0]
+              const expirationDate = calculateOfferExpirationDate(offer.expiration_type, offer.expiration_value)
+              
+              await executeQuery(
+                `
+                INSERT INTO proposal_offers (
+                  proposal_id, offer_type, offer_id, discount_amount, expiration_date, status
+                ) VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (proposal_id, offer_type, offer_id) DO NOTHING
+              `,
+                [
+                  proposalId,
+                  'special_offer',
+                  offer.id,
+                  offer.discount_amount || 0,
+                  expirationDate,
+                  'active'
+                ]
+              )
+            }
           }
         }
       }

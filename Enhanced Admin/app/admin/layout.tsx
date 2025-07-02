@@ -129,7 +129,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </Sidebar>
 
         <div className="flex flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 sm:px-6">
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-md border-green-200/50 shadow-sm px-4 sm:px-6">
             <SidebarTrigger />
             <div className="flex flex-1 items-center gap-4 md:gap-8">
               <div className="relative flex-1 md:grow-0 md:basis-1/3">

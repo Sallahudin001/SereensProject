@@ -404,35 +404,35 @@ export default function PricingPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Product Pricing Management</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage pricing for all services and products by category
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/admin/pricing/import">
-            <Button variant="outline" className="flex items-center gap-2">
-              <FileUp className="h-4 w-4" />
-              <span>Import Pricing</span>
-            </Button>
-          </Link>
-          <Button 
-            variant="outline" 
-            className="flex items-center gap-2"
-            onClick={handleExportToExcel}
-          >
-            <Download className="h-4 w-4" />
-            <span>Export {categories.find(c => c.id === activeCategory)?.name}</span>
-          </Button>
-          <Button className="flex items-center gap-2" onClick={handleAddItem}>
-            <Plus className="h-4 w-4" />
-            <span>Add Item</span>
-          </Button>
-        </div>
-      </div>
+    <div className="flex-1 space-y-6 p-6">
+      {/* Header Card */}
+      <Card className="shadow-xl rounded-xl overflow-hidden bg-white border-0">
+        <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 w-full">
+            <div>
+              <CardTitle className="text-3xl sm:text-4xl font-bold tracking-tight">Product Pricing</CardTitle>
+              <CardDescription className="text-green-100 text-sm sm:text-base">
+                Manage product pricing and catalog
+              </CardDescription>
+            </div>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Link href="/admin/pricing/import">
+                <Button className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-200 w-full sm:w-auto">
+                  <FileUp className="mr-2 h-4 w-4" />
+                  Import
+                </Button>
+              </Link>
+              <Button
+                onClick={handleAddItem}
+                className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-200 w-full sm:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Item
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       {/* Category Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">

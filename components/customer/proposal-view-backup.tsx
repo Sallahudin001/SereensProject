@@ -818,7 +818,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-4">
                 <div className="bg-slate-100 p-2 rounded-lg shadow-sm">
-                  <Image src="/newlogo.png" alt="Evergreen Home Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
+                  <Image src="/sereenh-04.png" alt="Evergreen Home Upgrades Logo" width={60} height={60} className="rounded-sm" /> 
                 </div>
                 <div>
                     <CardTitle className="text-3xl sm:text-4xl font-bold">Home Improvement Proposal</CardTitle>
@@ -875,6 +875,9 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                             <div><strong>Homeowner:</strong> {proposal?.customer?.name || 'N/A'}</div>
                             <div><strong>Address:</strong> {proposal?.customer?.address || 'N/A'}</div>
                             <div><strong>Proposal Date:</strong> {formatDate(proposal?.createdAt)}</div>
+                            <div><strong>Sales Representative:</strong> {proposal?.rep_first_name && proposal?.rep_last_name ? 
+                              `${proposal.rep_first_name} ${proposal.rep_last_name}` : 'N/A'}</div>
+                            <div><strong>Rep Phone:</strong> {proposal?.rep_phone || 'N/A'}</div>
                         </div>
                     </motion.div>
 
@@ -1498,12 +1501,12 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
             <CardFooter className="bg-gray-800 text-gray-300 p-6 sm:p-8 text-center sm:text-left rounded-b-xl">
                 <div className="container mx-auto max-w-5xl grid grid-cols-1 sm:grid-cols-3 gap-6 items-center">
                     <div className="sm:col-span-1">
-                        <Image src="/newlogo.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
+                        <Image src="/sereenh-04.png" alt="Evergreen Logo" width={80} height={80} className="rounded-md opacity-80 mx-auto sm:mx-0"/>
                     </div>
                     <div className="sm:col-span-2 text-sm">
                         <p className="font-semibold text-lg text-white mb-1">Evergreen Home Upgrades</p>
-                        <p>C: (408) 826-7377 | O: (408)333-9831</p>
-                        <p>sereen@evergreenenergy.io | info@evergreenenergy.io</p>
+                        <p>(408) 333-9831</p>
+                        <p>info@evergreenenergy.io</p>
                         <p>www.evergreenenergy.io</p>
                         <p className="mt-3 text-xs text-gray-400">&copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.</p>
                     </div>

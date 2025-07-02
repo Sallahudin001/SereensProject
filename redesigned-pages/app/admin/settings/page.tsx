@@ -105,12 +105,12 @@ export default function SystemSettings() {
   const [settings, setSettings] = useState<AllSettings>({
     general: {
       companyName: "Evergreen Home Upgrades",
-      companyEmail: "info@evergreen-energy.com",
-      companyPhone: "(555) 123-4567",
+      companyEmail: "info@evergreenenergy.io",
+      companyPhone: "(408) 333-9831",
       companyAddress: "123 Green Street, Eco City, EC 12345",
       timezone: "America/New_York",
       dateFormat: "MM/DD/YYYY",
-      logo: "/images/evergreen-logo.png",
+      logo: "/sereenh-04.png",
     },
     notifications: {
       emailNotifications: true,

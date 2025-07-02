@@ -447,8 +447,8 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
         <div class="email-wrapper">
           <div class="email-container">
             <div class="email-header">
-              <div class="logo-container">
-                <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/newlogo-lG9O9KzH8xKviah766GIp8QX9w9Ggu.png" alt="Evergreen Home Upgrades" class="logo" />
+                        <div class="logo-container">
+            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
               </div>
               <h1 class="header-title">Your Proposal is Ready</h1>
               <p class="header-subtitle">Professional Home Improvement Proposal</p>
@@ -558,9 +558,9 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
           
           <div class="email-footer">
             <div class="contact-info">
-              <div><strong class="contact-icon">📧</strong> info@evergreenenergyupgrades.com</div>
-              <div><strong class="contact-icon">📞</strong> Cell: (408) 826-7377 | Office: (408) 333-9831</div>
-              <div><strong class="contact-icon">🌐</strong> www.evergreenenergyupgrades.com</div>
+              <div><strong class="contact-icon">📧</strong> info@evergreenenergy.io</div>
+              <div><strong class="contact-icon">📞</strong> (408) 333-9831</div>
+              <div><strong class="contact-icon">🌐</strong> www.evergreenenergy.io</div>
             </div>
             <div class="copyright">
               © ${new Date().getFullYear()} Evergreen Home Upgrades. All rights reserved.

@@ -112,7 +112,8 @@ export default function LandingPage() {
   
   useEffect(() => {
     if (isSignedIn) {
-      router.push("/dashboard")
+      // Use replace instead of push for faster navigation
+      router.replace("/dashboard")
     }
   }, [isSignedIn, router])
 
@@ -123,19 +124,19 @@ export default function LandingPage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="border-b border-emerald-100/50 sticky top-0 z-50 bg-white/80 backdrop-blur-xl shadow-lg shadow-emerald-500/5"
+        className="border-b border-green-200/50 sticky top-0 z-50 bg-gradient-to-r from-green-100/95 to-emerald-100/95 backdrop-blur-xl shadow-lg shadow-emerald-500/5"
       >
         <div className="flex justify-between items-center px-6 py-5 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center group">
               <div className="flex items-center">
           <div
-                className="p-3 rounded-xl bg-white shadow-lg"
+                className="p-3 rounded-xl bg-transparent shadow-lg"
               >
                   <Image 
-                    src="/newlogo.png" 
+                    src="/sereenh-04.png" 
                     alt="Evergreen Home Upgrades Logo" 
-                    width={100}
-                    height={40}
+                    width={200}
+                    height={150}
                   className="h-8 w-auto object-contain"
                 />
               </div>
@@ -863,11 +864,11 @@ export default function LandingPage() {
                   className="p-3 rounded-xl bg-white shadow-lg"
                 >
                 <Image 
-                  src="/newlogo.png" 
+                  src="/sereenh-04.png" 
                   alt="Evergreen Home Upgrades Logo" 
                     width={100}
-                    height={40}
-                    className="h-8 w-auto object-contain"
+                    height={60}
+                    className="h-12 w-auto object-contain"
                   />
                 </div>
                 <div>
@@ -894,8 +895,8 @@ export default function LandingPage() {
 
               <div className="space-y-4">
                 {[
-                  { icon: Phone, text: "C: (408) 826-7377 | O: (408) 333-9831", href: "tel:+14088267377" },
-                  { icon: Mail, text: "sereen@evergreenenergy.io", href: "mailto:sereen@evergreenenergy.io" },
+                  { icon: Phone, text: "(408) 333-9831", href: "tel:+14083339831" },
+                  { icon: Mail, text: "info@evergreenenergy.io", href: "mailto:info@evergreenenergy.io" },
                   { icon: Globe, text: "www.evergreenenergy.io", href: "https://www.evergreenenergy.io" },
                 ].map((item, i) => (
                   <motion.a
@@ -906,13 +907,13 @@ export default function LandingPage() {
                   >
                     <div className="bg-emerald-600/20 p-3 rounded-xl group-hover:bg-emerald-600/30 transition-colors duration-300">
                       <item.icon className="w-5 h-5 text-emerald-400" />
-            </div>
+                    </div>
                     <span className="font-medium">{item.text}</span>
                   </motion.a>
                 ))}
               </div>
             </motion.div>
-            </div>
+          </div>
 
           <motion.div
             initial={{ opacity: 0 }}
@@ -924,9 +925,7 @@ export default function LandingPage() {
               <p className="text-gray-400 text-sm">
                 &copy; {new Date().getFullYear()} Evergreen Home Upgrades. All Rights Reserved.
               </p>
-
-             
-          </div>
+            </div>
           </motion.div>
         </div>
       </footer>
