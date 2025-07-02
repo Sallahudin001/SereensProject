@@ -64,6 +64,81 @@ interface ProposalFormData {
   proposalNumber?: string;
 }
 
+// Storage keys for localStorage
+const STORAGE_KEYS = {
+  FORM_DATA: 'proposal_form_draft',
+  CURRENT_STEP: 'proposal_current_step', 
+  DRAFT_ID: 'proposal_draft_id',
+  TIMESTAMP: 'proposal_draft_timestamp'
+}
+
+// Draft storage interface
+interface DraftData {
+  formData: ProposalFormData;
+  currentStep: number;
+  draftProposalId: string | null;
+  timestamp: number;
+}
+
+// Helper functions for localStorage management
+const saveDraftToStorage = (formData: ProposalFormData, currentStep: number, draftProposalId: string | null) => {
+  const draftData: DraftData = {
+    formData,
+    currentStep,
+    draftProposalId,
+    timestamp: Date.now()
+  }
+  
+  try {
+    localStorage.setItem(STORAGE_KEYS.FORM_DATA, JSON.stringify(draftData))
+  } catch (error) {
+    console.error('Error saving draft to localStorage:', error)
+    // If quota exceeded, try to clear old data and retry
+    if (error instanceof DOMException && error.code === 22) {
+      console.warn('localStorage quota exceeded, clearing old drafts...')
+      clearDraftFromStorage()
+      try {
+        localStorage.setItem(STORAGE_KEYS.FORM_DATA, JSON.stringify(draftData))
+      } catch (retryError) {
+        console.error('Failed to save draft even after clearing:', retryError)
+      }
+    }
+  }
+}
+
+const loadDraftFromStorage = (): DraftData | null => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEYS.FORM_DATA)
+    if (!saved) return null
+    
+    const draftData: DraftData = JSON.parse(saved)
+    
+    // Check if draft is recent (less than 7 days)
+    const maxAge = 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+    if (Date.now() - draftData.timestamp > maxAge) {
+      localStorage.removeItem(STORAGE_KEYS.FORM_DATA)
+      return null
+    }
+    
+    return draftData
+  } catch (error) {
+    console.error('Error loading draft from localStorage:', error)
+    localStorage.removeItem(STORAGE_KEYS.FORM_DATA)
+    return null
+  }
+}
+
+const clearDraftFromStorage = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.FORM_DATA)
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_STEP)
+    localStorage.removeItem(STORAGE_KEYS.DRAFT_ID)
+    localStorage.removeItem(STORAGE_KEYS.TIMESTAMP)
+  } catch (error) {
+    console.error('Error clearing draft from localStorage:', error)
+  }
+}
+
 // Memoize the form components to prevent unnecessary re-renders
 const MemoizedCustomerInfoForm = memo(CustomerInfoForm)
 const MemoizedScopeOfWorkForm = memo(ScopeOfWorkForm)
@@ -81,6 +156,8 @@ export default function NewProposalPage() {
   const [draftProposalId, setDraftProposalId] = useState<string | null>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isCustomerInfoValid, setIsCustomerInfoValid] = useState(false)
+  const [isDraftRestored, setIsDraftRestored] = useState(false)
+  const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null)
   const [formData, setFormData] = useState<ProposalFormData>({
     customer: {
       name: "",
@@ -106,6 +183,64 @@ export default function NewProposalPage() {
     selectedOffers: [],
     customizedOffers: [],
   })
+
+  // Auto-save form data to localStorage whenever it changes
+  useEffect(() => {
+    // Only save if we have meaningful data or if user has started filling the form
+    if (formData.customer.name || formData.customer.email || formData.services.length > 0 || currentStep > 0) {
+      // Debounce the save operation to prevent excessive writes
+      const saveTimeout = setTimeout(() => {
+        saveDraftToStorage(formData, currentStep, draftProposalId)
+        setLastSavedTime(new Date())
+      }, 1000) // Save after 1 second of inactivity
+      
+      return () => clearTimeout(saveTimeout)
+    }
+  }, [formData, currentStep, draftProposalId])
+
+  // Restore draft data on page load (only if not editing an existing proposal)
+  useEffect(() => {
+    if (!proposalId && !isDraftRestored) {
+      const savedDraft = loadDraftFromStorage()
+      
+      if (savedDraft) {
+        // Only restore if we don't already have data (prevents overwriting URL-loaded proposals)
+        const hasExistingData = formData.customer.name || formData.customer.email || formData.services.length > 0
+        
+        if (!hasExistingData) {
+          setFormData(savedDraft.formData)
+          setCurrentStep(savedDraft.currentStep)
+          setDraftProposalId(savedDraft.draftProposalId)
+          setIsDraftRestored(true)
+          
+          // Show user notification about restored data
+          toast({
+            title: "Draft Restored",
+            description: "Your previous work has been restored. You can continue where you left off.",
+            className: "bg-blue-50 border-blue-200"
+          })
+        }
+      }
+      
+      setIsDraftRestored(true)
+    }
+  }, [proposalId, isDraftRestored, formData.customer.name, formData.customer.email, formData.services.length])
+
+  // Save draft before user leaves the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // Save any pending changes before the page unloads
+      if (formData.customer.name || formData.customer.email || formData.services.length > 0 || currentStep > 0) {
+        saveDraftToStorage(formData, currentStep, draftProposalId)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [formData, currentStep, draftProposalId])
 
   // Fetch current user and pre-fill form if editing an existing proposal
   useEffect(() => {
@@ -151,6 +286,9 @@ export default function NewProposalPage() {
           })
           // Set the draft proposal ID if editing
           setDraftProposalId(proposal.id)
+          
+          // Clear any localStorage draft when loading an existing proposal
+          clearDraftFromStorage()
         }
       }
     }
@@ -287,6 +425,9 @@ export default function NewProposalPage() {
       const result = await createOrUpdateDraftProposal(true)
 
       if (result && result.success) {
+        // Clear localStorage draft on successful submission
+        clearDraftFromStorage()
+        
         // Message varies if it was a duplicate prevention
         const message = result.isDuplicate 
           ? "Using existing proposal to prevent duplication"
@@ -371,6 +512,45 @@ export default function NewProposalPage() {
     })
   }, [])
 
+  // Function to clear draft and start fresh
+  const clearDraftAndStartFresh = useCallback(() => {
+    clearDraftFromStorage()
+    setFormData({
+      customer: {
+        name: "",
+        address: "",
+        email: "",
+        phone: "",
+        repFirstName: "",
+        repLastName: "",
+        repPhone: "",
+      },
+      services: [],
+      products: {},
+      pricing: {
+        subtotal: 0,
+        discount: 0,
+        total: 0,
+        monthlyPayment: 0,
+        showLineItems: true,
+        financingPlanId: undefined,
+        financingPlanName: "",
+        merchantFee: 0,
+      },
+      selectedOffers: [],
+      customizedOffers: [],
+    })
+    setCurrentStep(0)
+    setDraftProposalId(null)
+    setLastSavedTime(null)
+    setIsDraftRestored(false)
+    toast({
+      title: "Draft Cleared",
+      description: "Starting fresh with a new proposal.",
+      className: "bg-orange-50 border-orange-200"
+    })
+  }, [])
+
   return (
     <DashboardLayout>
       <div className="flex-1 space-y-6 p-6">
@@ -393,7 +573,16 @@ export default function NewProposalPage() {
 
         <Card className="mb-6 overflow-hidden border-none shadow-md">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 pb-4">
-            <CardTitle className="text-gray-800">Proposal Progress</CardTitle>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-gray-800">Proposal Progress</CardTitle>
+              {/* Auto-save status indicator */}
+              {lastSavedTime && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>Auto-saved {lastSavedTime.toLocaleTimeString()}</span>
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="pt-6 pb-4">
             <ProposalStepper steps={steps} currentStep={currentStep} />
@@ -501,8 +690,8 @@ export default function NewProposalPage() {
                       </>
                     ) : (
                       <>
-                        <Check className="mr-2 h-4 w-4" /> 
-                        Complete Proposal
+                        <Check className="mr-2 h-4 w-4" />
+                        Create Proposal
                       </>
                     )}
                   </Button>
