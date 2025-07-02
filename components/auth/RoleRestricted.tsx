@@ -1,6 +1,8 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { getUserRole } from "@/lib/auth-utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ShieldX } from "lucide-react";
 
 type Props = {
   allowedRoles: ('admin' | 'user')[];
@@ -11,7 +13,7 @@ type Props = {
 /**
  * Component that only renders its children if the current user has one of the allowed roles
  */
-export default function RoleRestricted({ allowedRoles, children, fallback = null }: Props) {
+export default function RoleRestricted({ allowedRoles, children, fallback }: Props) {
   const { userId, isLoaded, isSignedIn } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,13 +55,53 @@ export default function RoleRestricted({ allowedRoles, children, fallback = null
   if (loading) return null;
 
   // If not signed in or no role, show fallback
-  if (!isSignedIn || !userRole) return <>{fallback}</>;
+  if (!isSignedIn || !userRole) {
+    if (fallback) return <>{fallback}</>;
+    
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <ShieldX className="h-12 w-12 text-red-500 mx-auto mb-2" />
+            <CardTitle className="text-red-700">Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center">
+            <p className="text-gray-600">Please sign in to access this content.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   // If user has one of the allowed roles, show children
   if (allowedRoles.includes(userRole as 'admin' | 'user')) {
     return <>{children}</>;
   }
 
-  // Otherwise show fallback
-  return <>{fallback}</>;
+  // Show custom fallback or default 403 message
+  if (fallback) return <>{fallback}</>;
+  
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <Card className="w-full max-w-md border-red-200">
+        <CardHeader className="text-center">
+          <ShieldX className="h-12 w-12 text-red-500 mx-auto mb-2" />
+          <CardTitle className="text-red-700">403 - Access Forbidden</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-3">
+          <p className="text-gray-600">
+            You don't have permission to access this content.
+          </p>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-700">
+              Required role: <span className="font-semibold">{allowedRoles.join(' or ')}</span>
+            </p>
+            <p className="text-sm text-red-700">
+              Your role: <span className="font-semibold">{userRole}</span>
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 } 

@@ -57,9 +57,8 @@ export default clerkMiddleware(async (auth, req) => {
           );
         }
         
-        // For UI routes, redirect to dashboard with error
-        const url = new URL('/dashboard', req.url);
-        url.searchParams.set('error', 'admin_access_required');
+        // For UI routes, redirect to 403 Forbidden page
+        const url = new URL('/403', req.url);
         return NextResponse.redirect(url);
       }
     } catch (error) {
@@ -73,9 +72,8 @@ export default clerkMiddleware(async (auth, req) => {
         );
       }
       
-      // Redirect to dashboard with error
-      const url = new URL('/dashboard', req.url);
-      url.searchParams.set('error', 'role_check_failed');
+      // Redirect to 403 page for security reasons
+      const url = new URL('/403', req.url);
       return NextResponse.redirect(url);
     }
   }

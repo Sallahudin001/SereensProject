@@ -867,8 +867,8 @@ export default function LandingPage() {
                   src="/sereenh-04.png" 
                   alt="Evergreen Home Upgrades Logo" 
                     width={100}
-                    height={40}
-                    className="h-8 w-auto object-contain"
+                    height={60}
+                    className="h-12 w-auto object-contain"
                   />
                 </div>
                 <div>
