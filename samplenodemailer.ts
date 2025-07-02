@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate proposal URL
-    const proposalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/proposals/view/${proposalId}`;
+    const proposalUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/proposals/view/${proposalId}`;
 
     // Email options
     const mailOptions = {

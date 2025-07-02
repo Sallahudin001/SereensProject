@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, memo, useEffect } from "react"
+import { useState, useCallback, memo, useEffect, useMemo, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import DashboardLayout from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -78,6 +78,25 @@ interface DraftData {
   currentStep: number;
   draftProposalId: string | null;
   timestamp: number;
+}
+
+// Debounce utility function
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): T {
+  let timeout: NodeJS.Timeout | null = null;
+  return ((...args: any[]) => {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  }) as T;
+}
+
+// Helper function to check if form data is valid for creating a draft
+const isValidForDraft = (formData: ProposalFormData): boolean => {
+  return !!(
+    formData.customer.name &&
+    formData.customer.email &&
+    formData.customer.name.trim() !== "" &&
+    formData.customer.email.trim() !== ""
+  );
 }
 
 // Helper functions for localStorage management
@@ -158,6 +177,13 @@ export default function NewProposalPage() {
   const [isCustomerInfoValid, setIsCustomerInfoValid] = useState(false)
   const [isDraftRestored, setIsDraftRestored] = useState(false)
   const [lastSavedTime, setLastSavedTime] = useState<Date | null>(null)
+  const [draftState, setDraftState] = useState({
+    proposalId: null as string | null,
+    proposalNumber: null as string | null,
+    isExistingDraft: false,
+    lastChecked: null as Date | null
+  })
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [formData, setFormData] = useState<ProposalFormData>({
     customer: {
       name: "",
@@ -184,19 +210,109 @@ export default function NewProposalPage() {
     customizedOffers: [],
   })
 
-  // Auto-save form data to localStorage whenever it changes
+  // Check for existing draft when customer email changes
   useEffect(() => {
-    // Only save if we have meaningful data or if user has started filling the form
-    if (formData.customer.name || formData.customer.email || formData.services.length > 0 || currentStep > 0) {
-      // Debounce the save operation to prevent excessive writes
-      const saveTimeout = setTimeout(() => {
-        saveDraftToStorage(formData, currentStep, draftProposalId)
-        setLastSavedTime(new Date())
-      }, 1000) // Save after 1 second of inactivity
-      
-      return () => clearTimeout(saveTimeout)
+    if (formData.customer.email && formData.customer.email.trim() !== "" && !isDraftRestored && !proposalId) {
+      checkForExistingDraft()
     }
-  }, [formData, currentStep, draftProposalId])
+  }, [formData.customer.email, isDraftRestored, proposalId])
+
+  // Function to check for existing draft
+  const checkForExistingDraft = async () => {
+    try {
+      const response = await fetch(`/api/proposals/check-draft?email=${encodeURIComponent(formData.customer.email)}`)
+      const data = await response.json()
+      
+      if (data.success && data.found) {
+        setDraftState(prev => ({
+          ...prev,
+          proposalId: data.draft.id,
+          proposalNumber: data.draft.proposalNumber,
+          isExistingDraft: true,
+          lastChecked: new Date()
+        }))
+        console.log(`Found existing draft: ${data.draft.proposalNumber}`)
+      }
+    } catch (error) {
+      console.error('Error checking for existing draft:', error)
+    }
+  }
+
+  // Function to create new draft
+  const createNewDraft = async (formData: ProposalFormData) => {
+    try {
+      setIsSavingDraft(true)
+      const result = await createProposal({
+        ...formData,
+        status: "draft_in_progress"
+      })
+      
+      if (result.success) {
+        setDraftState(prev => ({
+          ...prev,
+          proposalId: result.proposalId,
+          proposalNumber: result.proposalNumber,
+          isExistingDraft: false
+        }))
+        setFormData(prev => ({
+          ...prev,
+          id: result.proposalId,
+          proposalNumber: result.proposalNumber
+        }))
+        console.log(`Created new draft: ${result.proposalNumber}`)
+      }
+    } catch (error) {
+      console.error('Error creating new draft:', error)
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
+  // Function to update existing draft
+  const updateExistingDraft = async (proposalId: string, formData: ProposalFormData) => {
+    try {
+      setIsSavingDraft(true)
+      const result = await createProposal({
+        ...formData,
+        id: proposalId,
+        status: currentStep === steps.length - 1 ? "draft_complete" : "draft_in_progress"
+      })
+      
+      if (result.success) {
+        console.log(`Updated existing draft: ${result.proposalNumber}`)
+      }
+    } catch (error) {
+      console.error('Error updating existing draft:', error)
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
+  // Debounced auto-save function
+  const debouncedSave = useMemo(
+    () => debounce(async (formData: ProposalFormData, currentStep: number) => {
+      if (isValidForDraft(formData)) {
+        if (draftState.proposalId) {
+          // Update existing draft
+          await updateExistingDraft(draftState.proposalId, formData)
+        } else {
+          // Create new draft
+          await createNewDraft(formData)
+        }
+      }
+      // Always save to localStorage as backup
+      saveDraftToStorage(formData, currentStep, draftState.proposalId)
+      setLastSavedTime(new Date())
+    }, 2000),
+    [draftState.proposalId]
+  )
+
+  // Auto-save form data whenever it changes
+  useEffect(() => {
+    if (formData.customer.name || formData.customer.email || formData.services.length > 0 || currentStep > 0) {
+      debouncedSave(formData, currentStep)
+    }
+  }, [formData, currentStep, debouncedSave])
 
   // Restore draft data on page load (only if not editing an existing proposal)
   useEffect(() => {
@@ -306,43 +422,42 @@ export default function NewProposalPage() {
     { id: "finalize", label: "Finalize" },
   ]
 
-  // Function to create or update a draft proposal
+  // Simplified function to create or update a draft proposal
   const createOrUpdateDraftProposal = async (skipValidation = false) => {
     try {
-      // Skip saving if we're on the first step and have no meaningful data
-      if (!skipValidation && currentStep === 0 && (!formData.customer.name || !formData.customer.email)) {
+      // Skip saving if we don't have valid data and validation is required
+      if (!skipValidation && !isValidForDraft(formData)) {
         return null
       }
 
       setIsSavingDraft(true)
 
-      // If we already have a draft ID, include it in the form data to update instead of create
-      const dataToSave = {
-        ...formData,
-        id: draftProposalId || formData.id || undefined,
-        status: currentStep === steps.length - 1 ? "draft_complete" : "draft_in_progress"
-      }
-
-      const result = await createProposal(dataToSave)
-
-      if (result.success) {
-        // Store the proposal ID for future updates
-        if (!draftProposalId) {
-          setDraftProposalId(result.proposalId)
-          setFormData(prev => ({
-            ...prev,
-            id: result.proposalId,
-            proposalNumber: result.proposalNumber
-          }))
+      // Use the improved draft logic
+      if (draftState.proposalId) {
+        // Update existing draft
+        await updateExistingDraft(draftState.proposalId, formData)
+        return {
+          success: true,
+          proposalId: draftState.proposalId,
+          proposalNumber: draftState.proposalNumber,
+          isDuplicate: draftState.isExistingDraft
         }
-        return result
       } else {
-        console.error('Failed to save draft:', result.error)
-        return null
+        // Create new draft
+        await createNewDraft(formData)
+        return {
+          success: true,
+          proposalId: draftState.proposalId,
+          proposalNumber: draftState.proposalNumber,
+          isDuplicate: false
+        }
       }
     } catch (error) {
-      console.error("Error saving draft proposal:", error)
-      return null
+      console.error("Error in createOrUpdateDraftProposal:", error)
+      return {
+        success: false,
+        error: "Failed to save proposal"
+      }
     } finally {
       setIsSavingDraft(false)
     }
@@ -381,9 +496,9 @@ export default function NewProposalPage() {
       setIsSubmitting(true)
 
       // If we have a draft proposal ID, check its current status
-      if (draftProposalId) {
+      if (draftState.proposalId) {
         try {
-          const response = await fetch(`/api/proposals/${draftProposalId}`)
+          const response = await fetch(`/api/proposals/${draftState.proposalId}`)
           if (response.ok) {
             const proposalData = await response.json()
             if (proposalData.status === 'sent' || proposalData.status === 'signed' || proposalData.status === 'completed') {
@@ -575,13 +690,25 @@ export default function NewProposalPage() {
           <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 pb-4">
             <div className="flex justify-between items-center">
               <CardTitle className="text-gray-800">Proposal Progress</CardTitle>
-              {/* Auto-save status indicator */}
-              {lastSavedTime && (
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>Auto-saved {lastSavedTime.toLocaleTimeString()}</span>
-                </div>
-              )}
+              {/* Draft status indicator */}
+              <div className="flex items-center gap-3">
+                {draftState.proposalId && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-medium">
+                      {draftState.proposalNumber}
+                    </div>
+                    {draftState.isExistingDraft && (
+                      <span className="text-amber-600 text-xs">Continuing existing draft</span>
+                    )}
+                  </div>
+                )}
+                {lastSavedTime && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span>Auto-saved {lastSavedTime.toLocaleTimeString()}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </CardHeader>
           <CardContent className="pt-6 pb-4">
@@ -705,9 +832,9 @@ export default function NewProposalPage() {
                   <span>{Math.round((currentStep / (steps.length - 1)) * 100)}% Complete</span>
                 </div>
                 <Progress value={(currentStep / (steps.length - 1)) * 100} className="h-2 [&>div]:bg-emerald-600" />
-                {draftProposalId && (
+                {draftState.proposalId && (
                   <p className="text-xs text-emerald-600 text-center mt-1">
-                    Draft saved: {formData.proposalNumber}
+                    {draftState.isExistingDraft ? 'Updating' : 'Draft saved'}: {draftState.proposalNumber}
                   </p>
                 )}
               </div>

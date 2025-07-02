@@ -312,6 +312,32 @@ async function getCurrentUserId() {
   }
 }
 
+// Helper function to check if form data is valid for creating a draft
+function isValidForDraft(data: any): boolean {
+  return !!(
+    data.customer &&
+    data.customer.name &&
+    data.customer.email &&
+    data.customer.name.trim() !== "" &&
+    data.customer.email.trim() !== ""
+  );
+}
+
+// Helper function to find existing draft proposal
+export async function findExistingDraftProposal(customerEmail: string, userId: string) {
+  try {
+    const result = await executeQuery(
+      `SELECT * FROM find_existing_draft($1, $2, INTERVAL '2 hours')`,
+      [customerEmail, userId]
+    );
+    
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error('Error finding existing draft:', error);
+    return null;
+  }
+}
+
 // Create a new proposal
 export async function createProposal(data: any) {
   try {
@@ -626,25 +652,23 @@ export async function createProposal(data: any) {
       }
     }
     
-    // Enhanced duplicate check for new proposals - look for drafts created recently
-    const recentProposalCheck = await executeQuery(
-      `
-      SELECT p.id, p.proposal_number FROM proposals p
-      JOIN customers c ON p.customer_id = c.id
-      WHERE c.email = $1 
-      AND p.created_at > NOW() - INTERVAL '24 hours'
-      AND p.status IN ('draft', 'draft_in_progress', 'draft_complete')
-      ORDER BY p.created_at DESC
-      LIMIT 1
-      `,
-      [data.customer.email]
+    // Validate that we have minimum required data for creating a proposal
+    if (!isValidForDraft(data)) {
+      throw new Error("Invalid proposal data: customer name and email are required");
+    }
+
+    // Enhanced duplicate check using database function
+    const existingDraftResult = await executeQuery(
+      `SELECT * FROM find_existing_draft($1, $2, INTERVAL '2 hours')`,
+      [data.customer.email, userId]
     );
     
-    if (recentProposalCheck.length > 0) {
-      console.log("Using existing draft proposal instead of creating duplicate:", recentProposalCheck[0].id);
+    if (existingDraftResult.length > 0) {
+      const existingDraft = existingDraftResult[0];
+      console.log(`Found existing draft ${existingDraft.proposal_number} (ID: ${existingDraft.proposal_id}), updating instead of creating new`);
       
       // Update the existing draft instead of creating a new one
-      const updateData = { ...data, id: recentProposalCheck[0].id };
+      const updateData = { ...data, id: existingDraft.proposal_id };
       return await createProposal(updateData);
     }
 
@@ -668,8 +692,9 @@ export async function createProposal(data: any) {
 
     const customerId = customerResult[0].id
 
-    // 2. Generate a proposal number
-    const proposalNumber = `PRO-${Math.floor(10000 + Math.random() * 90000)}`
+    // 2. Generate a sequential proposal number
+    const proposalNumberResult = await executeQuery(`SELECT generate_proposal_number() as proposal_number`);
+    const proposalNumber = proposalNumberResult[0].proposal_number;
 
     // 3. Create the proposal
     const proposalResult = await executeQuery(

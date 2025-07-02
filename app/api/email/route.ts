@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Generate proposal URL
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.headers.get('origin') || 'https://yourdomain.com';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || request.headers.get('origin') || 'http://localhost:3000';
     const proposalUrl = `${baseUrl}/proposals/view/${proposalId}`;
 
     // Email options
@@ -299,7 +299,7 @@ export async function POST(request: NextRequest) {
             <div class="email-container">
               <div class="email-header">
                 <div class="logo-container">
-                  <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
+                  <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
                 </div>
                 <h1 class="header-title">Your Proposal is Ready</h1>
                 <p class="header-subtitle">Professional Home Improvement Proposal</p>

@@ -510,7 +510,7 @@ function generateAppointmentEmailHtml(data: AppointmentEmailData): string {
         <div class="email-container">
           <div class="email-header">
                       <div class="logo-container">
-            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
+            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
             </div>
             <h1 class="header-title">Appointment Scheduled</h1>
             <p class="header-subtitle">Your appointment has been confirmed</p>
@@ -746,7 +746,7 @@ function generateReminderEmailHtml(data: ReminderEmailData): string {
           <p>Please log into your calendar dashboard to mark this reminder as complete or take the necessary action.</p>
           
           <div style="text-align: center; margin: 20px 0;">
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/calendar" 
+            <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/calendar" 
                style="display: inline-block; background-color: #059669; color: white; padding: 12px 25px; 
                       text-decoration: none; border-radius: 5px; font-weight: bold;">
               Open Calendar Dashboard

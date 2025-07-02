@@ -404,7 +404,7 @@ export class NotificationService {
       <body>
         <div class="email-container">
           <div class="email-header">
-            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/sereenh-04.png" alt="Evergreen Home Upgrades" style="height: 60px; margin-bottom: 16px;" />
+            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/sereenh-04.png" alt="Evergreen Home Upgrades" style="height: 60px; margin-bottom: 16px;" />
             <h1>Discount Approval Required</h1>
             <div class="subtitle">Administrative Action Needed</div>
           </div>
@@ -451,7 +451,7 @@ export class NotificationService {
               <h3 style="margin-top: 0; color: #1f2937;">Review & Decide</h3>
               <p style="color: #6b7280; margin-bottom: 24px;">Click below to review the full proposal details and make your decision</p>
               
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/admin/approvals" class="cta-button">
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/approvals" class="cta-button">
                 Review Request
               </a>
               
@@ -572,7 +572,7 @@ export class NotificationService {
       <body>
         <div class="email-container">
           <div class="email-header">
-            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'https://yourdomain.com'}/sereenh-04.png" alt="Evergreen Home Upgrades" style="height: 60px; margin-bottom: 16px;" />
+            <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/sereenh-04.png" alt="Evergreen Home Upgrades" style="height: 60px; margin-bottom: 16px;" />
             <h1>Discount Request ${statusText}</h1>
           </div>
           
