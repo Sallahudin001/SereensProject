@@ -411,32 +411,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
             const data = await response.json();
             setCustomAdders(data);
             
-            // Update pricing data with fetched custom adders
-            if (data && data.length > 0) {
-              // Calculate custom adders total
-              const customAddersTotal = data.reduce((sum: number, adder: any) => sum + parseFloat(adder.cost || '0'), 0);
-              
-              // Update current total to include custom adders
-              const updatedTotal = (proposal?.pricing?.total || 0) + customAddersTotal;
-              setCurrentTotal(updatedTotal);
-              
-              // Update monthly payment if needed
-              if (proposal?.pricing?.paymentFactor) {
-                const factor = proposal.pricing.paymentFactor;
-                const newMonthlyPayment = updatedTotal * (factor / 100);
-                setCurrentMonthlyPayment(newMonthlyPayment);
-              } else if (proposal?.pricing?.financingTerm && proposal?.pricing?.interestRate) {
-                // Use standard amortization formula
-                const newMonthlyPayment = calculateMonthlyPayment(
-                  updatedTotal, 
-                  proposal.pricing.financingTerm, 
-                  proposal.pricing.interestRate
-                );
-                setCurrentMonthlyPayment(newMonthlyPayment);
-              }
-              
-              console.log(`Loaded ${data.length} custom adders, total cost: ${customAddersTotal}`);
-            }
+            console.log(`Loaded ${data.length} custom adders for display`);
           } else {
             console.error("Failed to fetch custom adders:", await response.text());
           }
@@ -742,16 +717,9 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     let baseTotal = proposal?.pricing?.total || 0;
     let additionalCost = 0;
     let savings = 0;
-    let customAddersTotal = 0;
 
     // Calculate addon costs (already included in proposal.pricing.total)
     // This is just for reference in the breakdown
-
-    // Calculate custom adders total if they exist
-    if (customAdders?.length > 0) {
-      customAddersTotal = customAdders.reduce((sum: number, adder: any) => 
-        sum + parseFloat(adder.cost || '0'), 0);
-    }
 
     // Calculate lifestyle upsell costs
     selectedUpsells.forEach(upsellId => {
@@ -776,7 +744,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     // Calculate the new total based on adjustments
     const newTotal = calculateTotalWithAdjustments(
       baseTotal,
-      additionalCost + customAddersTotal,
+      additionalCost,
       savings,
       0 // No need to apply discount again as it's already included in proposal.pricing.total
     );
@@ -832,7 +800,7 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
     const calculationResults = calculateTotalWithOffers();
     setCurrentTotal(calculationResults.newTotal);
     setCurrentMonthlyPayment(calculationResults.newMonthlyPayment);
-  }, [selectedOffers, selectedUpsells, proposal?.pricing?.total, proposal?.pricing?.monthlyPayment, customAdders]);
+  }, [selectedOffers, selectedUpsells, proposal?.pricing?.total, proposal?.pricing?.monthlyPayment]);
 
   // Simplified stub for lifestyle upsells (not fully implemented)
   const toggleLifestyleUpsell = (upsellId: number) => {
@@ -1158,7 +1126,11 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                                         {(productData.showPricePerSquare !== false) && productData.pricePerSquare && 
                                           <p><span className="font-medium">Price Per Square:</span> {formatCurrency(parseFloat(productData.pricePerSquare) || 0)}</p>}
                                         <p className="font-medium text-emerald-700 text-lg pt-2 mt-2 border-t border-gray-200">
-                                          Total Roofing Price: {formatCurrency(parseFloat(productData.totalPrice) || 0)}
+                                          Total Roofing Price: {formatCurrency(
+                                            (parseFloat(productData.totalPrice) || 0) + 
+                                            (parseFloat(productData.gutterPrice) || 0) + 
+                                            (parseFloat(productData.downspoutPrice) || 0)
+                                          )}
                                         </p>
                                       </div>
                                     )}
@@ -1478,14 +1450,14 @@ export default function CustomerProposalView({ proposal: initialProposal, readOn
                               if (service === "roofing") {
                                 if (productData.totalPrice) {
                                   servicePrice = parseFloat(productData.totalPrice) || 0;
-                                  
-                                  // Add gutters and downspouts if present
-                                  if (productData.gutterPrice) {
-                                    servicePrice += parseFloat(productData.gutterPrice) || 0;
-                                  }
-                                  if (productData.downspoutPrice) {
-                                    servicePrice += parseFloat(productData.downspoutPrice) || 0;
-                                  }
+                                }
+                                
+                                // Add gutters and downspouts if present
+                                if (productData.gutterPrice) {
+                                  servicePrice += parseFloat(productData.gutterPrice) || 0;
+                                }
+                                if (productData.downspoutPrice) {
+                                  servicePrice += parseFloat(productData.downspoutPrice) || 0;
                                 }
                               }
                               

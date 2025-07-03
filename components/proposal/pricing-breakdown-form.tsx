@@ -378,7 +378,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       }
       
       if (serviceList.includes("garage-doors") && products["garage-doors"]) {
-        subtotal += parseFloat(products["garage-doors"].totalPrice) || 0
+        const basePrice = parseFloat(products["garage-doors"].totalPrice) || 0
+        const addonPrices = products["garage-doors"].addonPrices || {}
+        const addonTotal = Object.values(addonPrices).reduce((sum: number, price: any) => 
+          sum + (parseFloat(String(price)) || 0), 0)
+        subtotal += basePrice + addonTotal
       }
       
       if (serviceList.includes("paint") && products.paint) {
@@ -404,7 +408,10 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     
     // Calculate bundle discounts based on selected services and their actual prices
     if (serviceList.includes("roofing") && serviceList.includes("windows-doors")) {
-      const roofPrice = products.roofing ? (parseFloat(products.roofing.totalPrice) || 0) : 0
+      const roofPrice = products.roofing ? 
+        (parseFloat(products.roofing.totalPrice) || 0) + 
+        (parseFloat(products.roofing.gutterPrice) || 0) + 
+        (parseFloat(products.roofing.downspoutPrice) || 0) : 0
       const windowsDoorsPrice = products["windows-doors"] ? 
         (parseFloat(products["windows-doors"].windowPrice) || 0) + 
         Object.values(products["windows-doors"].doorPrices || {}).reduce((sum: number, price: any) => 
