@@ -771,6 +771,16 @@ const ProposalPDF: React.FC<ProposalPDFProps> = ({
           servicePrice += Number.parseFloat(String(price)) || 0
         })
       }
+    } else if (service === "roofing") {
+      servicePrice = Number.parseFloat(productData.totalPrice) || 0
+      
+      // Add gutters and downspouts if present (following same structure as proposal view)
+      if (productData.gutterPrice) {
+        servicePrice += Number.parseFloat(productData.gutterPrice) || 0
+      }
+      if (productData.downspoutPrice) {
+        servicePrice += Number.parseFloat(productData.downspoutPrice) || 0
+      }
     } else if (service === "paint") {
       servicePrice = Number.parseFloat(productData.totalPrice) || 0
     } else {

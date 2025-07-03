@@ -131,6 +131,8 @@ const DEFAULT_DISCOUNT_TYPES: DiscountType[] = [
 function PricingBreakdownForm({ services, products, data, updateData, proposalId, userId, customerData, fullFormData }: PricingBreakdownFormProps) {
   // Use a ref to track if we've already updated the parent
   const hasUpdatedRef = useRef(false)
+  // Add a ref to prevent concurrent discount updates
+  const isUpdatingDiscount = useRef(false)
   const [financingPlans, setFinancingPlans] = useState<FinancingPlan[]>([])
   const [loading, setLoading] = useState(false)
   
@@ -147,6 +149,9 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
   // Track if discount has been manually edited
   const [discountManuallyEdited, setDiscountManuallyEdited] = useState(false)
+  
+  // New state to track if total discount field was directly edited (vs individual discounts)
+  const [totalDiscountFieldEdited, setTotalDiscountFieldEdited] = useState(false)
   
   // Custom adder state
   const [newCustomAdder, setNewCustomAdder] = useState<CustomAdder>({
@@ -199,38 +204,47 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
   // Real-time sync effect - ensures all calculated values stay in sync
   useEffect(() => {
-    // Only run after initial load
-    if (hasUpdatedRef.current) return;
+    // Prevent infinite update loops by checking for concurrent updates
+    if (hasUpdatedRef.current || isUpdatingDiscount.current) return;
 
     // Skip calculation if using override
     if (formData.pricingOverride) return;
 
     const total = formData.subtotal - formData.discount;
     
-    // Check if total needs to be updated
-    if (total !== formData.total) {
-      setFormData(prev => {
-        const updatedData = { ...prev, total };
-        
-        // Recalculate monthly payment based on selected financing plan
-        if (prev.financingPlanId) {
-          const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId);
-          if (selectedPlan) {
-            updatedData.monthlyPayment = calculateMonthlyPaymentWithFactor(total, selectedPlan.payment_factor);
+    // Check if total needs to be updated and the difference is significant
+    // Only update if the difference is more than a penny to avoid rounding issues
+    if (Math.abs(total - formData.total) > 0.01) {
+      isUpdatingDiscount.current = true;
+      
+      // Use setTimeout to avoid rapid consecutive updates
+      setTimeout(() => {
+        setFormData(prev => {
+          const updatedData = { ...prev, total };
+          
+          // Recalculate monthly payment based on selected financing plan
+          if (prev.financingPlanId) {
+            const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId);
+            if (selectedPlan) {
+              updatedData.monthlyPayment = calculateMonthlyPaymentWithFactor(total, selectedPlan.payment_factor);
+            } else {
+              updatedData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate);
+            }
           } else {
             updatedData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate);
           }
-        } else {
-          updatedData.monthlyPayment = calculateMonthlyPayment(total, prev.financingTerm, prev.interestRate);
-        }
+          
+          return updatedData;
+        });
         
-        return updatedData;
-      });
+        // Mark that we need to update the parent, but with a delay to prevent cascading updates
+        setTimeout(() => {
+          hasUpdatedRef.current = false;
+          isUpdatingDiscount.current = false;
+        }, 50);
+      }, 100);
     }
-    
-    // Don't call updateData here - it will be handled by the dedicated effect below
-    hasUpdatedRef.current = false; // Set to false so the dedicated effect will run
-  }, [formData.subtotal, formData.discount, formData.financingPlanId, financingPlans, formData.pricingOverride]);
+  }, [formData.subtotal, formData.discount, formData.financingPlanId, financingPlans, formData.pricingOverride, formData.total]);
 
   // Fetch financing plans and user permissions from API
   useEffect(() => {
@@ -555,6 +569,10 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
   // Handle toggling a discount type on or off
   const handleToggleDiscountType = (discountId: string, isEnabled: boolean) => {
+    // Prevent concurrent discount updates to avoid state thrashing
+    if (isUpdatingDiscount.current) return;
+    isUpdatingDiscount.current = true;
+
     // Update the discount types array
     const updatedDiscountTypes = formData.discountTypes.map(discount => {
       if (discount.id === discountId) {
@@ -580,8 +598,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       return discount;
     });
 
+    // IMPORTANT: Only apply conflict resolution after toggling
+    const resolvedDiscountTypes = resolveDiscountConflicts(updatedDiscountTypes, discountId);
+
     // Calculate the new total discount
-    const totalDiscount = updatedDiscountTypes
+    const totalDiscount = resolvedDiscountTypes
       .filter(d => d.isEnabled)
       .reduce((sum, d) => sum + d.amount, 0);
 
@@ -605,39 +626,63 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
       
       return {
         ...prev,
-        discountTypes: updatedDiscountTypes,
+        discountTypes: resolvedDiscountTypes,
         discount: totalDiscount,
         total: newTotal,
         monthlyPayment: newMonthlyPayment
       };
     });
 
+    // Simplified flag management - ONLY mark manually edited in specific cases
+    // Mark discount as manually edited only when manually disabling an auto-bundle discount
+    if (discountId === 'auto-bundle' && !isEnabled) {
+      setDiscountManuallyEdited(true);
+      setTotalDiscountFieldEdited(true);
+    } 
+    // Otherwise, just leave the flags alone - don't reset them
+    // This prevents "fighting" between auto and manual discounts
+
     // Update the parent with the new data
     hasUpdatedRef.current = false;
+    
+    // Release the update lock after a short delay
+    setTimeout(() => {
+      isUpdatingDiscount.current = false;
+    }, 100);
   };
 
   // Handle updating a discount amount (dollar value) with enhanced approval logic
   const handleUpdateDiscountAmount = (discountId: string, amount: number) => {
-    const discountType = formData.discountTypes.find(d => d.id === discountId);
-    if (!discountType) return;
+    // Prevent concurrent discount updates
+    if (isUpdatingDiscount.current) return;
+    isUpdatingDiscount.current = true;
 
-    // Don't set manually edited for system-generated discounts
-    if (!discountType.isSystemGenerated) {
-      setDiscountManuallyEdited(true);
+    const discountType = formData.discountTypes.find(d => d.id === discountId);
+    if (!discountType) {
+      isUpdatingDiscount.current = false;
+      return;
     }
 
-    // ENHANCED APPROVAL LOGIC: Only bundled and individual discounts skip approval
-    // Manual total discount field requires approval, but individual discount types don't
+    // Only mark as manually edited for non-system discounts
+    // and only when changing auto-bundle discount
+    if (!discountType.isSystemGenerated && discountId === 'auto-bundle') {
+      setTotalDiscountFieldEdited(true);
+    }
+
+    // FIXED: Individual discount types are pre-approved by default
+    // Only non-standard discounts should require approval
     const isPreApprovedDiscount = discountType.category === 'Customer Type' || 
-                                  discountType.category === 'Loyalty' || 
-                                  discountType.category === 'Bundle' ||
-                                  discountType.isSystemGenerated;
+                                discountType.category === 'Loyalty' || 
+                                discountType.category === 'Bundle' ||
+                                discountType.isSystemGenerated;
 
     // Only check permissions for non-pre-approved discounts
-    if (!isPreApprovedDiscount) {
+    // FIXED: Skip approval entirely for pre-approved discount types
+    // Pre-approved types will never trigger toast messages
+    if (!isPreApprovedDiscount && userPermissions) {
       const discountPercent = formData.subtotal > 0 ? (amount / formData.subtotal) * 100 : 0;
       
-      if (userPermissions && discountPercent > userPermissions.maxDiscountPercent) {
+      if (discountPercent > userPermissions.maxDiscountPercent) {
         setPendingDiscount(amount);
         setShowApprovalDialog(true);
         
@@ -647,6 +692,7 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
           variant: "destructive"
         });
         
+        isUpdatingDiscount.current = false;
         return;
       }
     }
@@ -710,6 +756,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
     // Update the parent with the new data
     hasUpdatedRef.current = false;
+    
+    // Release the update lock after a short delay
+    setTimeout(() => {
+      isUpdatingDiscount.current = false;
+    }, 100);
   };
 
   // Handle updating a discount percentage
@@ -734,8 +785,14 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
 
   // Enhanced manual discount handler with improved approval logic and conflict resolution
   const handleDiscountChange = useCallback(async (value: number) => {
-    // Mark that discount has been manually edited
-    setDiscountManuallyEdited(true)
+    // Prevent concurrent discount updates to avoid state thrashing
+    if (isUpdatingDiscount.current) return;
+    isUpdatingDiscount.current = true;
+    
+    // Mark that total discount field was directly edited
+    setTotalDiscountFieldEdited(true);
+    // Also set the broader flag
+    setDiscountManuallyEdited(true);
     
     // ENHANCED APPROVAL LOGIC: Manual discount field ALWAYS requires approval if exceeding threshold
     // This is different from individual discount types which are pre-approved
@@ -751,7 +808,39 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
           className: "bg-yellow-50 border-yellow-200"
         })
       }
-      handleChange("discount", value)
+      
+      // Apply the change directly rather than calling handleChange
+      setFormData(prev => {
+        const newTotal = prev.subtotal - value;
+        
+        // Calculate new monthly payment
+        let newMonthlyPayment = prev.monthlyPayment;
+        if (prev.financingPlanId) {
+          const selectedPlan = financingPlans.find(plan => plan.id === prev.financingPlanId);
+          if (selectedPlan) {
+            newMonthlyPayment = calculateMonthlyPaymentWithFactor(newTotal, selectedPlan.payment_factor);
+          } else {
+            newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
+          }
+        } else {
+          newMonthlyPayment = calculateMonthlyPayment(newTotal, prev.financingTerm, prev.interestRate);
+        }
+        
+        return {
+          ...prev,
+          discount: value,
+          total: newTotal,
+          monthlyPayment: newMonthlyPayment
+        };
+      });
+      
+      // Release the update lock after a short delay
+      setTimeout(() => {
+        isUpdatingDiscount.current = false;
+      }, 100);
+      
+      // Mark that we need to update the parent
+      hasUpdatedRef.current = false;
       return
     }
 
@@ -768,6 +857,10 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
         variant: "destructive"
       })
       
+      // Release the update lock after a short delay
+      setTimeout(() => {
+        isUpdatingDiscount.current = false;
+      }, 100);
       return
     }
     
@@ -812,6 +905,11 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
     
     // Mark that we need to update the parent
     hasUpdatedRef.current = false
+    
+    // Release the update lock after a short delay
+    setTimeout(() => {
+      isUpdatingDiscount.current = false;
+    }, 100);
   }, [formData.subtotal, userPermissions, userId])
 
   // Handle user input changes
@@ -853,10 +951,24 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   
   // Enhanced effect to auto-apply bundle discounts
   useEffect(() => {
-    if (services.length >= 2 && !discountManuallyEdited) {
-      calculateAndApplyBundleDiscount(services);
+    // Only auto-apply bundle discounts if:
+    // 1. We have multiple services
+    // 2. Total discount field wasn't directly edited
+    // 3. Not currently updating discounts
+    if (services.length >= 2 && !totalDiscountFieldEdited && !isUpdatingDiscount.current) {
+      // Use a timeout to avoid rapid consecutive updates
+      setTimeout(() => {
+        // Double-check we're still not in an update (safety check)
+        if (!isUpdatingDiscount.current) {
+          isUpdatingDiscount.current = true;
+          calculateAndApplyBundleDiscount(services);
+          setTimeout(() => {
+            isUpdatingDiscount.current = false;
+          }, 100);
+        }
+      }, 150);
     }
-  }, [services, products, discountManuallyEdited]);
+  }, [services, products, totalDiscountFieldEdited]);
 
   // Check for approval request updates for this proposal
   useEffect(() => {
@@ -1233,28 +1345,33 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
   useEffect(() => {
     if (hasUpdatedRef.current) return;
     
-    updateData({
-      subtotal: formData.subtotal,
-      discount: formData.discount,
-      total: formData.total,
-      monthlyPayment: formData.monthlyPayment,
-      showLineItems: formData.showLineItems,
-      financingTerm: formData.financingTerm,
-      interestRate: formData.interestRate,
-      financingPlanId: formData.financingPlanId,
-      financingPlanName: formData.financingPlanName,
-      merchantFee: formData.merchantFee,
-      financingNotes: formData.financingNotes,
-      paymentFactor: formData.paymentFactor,
-      pricingOverride: formData.pricingOverride,
-      pricingBreakdown: formData.pricingBreakdown,
-      customAdders: formData.customAdders,
-      // Include discount types in the update data
-      discountTypes: formData.discountTypes,
-      discountLog: formData.discountLog
-    });
+    // Throttle updates to parent - only update when values actually changed
+    const throttledUpdate = setTimeout(() => {
+      updateData({
+        subtotal: formData.subtotal,
+        discount: formData.discount,
+        total: formData.total,
+        monthlyPayment: formData.monthlyPayment,
+        showLineItems: formData.showLineItems,
+        financingTerm: formData.financingTerm,
+        interestRate: formData.interestRate,
+        financingPlanId: formData.financingPlanId,
+        financingPlanName: formData.financingPlanName,
+        merchantFee: formData.merchantFee,
+        financingNotes: formData.financingNotes,
+        paymentFactor: formData.paymentFactor,
+        pricingOverride: formData.pricingOverride,
+        pricingBreakdown: formData.pricingBreakdown,
+        customAdders: formData.customAdders,
+        // Include discount types in the update data
+        discountTypes: formData.discountTypes,
+        discountLog: formData.discountLog
+      });
+      
+      hasUpdatedRef.current = true;
+    }, 300); // Small delay to prevent rapid updates
     
-    hasUpdatedRef.current = true;
+    return () => clearTimeout(throttledUpdate);
   }, [formData, updateData]);
 
   // Handle adding a custom adder
@@ -1464,14 +1581,21 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                       <span className="text-xs text-gray-400">Loading permissions...</span>
                     </div>
                   )}
-                  {discountManuallyEdited && services.length > 1 && (
+                  {totalDiscountFieldEdited && (
+                    <Badge variant="outline" className="text-xs">
+                      Manual Override
+                    </Badge>
+                  )}
+                  {totalDiscountFieldEdited && services.length > 1 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
-                        const bundleDiscount = calculateDiscount(services)
-                        setDiscountManuallyEdited(false)
-                        handleChange("discount", bundleDiscount)
+                        const bundleDiscount = calculateDiscount(services);
+                        setTotalDiscountFieldEdited(false);
+                        setDiscountManuallyEdited(false);
+                        handleChange("discount", bundleDiscount);
+                        calculateAndApplyBundleDiscount(services);
                       }}
                       className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800"
                     >
@@ -1484,27 +1608,31 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                   <Input
                     value={formData.discount.toFixed(2)}
                     onChange={(e) => {
-                      const value = Number.parseFloat(e.target.value) || 0
-                      console.log('Discount input changed:', value)
-                      handleDiscountChange(value)
+                      const value = Number.parseFloat(e.target.value) || 0;
+                      console.log('Discount input changed:', value);
+                      handleDiscountChange(value);
                     }}
-                    className="pl-8 text-right font-medium"
+                    className={`pl-8 text-right font-medium ${totalDiscountFieldEdited ? "border-amber-300" : ""}`}
                     placeholder="0.00"
                     title="Manual discount entry - may require manager approval if exceeding your limit"
                   />
-                  </div>
                 </div>
+              </div>
 
                 {/* Enhanced Discount Management System */}
                 <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <h3 className="font-medium text-gray-800 mb-3 flex items-center gap-1">
                     <Sparkles className="h-4 w-4 text-blue-600" />
                     Discount Management
-                    {discountManuallyEdited && (
-                      <Badge variant="outline" className="ml-2 text-xs">
+                                          {totalDiscountFieldEdited ? (
+                      <Badge variant="outline" className="ml-2 text-xs bg-amber-50">
                         Manual Override Active
                       </Badge>
-                    )}
+                    ) : services.length >= 2 ? (
+                      <Badge variant="outline" className="ml-2 text-xs bg-green-50">
+                        Auto Bundle Active
+                      </Badge>
+                    ) : null}
                   </h3>
                   
                   {/* Bundle Discount Status */}
@@ -1514,11 +1642,13 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                         <span className="text-sm text-blue-800">
                           🎯 Bundle discount available: ${calculateDiscount(services).toFixed(2)}
                         </span>
-                        {discountManuallyEdited && (
+                        {/* Only show reset button if total field was edited manually or auto-bundle is disabled */}
+                        {(totalDiscountFieldEdited || !formData.discountTypes.find(d => d.id === 'auto-bundle')?.isEnabled) && (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => {
+                              setTotalDiscountFieldEdited(false);
                               setDiscountManuallyEdited(false);
                               calculateAndApplyBundleDiscount(services);
                             }}
@@ -1642,8 +1772,9 @@ function PricingBreakdownForm({ services, products, data, updateData, proposalId
                                 </div>
                                                 
                                                 {/* Approval status indicator */}
-                                                <div className="text-xs text-green-600 bg-green-50 p-2 rounded">
-                                                  ✓ This discount type does not require manager approval
+                                                <div className="text-xs text-green-600 bg-green-50 p-2 rounded flex items-center gap-1">
+                                                  <CheckCircle className="h-3 w-3" />
+                                                  <span>Standard discount - no approval needed</span>
                                                 </div>
                                                 
                                                 <div className="flex justify-between">

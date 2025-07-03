@@ -450,7 +450,7 @@ export async function generateProposalEmailHtml(proposalId: string, baseUrl: str
                         <div class="logo-container">
             <img src="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/sereenh-04.png" alt="Evergreen Home Upgrades" class="logo" />
               </div>
-              <h1 class="header-title">Your Proposal is Ready</h1>
+              <h1 class="header-title text-color-white">Your Proposal is Ready</h1>
               <p class="header-subtitle">Professional Home Improvement Proposal</p>
             </div>
             
